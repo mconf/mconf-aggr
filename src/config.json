@@ -1,0 +1,15 @@
+{
+  "period": 10,
+  "servers": [
+    {
+      "url": "https://mconf-zabbix-infra.inf.ufrgs.br",
+      "login": "Admin",
+      "password": "zabbix"
+    },
+    {
+      "url": "https://mconf-zabbix-infra.inf.ufrgs.br",
+      "login": "Admin",
+      "password": "zabbix"
+    }
+  ]
+}
