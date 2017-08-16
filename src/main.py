@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.6
 
-from connection import ConnectionPool, ZabbixConnection
+from reader import DataReader
+from writer import DataWriter
 from utils import print_json
 import json
 import logging
@@ -17,31 +18,20 @@ def read_config(config_file):
 class Controller:
     def __init__(self, config):
         self.config = config
-        self.pool = None
+        self.reader = DataReader(self.config)
+        self.writer = DataWriter(self.config)
 
     def run(self):
         period = self.config['period']
 
-        self.create_pool()
+        self.reader.connect()
 
         while True:
-            for conn in self.pool.connections:
-                # Read from Zabbix API.
-                last_values = conn.conn.item.get({"output": ["lastvalue"], "host": "mconf-live-test01", "application": "BigBlueButton"})
-
-                # Write to database.
-                for result in last_values:
-                    print_json(result['lastvalue'])
+            results = self.reader.read()
+            self.writer.write(results)
 
             time.sleep(period)
 
-    def create_pool(self):
-        self.pool = ConnectionPool()
-
-        for server in self.config['servers']:
-            self.pool.add_connection(ZabbixConnection(server['url'],
-                                                      server['login'],
-                                                      server['password']))
 
 def main():
     #logging.basicConfig(level=logging.INFO)
