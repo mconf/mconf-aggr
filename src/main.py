@@ -24,12 +24,14 @@ class Controller:
     def run(self):
         period = self.config['period']
 
-        self.reader.connect()
+        self.reader.setup()
+        self.writer.setup()
 
         while True:
             results = self.reader.read()
-            self.writer.write(results)
+            #self.writer.write(results)
 
+            print_json(results)
             time.sleep(period)
 
 
