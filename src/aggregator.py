@@ -14,6 +14,11 @@ class SetupError(Exception):
         super().__init__(msg)
 
 
+class ChannelClosed(Exception):
+    def __init__(self, msg=''):
+        super().__init__(msg)
+
+
 Subscriber = namedtuple('Subscriber', ('channel', 'callback'))
 
 
@@ -39,15 +44,24 @@ class SubscriberThread(threading.Thread):
         self.subscriber = subscriber
         self._stopevent = threading.Event()
 
+    def __call__(self, *args, **kwargs):
+        self.run()
+
     def run(self):
         while not self._stopevent.is_set():
-            data = self.subscriber.channel.pop()
-            self.subscriber.callback.run(data)
+            try:
+                data = self.subscriber.channel.pop()
+            except ChannelClosed as err:
+                continue
+            else:
+                self.subscriber.callback.run(data)
 
         return
 
-    def join(self, timeout=None):
+    def exit(self, timeout=None):
         self._stopevent.set()
+        self.subscriber.channel.close()
+
         threading.Thread.join(self)
 
 
@@ -56,11 +70,18 @@ class Channel:
         self.name = name
         self.queue = queue.Queue()
 
+    def close(self):
+        self.queue.put(None)
+
     def publish(self, data):
         self.queue.put(data)
 
     def pop(self):
         data = self.queue.get()
+
+        if data is None:
+            raise ChannelClosed()
+
         self.queue.task_done()
 
         return data
@@ -113,7 +134,6 @@ class Aggregator:
                               thread object")
 
     def stop(self):
-        print("stopping aggregator.")
         for subscriber in self.subscribers:
             try:
                 subscriber.callback.teardown()
@@ -121,7 +141,7 @@ class Aggregator:
                 pass
 
         for thread in self.threads:
-            thread.join()
+            thread.exit()
 
     def register_callback(self, callback, channel='default'):
         try:

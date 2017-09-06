@@ -1,50 +1,40 @@
 #!/usr/bin/env python3.6
 
-from reader import DataReader
-from writer import DataWriter
-from utils import print_json
-import json
-import logging
+
+import cfg
+from zabbix import ZabbixDataReader
+from dummy import FileWriter, DummyWriter
+from aggregator import Aggregator
 import time
 
 
-def read_config(config_file):
-    with open(config_file, 'r') as f:
-        config = json.load(f)
-
-    return config
-
-
-class Controller:
-    def __init__(self, config):
-        self.config = config
-        self.reader = DataReader(self.config)
-        self.writer = DataWriter(self.config)
-
-    def run(self):
-        period = self.config['period']
-
-        self.reader.setup()
-        self.writer.setup()
-
-        while True:
-            results = self.reader.read()
-            #self.writer.write(results)
-
-            print_json(results)
-            time.sleep(period)
-
-
 def main():
-    #logging.basicConfig(level=logging.INFO)
-    #logger = logging.getLogger(__name__)
+    cfg.config.load_config("config.json")
 
-    config = read_config("config.json")
+    zabbix_reader = ZabbixDataReader()
+    file_writer = FileWriter("file1.txt")
+    dummy_writer = DummyWriter()
 
-    controller = Controller(config)
+    aggregator = Aggregator()
+    aggregator.register_callback(file_writer, channel='zabbix')
+    aggregator.register_callback(dummy_writer, channel='zabbix')
 
-    controller.run()
+    aggregator.setup()
+    zabbix_reader.setup()
 
+    publisher = aggregator.publisher
+
+    while True:
+        try:
+            data = zabbix_reader.read()
+
+            publisher.publish(data, channel='zabbix')
+
+            time.sleep(cfg.config['period'])
+        except:
+            break
+
+    aggregator.stop()
 
 if __name__ == '__main__':
     main()
