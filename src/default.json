@@ -1,6 +1,6 @@
 {
-  "period": 2,
-  "application": "security",
+  "period": 30,
+  "application": "LB",
   "servers": [
     {
       "url": "https://mconf-zabbix-infra.inf.ufrgs.br",
@@ -22,7 +22,7 @@
   },
   "setup_file": "config",
   "debug": {
-      "enabled": false,
+      "enabled": true,
       "read_delay": 1,
       "write_delay": 1
   }
