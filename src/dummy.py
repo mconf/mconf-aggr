@@ -1,5 +1,9 @@
+import json
 from aggregator import AggregatorCallback
-from utils import print_json
+
+
+def print_json(obj):
+    print(json.dumps(obj, indent=True))
 
 
 class DummyReader():

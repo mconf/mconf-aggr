@@ -19,6 +19,11 @@ class ChannelClosed(Exception):
         super().__init__(msg)
 
 
+class ChannelNotFoundError(Exception):
+    def __init__(self, msg=''):
+        super().__init__(msg)
+
+
 Subscriber = namedtuple('Subscriber', ('channel', 'callback'))
 
 
@@ -44,9 +49,6 @@ class SubscriberThread(threading.Thread):
         self.subscriber = subscriber
         self._stopevent = threading.Event()
 
-    def __call__(self, *args, **kwargs):
-        self.run()
-
     def run(self):
         while not self._stopevent.is_set():
             try:
@@ -58,11 +60,14 @@ class SubscriberThread(threading.Thread):
 
         return
 
-    def exit(self, timeout=None):
+    def exit(self):
         self._stopevent.set()
         self.subscriber.channel.close()
 
         threading.Thread.join(self)
+
+    def start_(self):
+        raise RuntimeError()
 
 
 class Channel:
@@ -104,6 +109,9 @@ class Publisher:
         self.channels = channels
 
     def publish(self, data, channel='default'):
+        if self.channels is None:
+            raise ChannelNotFoundError()
+
         for subscriber in self.channels[channel]:
             subscriber.channel.publish(data)
 
@@ -119,7 +127,7 @@ class Aggregator:
             try:
                 subscriber.callback.setup()
             except NotImplementedError as err:
-                pass
+                continue
 
         self.threads = []
 
@@ -130,8 +138,11 @@ class Aggregator:
             for thread in self.threads:
                 thread.start()
         except RuntimeError as err:
-            raise SetupError("start() cannot be called twice on the same \
-                              thread object")
+            for thread in self.threads:
+                if thread.is_alive():
+                    thread.exit()
+
+            raise SetupError("something went wrong while starting thread")
 
     def stop(self):
         for subscriber in self.subscribers:
