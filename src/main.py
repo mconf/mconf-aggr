@@ -6,10 +6,14 @@ from zabbix import ZabbixDataReader
 from dummy import FileWriter, DummyWriter
 from aggregator import Aggregator, SetupError, ChannelNotFoundError
 import time
+import logging
 
 
 def main():
     cfg.config.load_config("config.json")
+    cfg.setup_logging()
+
+    logger = logging.getLogger(__name__)
 
     zabbix_reader = ZabbixDataReader()
     file_writer = FileWriter("file1.txt")

@@ -7,6 +7,7 @@ import itertools
 import cfg
 from collections import namedtuple
 from abc import ABC, abstractmethod
+import logging
 
 
 class SetupError(Exception):
@@ -117,10 +118,18 @@ class Publisher:
 
 
 class Aggregator:
-    def __init__(self):
+    def __init__(self, logger=None):
         self.channels = {}
         self.publisher = Publisher()
         self.threads = []
+        self.logger = logger or logging.getLogger(__name__)
+
+        self.logger.debug("Creating new aggregator debug")
+        self.logger.info("Creating new aggregator info")
+        self.logger.warn("Creating new aggregator warn")
+        self.logger.error("Creating new aggregator error")
+        self.logger.critical("Creating new aggregator critical")
+
 
     def setup(self):
         for subscriber in self.subscribers:
