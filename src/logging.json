@@ -67,6 +67,14 @@
     },
 
     "loggers": {
+        "aggregator": {
+            "level": "DEBUG",
+            "handlers": [
+                "debug_file_handler"
+            ],
+            "propagate": false
+        },
+
         "zabbix_api": {
             "propagate": false
         }
