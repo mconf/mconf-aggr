@@ -151,6 +151,13 @@ class Aggregator:
                     .format(subscriber.callback)
                 )
                 continue
+            except Exception as err:
+                self.logger.exception(
+                    "Something went wrong while setting up callback {}." \
+                    .format(subscriber.callback)
+                )
+                self.remove_callback(subscriber.callback)
+                continue
 
         self.threads = []
 
@@ -191,6 +198,12 @@ class Aggregator:
                     .format(subscriber.callback)
                 )
                 continue
+            except Exception as err:
+                self.logger.exception(
+                    "Something went wrong while tearing down callback {}." \
+                    .format(subscriber.callback)
+                )
+                continue
 
         self.logger.info("Exiting threads.")
         for thread in self.threads:
@@ -219,6 +232,16 @@ class Aggregator:
         self.channels[channel] = subscribers
 
         self.publisher.update_channels(self.channels)
+
+    def remove_callback(self, callback):
+        for subscribers in self.channels.values():
+            for subscriber in subscribers:
+                if callback == subscriber.callback:
+                    self.logger.debug(
+                        "Removing callback {} from subscribers." \
+                        .format(callback)
+                    )
+                    subscribers.remove(subscriber)
 
     @property
     def subscribers(self):
