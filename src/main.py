@@ -10,8 +10,8 @@ import logging
 
 
 def main():
-    cfg.config.load_config("config.json")
-    cfg.setup_logging()
+    cfg.config.setup_config("config.json")
+    cfg.config.setup_logging()
 
     logger = logging.getLogger(__name__)
 
