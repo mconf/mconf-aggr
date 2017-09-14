@@ -59,6 +59,7 @@ class ZabbixServer:
         self.password = password
         self.hosts = dict() # hosts is a hostid:hostname dictionary.
         self.logger = logger or logging.getLogger(__name__)
+        self._ok = False
 
         self.name = urlsplit(self.url).netloc # Extract just the domain.
 
@@ -75,12 +76,14 @@ class ZabbixServer:
                 .format(self)
             )
             self.connection = None
+            self._ok = False
 
             raise ZabbixLoginError("Can not login to server".format(self))
+        else:
+            self._ok = True
 
     def close(self):
         self.logger.debug("Closing server {}.".format(self))
-        pass
 
     def get_hosts(self, parameters):
         if self.connection is None:
@@ -89,11 +92,14 @@ class ZabbixServer:
         try:
             results = self.connection.host.get(parameters)
         except:
+            self._ok = False
+
             raise
         else:
             self.hosts = {host['hostid']: host['host'] for host in results}
 
     def get_items(self, parameters):
+        self.logger.debug("Fetching data from server {}.".format(self))
         if self.connection is None:
             raise ZabbixNoConnectionError()
 
@@ -103,11 +109,24 @@ class ZabbixServer:
             try:
                 results[host[1]] = self.connection.item.get(parameters)
             except:
+                # Suppress stack trace from this exception as it logs
+                # many not so useful information.
+                self.logger.error(
+                    "Something went wrong while getting items from {}." \
+                    .format(self)
+                )
+
                 # Remove the host from results.
                 # Returning None avoids it raising KeyError.
                 results.pop(host[1], None)
+                self._ok = False
 
                 raise
+            else:
+                if not self._ok:
+                    self.logger.info("Connection to server {} restored." \
+                                     .format(self))
+                    self._ok = True
 
         return {self.name: results}
 
@@ -222,6 +241,8 @@ class ZabbixDataReader():
                 )
                 self.pool.remove_server(server)
 
+        self.logger.info("ZabbixDataReader running.")
+
     def stop(self):
         self.logger.info("Stopping ZabbixDataReader.")
         self.pool.close()
@@ -264,10 +285,7 @@ class ZabbixDataReader():
             try:
                 all_items.update(server.get_items(parameters))
             except:
-                self.logger.exception(
-                    "Something went wrong while getting items from {}." \
-                    .format(server)
-                )
+                pass
 
         # Create a single bundle of data.
         data = make_data(all_items)
