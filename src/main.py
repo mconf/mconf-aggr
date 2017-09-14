@@ -41,10 +41,11 @@ def main():
         try:
             data = zabbix_reader.read()
 
-            try:
-                publisher.publish(data, channel='zabbix')
-            except ChannelNotFoundError as err:
-                pass
+            if data: # What to publish when fetching data fails?
+                try:
+                    publisher.publish(data, channel='zabbix')
+                except ChannelNotFoundError as err:
+                    continue
 
             time.sleep(period)
         except:
