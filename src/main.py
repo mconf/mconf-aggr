@@ -35,6 +35,8 @@ def main():
 
     publisher = aggregator.publisher
 
+    period = cfg.config['period']
+
     while True:
         try:
             data = zabbix_reader.read()
@@ -44,7 +46,7 @@ def main():
             except ChannelNotFoundError as err:
                 pass
 
-            time.sleep(cfg.config['period'])
+            time.sleep(period)
         except:
             break
 
