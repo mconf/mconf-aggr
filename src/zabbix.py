@@ -11,6 +11,11 @@ import cfg
 from aggregator import AggregatorCallback
 
 
+class ZabbixLoginError(Exception):
+    def __init__(self, msg):
+        super().__init__(msg)
+
+
 class ServersPool:
     def __init__(self, logger=None):
         self.servers = []
@@ -19,13 +24,20 @@ class ServersPool:
         self.logger.info("New pool of servers created.")
 
     def add_server(self, server):
-        self.logger.info("Adding server {} to server pool.".format(server))
+        self.logger.debug("Adding server {} to server pool.".format(server))
         self.servers.append(server)
+
+    def remove_server(self, server):
+        self.logger.info("Removing server {} from server pool.".format(server))
+        self.servers.remove(server)
 
     def connect(self):
         self.logger.info("Connecting to servers.")
         for server in self.servers:
-            server.connect()
+            try:
+                server.connect()
+            except ZabbixLoginError:
+                self.remove_server(server)
 
     def __iter__(self):
         return iter(self.servers)
@@ -34,36 +46,56 @@ class ServersPool:
 class ZabbixServer:
     def __init__(self, url, login, password, logger=None):
         self.url = url # It must start with http(s)://.
-        self.name = urlsplit(self.url).netloc # Extract just the domain.
         self.login = login
         self.password = password
         self.hosts = dict() # hosts is a hostid:hostname dictionary.
         self.logger = logger or logging.getLogger(__name__)
 
+        self.name = urlsplit(self.url).netloc # Extract just the domain.
+
     def connect(self):
-        self.logger.info("Connecting to server {}".format(self))
+        self.logger.debug("Connecting to server {}".format(self))
         self.connection = api.ZabbixAPI(self.url)
 
         try:
             self.logger.debug("Login to server {}.".format(self))
             self.connection.login(self.login, self.password)
-        except api.ZabbixAPIException as err:
+        except api.ZabbixAPIException:
             self.logger.exception(
                 "Something went wrong while trying to login to server {}." \
                 .format(self)
             )
-
             self.connection = None
 
+            raise ZabbixLoginError("Can not login to server".format(self))
+
+
     def get_hosts(self, parameters):
-        results = self.connection.host.get(parameters)
-        self.hosts = {host['hostid']: host['host'] for host in results}
+        if self.connection is None:
+            raise ZabbixNoConnectionError()
+
+        try:
+            results = self.connection.host.get(parameters)
+        except:
+            raise
+        else:
+            self.hosts = {host['hostid']: host['host'] for host in results}
 
     def get_items(self, parameters):
+        if self.connection is None:
+            raise ZabbixNoConnectionError()
+
         results = dict()
         for host in self.hosts.items():
             parameters['hostids'] = host[0]
-            results[host[1]] = self.connection.item.get(parameters)
+            try:
+                results[host[1]] = self.connection.item.get(parameters)
+            except:
+                # Remove the host from results.
+                # Returning None avoids it raising KeyError.
+                results.pop(host[1], None)
+
+                raise
 
         return {self.name: results}
 
@@ -84,10 +116,12 @@ class PostgresConnector:
                                    password=self.config['password'])
 
             self.cursor = self.conn.cursor()
-        except pg.DatabaseError as err:
+        except pg.DatabaseError:
             self.logger.exception(
                 "Something went wrong while connecting to the database."
             )
+
+            raise
 
     def close(self):
         self.logger.info("Closing connection to PostgreSQL.")
@@ -95,18 +129,21 @@ class PostgresConnector:
             self.conn.close()
 
     def update(self, data):
-        update_sql = """UPDATE metrics
-                        SET
-                            value = %s,
-                            updatedat = %s
-                        WHERE serverid = %s AND metric = %s"""
+        update_sql = "UPDATE metrics " \
+                     "SET " \
+                        "value = %s, " \
+                        "updatedat = %s " \
+                     "WHERE serverid = %s AND metric = %s"
 
-        self.cursor.execute(update_sql, (data['value'],
-                                         data['updatedat'],
-                                         data['serverid'],
-                                         data['metric']))
-
-        self.conn.commit()
+        try:
+            self.cursor.execute(update_sql, (data['value'],
+                                             data['updatedat'],
+                                             data['serverid'],
+                                             data['metric']))
+        except DatabaseError:
+            self.logger.expcetion("Update to PostgreSQL has failed.")
+        else:
+            self.conn.commit()
 
 
 class ZabbixDataWriter(AggregatorCallback):
@@ -156,19 +193,39 @@ class ZabbixDataReader():
         application = cfg.config['application']
         parameters = {"with_applications": application}
         for server in self.pool:
-            server.get_hosts(parameters)
+            try:
+                server.get_hosts(parameters)
+            except ZabbixNoConnectionError:
+                self.logger.exception(
+                    "No connection to server {}.".format(server)
+                )
+                self.pool.remove_server(server)
+            except Exception:
+                self.logger.exception(
+                    "Something went wrong when getting hosts for server {}." \
+                    .format(server)
+                )
+                self.pool.remove_server(server)
 
     def connect(self):
         self.logger.info("Connecting ZabbixDataReader.")
         # Create a new server pool.
         self.pool = ServersPool()
 
+        self.logger.info("Adding servers to the server pool.")
         # Add each server to the server pool.
         for server in cfg.config['servers']:
-            # It must be more resilient. Surrond it with a try/except.
-            self.pool.add_server(ZabbixServer(server['url'],
-                                              server['login'],
-                                              server['password']))
+            try:
+                url, login, password = server['url'], \
+                                       server['login'], \
+                                       server['password']
+            except KeyError:
+                self.logger.exception(
+                    "URL, login or password not supplied for server {}". \
+                    format(server)
+                )
+            else:
+                self.pool.add_server(ZabbixServer(url, login, password))
 
         # Connect the server pool.
         self.pool.connect()
@@ -185,7 +242,13 @@ class ZabbixDataReader():
 
         # Fetch data from each server in the server pool.
         for server in self.pool:
-            all_items.update(server.get_items(parameters))
+            try:
+                all_items.update(server.get_items(parameters))
+            except:
+                self.logger.exception(
+                    "Something went wrong while getting items from {}." \
+                    .format(server)
+                )
 
         # Create a single bundle of data.
         data = make_data(all_items)
