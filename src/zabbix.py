@@ -37,9 +37,14 @@ class ServersPool:
             try:
                 server.connect()
             except ZabbixLoginError:
+                self.logger.exception(
+                    "Login to server {} has failed. Removing it from server pool." \
+                    .format(server)
+                )
                 self.remove_server(server)
 
     def close(self):
+        self.logger.info("Closing server pool.")
         for server in self.servers:
             server.close()
 
@@ -58,7 +63,7 @@ class ZabbixServer:
         self.name = urlsplit(self.url).netloc # Extract just the domain.
 
     def connect(self):
-        self.logger.debug("Connecting to server {}".format(self))
+        self.logger.debug("Connecting to server {}.".format(self))
         self.connection = api.ZabbixAPI(self.url)
 
         try:
@@ -74,6 +79,7 @@ class ZabbixServer:
             raise ZabbixLoginError("Can not login to server".format(self))
 
     def close(self):
+        self.logger.debug("Closing server {}.".format(self))
         pass
 
     def get_hosts(self, parameters):
@@ -104,6 +110,9 @@ class ZabbixServer:
                 raise
 
         return {self.name: results}
+
+    def __str__(self):
+        return self.name
 
 
 class PostgresConnector:
