@@ -5,12 +5,10 @@ import zabbix_api as api
 import psycopg2 as pg
 from urllib.parse import urlsplit
 from datetime import datetime
-import time
 import logging
 
 import cfg
 from aggregator import AggregatorCallback
-from dummy import DummyWriter
 
 
 class ServersPool:
@@ -78,8 +76,8 @@ class PostgresConnector:
         self.logger = logger or logging.getLogger(__name__)
 
     def connect(self):
+        self.logger.debug("Connecting to PostgreSQL.")
         try:
-            self.logger.debug("Connecting to PostgreSQL.")
             self.conn = pg.connect(host=self.config['host'],
                                    database=self.config['database'],
                                    user=self.config['user'],
@@ -92,6 +90,7 @@ class PostgresConnector:
             )
 
     def close(self):
+        self.logger.info("Closing connection to PostgreSQL.")
         if self.conn is not None:
             self.conn.close()
 
@@ -116,8 +115,13 @@ class ZabbixDataWriter(AggregatorCallback):
         self.logger = logger or logging.getLogger(__name__)
 
     def setup(self):
+        self.logger.info("Setting up ZabbixDataWriter")
         # Connect to the effective data writer.
         self.connector.connect()
+
+    def teardown(self):
+        self.logger.info("Tearing down ZabbixDataWriter.")
+        self.connector.close()
 
     def run(self, data):
         for metric in data:
@@ -144,6 +148,7 @@ class ZabbixDataReader():
         self.logger = logger or logging.getLogger(__name__)
 
     def setup(self):
+        self.logger.info("Setting up ZabbixDataReader.")
         # Connect to the Zabbix servers of the pool.
         self.connect()
 
@@ -154,6 +159,7 @@ class ZabbixDataReader():
             server.get_hosts(parameters)
 
     def connect(self):
+        self.logger.info("Connecting ZabbixDataReader.")
         # Create a new server pool.
         self.pool = ServersPool()
 
@@ -171,6 +177,7 @@ class ZabbixDataReader():
         # Here comes the logic to read data from Zabbix API.
         # It iterates over all Zabbix servers reading a subset of the
         # monitored items.
+        self.logger.debug("Fetching data from server pool.")
         application = cfg.config['application']
         parameters = {"output": ["hostid", "name", "lastvalue"],
                       "application": application}
