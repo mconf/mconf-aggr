@@ -39,6 +39,10 @@ class ServersPool:
             except ZabbixLoginError:
                 self.remove_server(server)
 
+    def close(self):
+        for server in self.servers:
+            server.close()
+
     def __iter__(self):
         return iter(self.servers)
 
@@ -69,6 +73,8 @@ class ZabbixServer:
 
             raise ZabbixLoginError("Can not login to server".format(self))
 
+    def close(self):
+        pass
 
     def get_hosts(self, parameters):
         if self.connection is None:
@@ -184,7 +190,7 @@ class ZabbixDataReader():
         self.pool = None
         self.logger = logger or logging.getLogger(__name__)
 
-    def setup(self):
+    def start(self):
         self.logger.info("Setting up ZabbixDataReader.")
         # Connect to the Zabbix servers of the pool.
         self.connect()
@@ -206,6 +212,10 @@ class ZabbixDataReader():
                     .format(server)
                 )
                 self.pool.remove_server(server)
+
+    def stop(self):
+        self.logger.info("Stopping ZabbixDataReader.")
+        self.pool.close()
 
     def connect(self):
         self.logger.info("Connecting ZabbixDataReader.")

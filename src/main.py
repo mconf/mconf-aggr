@@ -28,10 +28,10 @@ def main():
 
     try:
         aggregator.setup()
-    except SetupError as err:
+    except SetupError:
         exit(1)
 
-    zabbix_reader.setup()
+    zabbix_reader.start()
 
     publisher = aggregator.publisher
 
@@ -49,6 +49,7 @@ def main():
             break
 
     aggregator.stop()
+    zabbix_reader.stop()
 
 if __name__ == '__main__':
     main()
