@@ -1,12 +1,13 @@
 #!/usr/bin/env python3.6
 
 
+import time
+import logging
+
 import cfg
 from zabbix import ZabbixDataReader
 from dummy import FileWriter, DummyWriter
 from aggregator import Aggregator, SetupError, PublishError
-import time
-import logging
 
 
 def main():

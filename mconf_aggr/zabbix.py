@@ -7,8 +7,8 @@ from urllib.parse import urlsplit
 from datetime import datetime
 import logging
 
-import cfg
-from aggregator import AggregatorCallback
+from . import cfg
+from .aggregator import AggregatorCallback
 
 
 class ZabbixLoginError(Exception):

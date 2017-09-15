@@ -1,5 +1,8 @@
+#!/usr/bin/env python3.6
+
+
 import json
-from aggregator import AggregatorCallback
+from .aggregator import AggregatorCallback
 
 
 def print_json(obj):

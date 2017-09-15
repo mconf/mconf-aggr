@@ -87,7 +87,7 @@
     },
 
     "loggers": {
-        "aggregator": {
+        "mconf_aggr.aggregator": {
             "level": "DEBUG",
             "handlers": [
                 "debug_file_handler"
@@ -95,7 +95,7 @@
             "propagate": false
         },
 
-        "zabbix": {
+        "mconf_aggr.zabbix": {
             "level": "DEBUG",
             "handlers": [
                 "zabbix_debug_file_handler",

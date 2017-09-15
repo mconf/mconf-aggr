@@ -12,17 +12,17 @@ class Config:
         self.custom_config = custom_config
         self._config = {}
 
-        self.setup_config("default.json")
+        self.setup_config()
         if custom_config: self.load_config(self.custom_config)
 
-    def setup_config(self, config_file):
+    def setup_config(self, config_file="config/default.json"):
         config = self.read_config(config_file)
         if self._config is None:
             self._config = config
         else:
             self._config.update(config)
 
-    def setup_logging(self, default_path='logging.json',
+    def setup_logging(self, default_path="config/logging.json",
                       default_level=logging.INFO, env_key='LOG_CFG'):
         """
         Setup logging configuration

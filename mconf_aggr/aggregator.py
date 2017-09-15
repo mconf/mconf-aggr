@@ -4,9 +4,7 @@
 import threading
 import queue
 import itertools
-import cfg
 from collections import namedtuple
-from abc import ABC, abstractmethod
 import logging
 
 
