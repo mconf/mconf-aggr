@@ -4,7 +4,7 @@
 import cfg
 from zabbix import ZabbixDataReader
 from dummy import FileWriter, DummyWriter
-from aggregator import Aggregator, SetupError, ChannelNotFoundError
+from aggregator import Aggregator, SetupError, PublishError
 import time
 import logging
 
@@ -44,7 +44,7 @@ def main():
             if data: # What to publish when fetching data fails?
                 try:
                     publisher.publish(data, channel='zabbix')
-                except ChannelNotFoundError as err:
+                except PublishError as err:
                     continue
 
             time.sleep(period)

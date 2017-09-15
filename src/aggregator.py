@@ -20,7 +20,7 @@ class ChannelClosed(Exception):
         super().__init__(msg)
 
 
-class ChannelNotFoundError(Exception):
+class PublishError(Exception):
     def __init__(self, msg=''):
         super().__init__(msg)
 
@@ -121,7 +121,7 @@ class Publisher:
 
         if self.channels is None:
             self.logger.exception("No channel was found for this publisher.")
-            raise ChannelNotFoundError()
+            raise PublishError()
 
         for subscriber in self.channels[channel]:
             subscriber.channel.publish(data)
