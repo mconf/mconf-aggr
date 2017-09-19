@@ -4,8 +4,8 @@
 import unittest
 import unittest.mock as mock
 
-from mconf_aggr.aggregator import Publisher, Subscriber, Channel, \
-                                  PublishError
+from mconf_aggr.aggregator import Publisher, Subscriber, \
+                                  Channel, PublishError
 
 
 class TestPublisher(unittest.TestCase):

@@ -1,8 +1,8 @@
 #!/usr/bin/env python3.6
 
 
-import time
 import logging
+import time
 
 import mconf_aggr.cfg as cfg
 from mconf_aggr.dummy import UserReader, DbWriter

@@ -1,10 +1,10 @@
 #!/usr/bin/env python3.6
 
 
-import threading
-import queue
 import itertools
 import logging
+import queue
+import threading
 from collections import namedtuple
 
 

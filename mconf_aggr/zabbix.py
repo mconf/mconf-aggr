@@ -1,11 +1,15 @@
 #!/usr/bin/env python3.6
 
 
-import zabbix_api as api
-import psycopg2 as pg
-from urllib.parse import urlsplit
-from datetime import datetime
 import logging
+from datetime import datetime
+from urllib.parse import urlsplit
+
+import psycopg2 as pg
+import zabbix_api as api
+
+
+
 
 from . import cfg
 from .aggregator import AggregatorCallback
