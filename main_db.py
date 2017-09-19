@@ -5,8 +5,7 @@ import time
 import logging
 
 import mconf_aggr.cfg as cfg
-from mconf_aggr.zabbix import ZabbixDataReader
-from mconf_aggr.dummy import FileWriter, DummyWriter
+from mconf_aggr.dummy import UserReader, DbWriter
 from mconf_aggr.aggregator import Aggregator, SetupError, PublishError
 
 
@@ -16,15 +15,11 @@ def main():
 
     logger = logging.getLogger(__name__)
 
-    zabbix_reader = ZabbixDataReader()
-    file_writer = FileWriter("tmp/file1.txt")
-    dummy_writer1 = DummyWriter()
-    dummy_writer2 = DummyWriter()
+    reader = UserReader()
+    writer = DbWriter()
 
     aggregator = Aggregator()
-    aggregator.register_callback(file_writer, channel='zabbix')
-    aggregator.register_callback(dummy_writer1, channel='zabbix')
-    aggregator.register_callback(dummy_writer2, channel='zabbix')
+    aggregator.register_callback(writer, channel='db')
 
 
     try:
@@ -32,7 +27,7 @@ def main():
     except SetupError:
         exit(1)
 
-    zabbix_reader.setup()
+    reader.setup()
 
     publisher = aggregator.publisher
 
@@ -40,20 +35,20 @@ def main():
 
     while True:
         try:
-            data = zabbix_reader.read()
+            data = reader.read()
 
             if data: # What to publish when fetching data fails?
                 try:
-                    publisher.publish(data, channel='zabbix')
+                    publisher.publish(data, channel='db')
                 except PublishError as err:
                     continue
 
-            time.sleep(period)
+            #time.sleep(period)
         except:
             break
 
     aggregator.stop()
-    zabbix_reader.stop()
+    reader.teardown()
 
 if __name__ == '__main__':
     main()

@@ -218,7 +218,7 @@ class ZabbixDataReader():
         self.pool = None
         self.logger = logger or logging.getLogger(__name__)
 
-    def start(self):
+    def setup(self):
         self.logger.info("Setting up ZabbixDataReader.")
         # Connect to the Zabbix servers of the pool.
         self.connect()

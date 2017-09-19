@@ -2,6 +2,8 @@
 
 
 import json
+import time
+
 from .aggregator import AggregatorCallback
 
 
@@ -9,7 +11,7 @@ def print_json(obj):
     print(json.dumps(obj, indent=True))
 
 
-class DummyReader():
+class UserReader():
     def __init__(self):
         super().__init__()
 
@@ -19,11 +21,28 @@ class DummyReader():
     def teardown(self):
         pass
 
-    def run(self):
-        data = input("Reading with dummy reader: ")
+    def read(self):
+        data = input("reading: ")
 
         return data
 
+
+class CounterReader():
+    def __init__(self):
+        super().__init__()
+
+    def setup(self, start, end):
+        self.counter = start
+        self.end = end
+
+    def teardown(self):
+        pass
+
+    def read(self):
+        data = self.counter if self.counter < self.end else None
+        self.counter += 1
+
+        return data
 
 class DummyWriter(AggregatorCallback):
     def __init__(self):
@@ -50,7 +69,7 @@ class FileReader():
     def teardown(self):
         self.file.close()
 
-    def run(self):
+    def read(self):
         return self.file.readline()
 
 
@@ -62,8 +81,23 @@ class FileWriter(AggregatorCallback):
         pass
 
     def teardown(self):
-        print("teardown", self)
+        pass
 
     def run(self, data):
         with open(self.filename, 'a') as f:
-            f.write(str(data)+"\n")
+            f.write(str(data) + "\n")
+
+class DbWriter(AggregatorCallback):
+    def __init__(self, filename="db.txt"):
+        self.filename = filename
+
+    def setup(self):
+        pass
+
+    def teardown(self):
+        pass
+
+    def run(self, data):
+        time.sleep(2)
+        with open(self.filename, 'a') as f:
+            f.write(str(data) + "\n")

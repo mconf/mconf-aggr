@@ -4,8 +4,8 @@
 import threading
 import queue
 import itertools
-from collections import namedtuple
 import logging
+from collections import namedtuple
 
 
 class SetupError(Exception):
@@ -73,18 +73,20 @@ class SubscriberThread(threading.Thread):
 
 
 class Channel:
-    def __init__(self, name, logger=None):
+    def __init__(self, name, maxsize=0, logger=None):
         self.name = name
-        self.queue = queue.Queue()
+        self.queue = queue.Queue(maxsize=maxsize)
         self.logger = logger or logging.getLogger(__name__)
 
     def close(self):
         self.queue.put(None)
 
     def publish(self, data):
+        self.logger.debug("Putting data into the channel.")
         self.queue.put(data)
 
     def pop(self):
+        self.logger.debug("Popping data into the channel.")
         data = self.queue.get()
 
         if data is None:
