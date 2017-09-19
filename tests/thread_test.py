@@ -1,40 +1,51 @@
 #!/usr/bin/env python3.6
 
 
+import threading
 import unittest
 import unittest.mock as mock
 
-from mconf_aggr.aggregator import Publisher, Subscriber, Channel, \
-                                  PublishError
+from mconf_aggr.aggregator import SubscriberThread, Subscriber, Channel
 
 
 class TestPublisher(unittest.TestCase):
     def setUp(self):
-        pass
+        callback_mock = mock.Mock()
+        channel = Channel('channel_1')
+        subscriber = Subscriber(channel, callback_mock)
+        self.thread = SubscriberThread(subscriber=subscriber)
 
     @mock.patch('mconf_aggr.aggregator.Subscriber')
     @mock.patch('mconf_aggr.aggregator.SubscriberThread')
-    def test_run(self, MockThread, MockSubscriber):
-        #mock_sub = MockSubscriber()
-        sub = Subscriber(None, 'callback')
-        mock_thread = MockThread(subscriber=sub)
+    def test_stop_is_false(self, MockThread, MockSubscriber):
+        self.assertFalse(self.thread._stopevent.is_set())
 
-        self.assertIs(mock_thread.subscriber, sub)
+    def test_start_exit(self):
+        self.thread.start()
 
-    """
-    def test_publish_error(self):
-        with self.assertRaises(PublishError):
-            self.publisher.publish(None)
+        try:
+            self.assertTrue(self.thread.is_alive())
+            self.assertFalse(self.thread._stopevent.is_set())
+        except:
+            raise
+        finally:
+            self.thread.exit()
 
-    @mock.patch('mconf_aggr.aggregator.Subscriber')
-    def test_publish(self, MockChannel):
-        mock_channel = MockChannel('channel')
-        subscriber = Subscriber(mock_channel, 'callback')
+        self.assertFalse(self.thread.is_alive())
+        self.assertTrue(self.thread._stopevent.is_set())
 
-        self.publisher.update_channels({'channel': [subscriber]})
+    def test_run_callback(self):
+        self.thread.start()
 
-        data = {'key': 'value'}
-        self.publisher.publish(data, channel='channel')
+        data  = "data"
+        self.thread.subscriber.channel.publish(data)
 
-        mock_channel.publish.assert_called_with(data)
-    """
+        import time
+        time.sleep(1)
+
+        try:
+            self.thread.subscriber.callback.run.assert_called_with(data)
+        except:
+            raise
+        finally:
+            self.thread.exit()
