@@ -8,9 +8,6 @@ from urllib.parse import urlsplit
 import psycopg2 as pg
 import zabbix_api as api
 
-
-
-
 from . import cfg
 from .aggregator import AggregatorCallback
 
