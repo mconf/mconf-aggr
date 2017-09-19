@@ -2,52 +2,64 @@
 
 
 import unittest
-import os
-import time
-
+import unittest.mock as mock
 from mconf_aggr.aggregator import Aggregator
-from mconf_aggr.dummy import CounterReader, FileWriter
-import mconf_aggr.cfg as cfg
 
 
 class TestAggregator(unittest.TestCase):
     @classmethod
-    def setUpClass(cls):
-        cfg.config.setup_logging()
-
-    def setUp(self):
+    def setUpClass(self):
         self.aggregator = Aggregator()
-        self.reader = CounterReader()
-        self.writer = FileWriter("aggregator_test.txt")
+        self.channel = "channel"
 
-        self.aggregator.register_callback(self.writer, channel='test')
+    def test_no_channel(self):
+        with self.assertRaises(KeyError):
+            self.aggregator.channels[self.channel]
 
-        self.aggregator.setup()
-        self.reader.setup(1, 10)
-        self.writer.setup()
+    def test_register_callback(self):
+        callback_mock = mock.Mock()
+        publisher_mock = mock.Mock()
+        self.aggregator.publisher = publisher_mock
 
-        self.publisher = self.aggregator.publisher
+        self.aggregator.register_callback(callback_mock)
+        channels = self.aggregator.channels
 
+        publisher_mock.update_channels.assert_called_with(channels)
 
-    def test_create_aggregator(self):
-        try:
-            os.remove("aggregator_tests.txt")
-        except OSError:
-            pass
+    def test_remove_callback(self):
+        channel_1 = "channel_1"
+        channel_2 = "channel_2"
+        callbacks_1 = [mock.Mock() for i in range(10)]
+        callbacks_2 = [mock.Mock() for i in range(10)]
+        subscribers_1 = []
+        for callback in callbacks_1:
+            subscriber = mock.Mock()
+            subscriber.callback = callback
+            subscribers_1.append(subscriber)
 
-        while True:
-            data = self.reader.read()
-            if data is None: break
-            self.publisher.publish(data, channel='test')
+        subscribers_2 = []
+        for callback in callbacks_2:
+            subscriber = mock.Mock()
+            subscriber.callback = callback
+            subscribers_2.append(subscriber)
 
-        time.sleep(5)
-        with open("aggregator_test.txt", 'r') as f:
-            try:
-                for expected in range(1, 10):
-                    actual = int(f.readline())
+        subscribers_1 = [mock.Mock().callback(cb) for cb in callbacks_1]
+        subscribers_2 = [mock.Mock().callback(cb) for cb in callbacks_2]
 
-                    self.assertEqual(expected, actual)
-            except:
-                raise
-            finally:
-                self.aggregator.stop()
+        self.aggregator.channels = {channel_1: subscribers_1,
+                                    channel_2: subscribers_2}
+
+        self.assertEqual(len(self.aggregator.channels[channel_1]), 10)
+        self.assertEqual(len(self.aggregator.channels[channel_2]), 10)
+
+        self.aggregator.remove_callback(subscribers_1[0].callback)
+        self.aggregator.remove_callback(subscribers_1[3].callback)
+        self.aggregator.remove_callback(subscribers_1[5].callback)
+
+        for subscriber in subscribers_2:
+            self.aggregator.remove_callback(subscriber.callback)
+
+        self.assertEqual(len(self.aggregator.channels[channel_1]), 7)
+        self.assertIn(channel_1, self.aggregator.channels)
+
+        self.assertNotIn(channel_2, self.aggregator.channels.keys())

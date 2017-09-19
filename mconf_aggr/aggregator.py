@@ -234,14 +234,22 @@ class Aggregator:
         self.publisher.update_channels(self.channels)
 
     def remove_callback(self, callback):
-        for subscribers in self.channels.values():
-            for subscriber in subscribers:
-                if callback == subscriber.callback:
-                    self.logger.debug(
-                        "Removing callback {} from subscribers." \
-                        .format(callback)
-                    )
-                    subscribers.remove(subscriber)
+        self.logger.debug(
+            "Removing callback {} from subscribers." \
+            .format(callback)
+        )
+        for channel, subscribers in self.channels.items():
+            filtered_subscribers = filter(lambda subscriber:
+                                          subscriber.callback != callback,
+                                          subscribers)
+            filtered_subscribers = list(filtered_subscribers)
+
+            self.channels[channel] = filtered_subscribers
+
+        self.channels = {channel: subscribers \
+                        for channel, subscribers \
+                        in self.channels.items() \
+                        if subscribers}
 
     @property
     def subscribers(self):
