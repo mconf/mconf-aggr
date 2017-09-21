@@ -17,10 +17,10 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
+import os
+import sys
 # sys.path.insert(0, os.path.abspath('.'))
-
+sys.path.append(os.path.abspath('../mconf_aggr'))
 
 # -- General configuration ------------------------------------------------
 
@@ -31,7 +31,9 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = []
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.napoleon',
+              'sphinx.ext.autosummary']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -47,8 +49,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'mconf-aggr'
-copyright = '2017, Kazuki Yokoyama'
-author = 'Kazuki Yokoyama'
+copyright = '2017, Mconf Tecnologia'
+author = 'Mconf Tecnologia'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -143,7 +145,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'mconf-aggr.tex', 'mconf-aggr Documentation',
-     'Kazuki Yokoyama', 'manual'),
+     'Mconf Tecnologia', 'manual'),
 ]
 
 
@@ -167,6 +169,3 @@ texinfo_documents = [
      author, 'mconf-aggr', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-
