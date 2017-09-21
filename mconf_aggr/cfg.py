@@ -14,6 +14,13 @@ import logging.config
 import os
 
 
+def get_config_path(config_file):
+    module_path = os.path.dirname(__file__)
+    config_dir = os.path.join(module_path, os.pardir, "config")
+
+    return os.path.join(config_dir, config_file)
+
+
 class Config:
     """Configuration for aggregator functioning and logging settings.
 
@@ -36,7 +43,7 @@ class Config:
         # Load custom configurations if a config file was provided.
         if custom_config: self.setup_config(self.custom_config)
 
-    def setup_config(self, config_file="config/default.json"):
+    def setup_config(self, config_file=None):
         """Load general configuration from JSON file.
 
         It updates the set of configurations with those from the
@@ -46,15 +53,16 @@ class Config:
         ----------
         config_file : str
             Path to the custom JSON configuration file.
-            Defaults to "config/default.json".
+            If missing, it defaults to "config/default.json".
         """
+        config_file = config_file or get_config_path("default.json")
         config = self.read_config(config_file)
         if self._config is None:
             self._config = config
         else:
             self._config.update(config)
 
-    def setup_logging(self, default_path="config/logging.json",
+    def setup_logging(self, logging_config_file=None,
                       default_level=logging.INFO, env_key="LOG_CFG"):
         """Load logging configuration from JSON file.
 
@@ -64,7 +72,7 @@ class Config:
         ----------
         default_path : str
             Path to the logging JSON configuration file.
-            Defaults to "config/logging.json"
+            If missing, it defaults to "config/logging.json"
         default_level : int
             Log level required. Defaults to `logging.INFO`.
         env_key : str
@@ -87,7 +95,7 @@ class Config:
         `Logging cookbook
         <https://docs.python.org/3/howto/logging-cookbook.html#logging-cookbook>`_
         """
-        path = default_path
+        path = logging_config_file or get_config_path("logging.json")
         value = os.getenv(env_key, None)
         if value:
             path = value
