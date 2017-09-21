@@ -75,17 +75,17 @@ class Config:
         ----------
         Logging documentation for Python 3.
 
-        Logging library:
-        https://docs.python.org/3/library/logging.html
+        `Logging library
+        <https://docs.python.org/3/library/logging.html>`_
 
-        Logging basic tutorial:
-        lhttps://docs.python.org/3/howto/logging.html#logging-basic-tutorial
+        `Logging basic tutorial
+        <lhttps://docs.python.org/3/howto/logging.html#logging-basic-tutorial>`_
 
-        Logging advanced tutorial:
-        https://docs.python.org/3/howto/logging.html#logging-advanced-tutorial
+        `Logging advanced tutorial
+        <https://docs.python.org/3/howto/logging.html#logging-advanced-tutorial>`_
 
-        Logging cookbook:
-        https://docs.python.org/3/howto/logging-cookbook.html#logging-cookbook
+        `Logging cookbook
+        <https://docs.python.org/3/howto/logging-cookbook.html#logging-cookbook>`_
         """
         path = default_path
         value = os.getenv(env_key, None)
