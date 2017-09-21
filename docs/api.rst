@@ -5,8 +5,8 @@ This page shows how to use the aggregator. First, we present how Mconf-Aggregato
 architecture is thought and structured. Then, we show how you can extend it
 to meet your needs.
 
-Aggregator components
-=====================
+Components
+==========
 
 The Mconf-Aggregator has three main parts:
 
