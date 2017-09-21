@@ -10,8 +10,8 @@ Mconf Aggregator docs
    :maxdepth: 2
    :caption: Contents:
 
+   architecture
    api
-   quickreference
 
 Indices and tables
 ==================
