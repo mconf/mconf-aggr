@@ -223,7 +223,7 @@ class Channel:
         ChannelClosed
             If the channel was closed.
         """
-        self.logger.debug("Popping data into the channel.")
+        self.logger.debug("Popping data from the channel.")
         data = self.queue.get()
 
         if data is None:
