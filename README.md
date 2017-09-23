@@ -70,10 +70,6 @@ To run all tests in the `tests/` directory:
 $ python setup.py test
 ```
 
-> Note: It is assumed that all tests in the `tests/` directory follow the
-name pattern `modulename_test.py` where _modulename_ is the name of the module
-being tested.
-
 Other commands are also available. Check this
 [Getting Started With setuptools and setup.py](https://pythonhosted.org/an_example_pypi_project/setuptools.html).
 
@@ -109,10 +105,8 @@ sense to import it.
 
 ## Testing
 
-We use the standard `unittest` package to run tests.
-
-The tests should follow the name pattern `modulename_test.py`
-where _modulename_ is the name of the module being tested.
+We use the standard `unittest` package to run tests. All tests go in the
+`tests/` directory.
 
 For further information about `unittest`, check
 [unittest's official documentation](https://docs.python.org/3/library/unittest.html).
