@@ -1,12 +1,13 @@
 # Mconf-Aggregator
 
-## Setting environment
+## Python version
 
 > Note: You only have to do this once.
 
-Before we even start, we have to make sure that the Python environment is
-properly set. We highly suggest you to use a virtual environment such as one
-provided by `pyenv`. For instructions on how to install `pyenv`, check
+This project is meant to work with version 3.6.0 of Python. Before we even start,
+we have to make sure that the right version is set. We highly suggest you to use
+a version manager such as `pyenv`. For instructions on how to
+install `pyenv`, check
 [pyenv's official documentation](https://github.com/pyenv/pyenv#installation).
 
 > Note: Don't forget to run `source ~/.bashrc` after installing `pyenv`.
@@ -33,27 +34,63 @@ Python 3.6.0
 ```
 
 From now on, every Python-related command you use in this project should be
-provided by the virtual environment. For instance, the output for the
-`which pip3` command should be similar to this:
+provided by `pyenv`. For instance, the output for the `which pip3` command should be similar to this:
 
 ```
 /home/john_doe/.pyenv/shims/pip3
 ```
 
-## Dependencies
+When running a script in the project, call Python explicitly as in `python main.py`.
+**Do not** make the script executable and then call it directly. The reason for
+this is that calling it explicitly will use the Python version as defined by `pyenv` as expected.
+If you run the script as an executable, it will check for system's Python
+(possibly with the wrong version).
 
-> Note: It will be soon moved to a `setup.py` file.
+## Setup.py
+
+Although this package is not distributed by _Distutils_ (or available on _PyPI_),
+it does come with a `setup.py` script. It makes developing, testing, and
+(maybe in future) distributing easier.
+
+To install the package for development:
+
+```
+$ python setup.py develop
+```
+
+To really install the package:
+
+```
+$ python setup.py install
+```
+
+To run all tests in the `tests/` directory:
+
+```
+$ python setup.py test
+```
+
+> Note: It is assumed that all tests in the `tests/` directory follow the
+name pattern `modulename_test.py` where _modulename_ is the name of the module
+being tested.
+
+Other commands are also available. Check this
+[Getting Started With setuptools and setup.py](https://pythonhosted.org/an_example_pypi_project/setuptools.html).
+
+## Dependencies
 
 We are currently using the following third-party packages:
 
 * `psycopg2` version 2.7.3.1 or later ([official site](http://initd.org/psycopg/))
 * `zabbix-api` ([GitHub repository](https://github.com/gescheit/scripts/tree/master/zabbix))
+* `sphinx` version 1.6.3 or later ([official site](http://www.sphinx-doc.org/en/stable/))
 
 They can be easily installed with:
 
 ```
-pip3 install psycopg2
-pip3 install zabbix-api
+$ pip3 install psycopg2
+$ pip3 install zabbix-api
+$ pip3 install sphinx
 ```
 
 To check if the installation ran successfuly, try to import them
@@ -62,14 +99,28 @@ To check if the installation ran successfuly, try to import them
 ```
 $ python -c "import psycopg2"
 $ python -c "import zabbix_api"
+$ python -c "import sphinx"
 ```
 
 It should run successfuly.
 
+> Note: _Sphinx_ is actually used to generate documentation. It makes little
+sense to import it.
+
 ## Testing
 
-To run the unit tests, we simply call `unittest` on a test file in the `tests/`
-directory.
+We use the standard `unittest` package to run tests.
+
+The tests should follow the name pattern `modulename_test.py`
+where _modulename_ is the name of the module being tested.
+
+For further information about `unittest`, check
+[unittest's official documentation](https://docs.python.org/3/library/unittest.html).
+
+### Running individual tests
+
+To run the unit tests, we simply call `unittest` on a test file in the
+`tests/` directory.
 
 For instance, if you want to test `aggregator_test.py`, run
 (from the project's root directory):
@@ -78,15 +129,21 @@ For instance, if you want to test `aggregator_test.py`, run
 $ python -m unittest tests/aggregator_test.py
 ```
 
-After making any modifications in the package, please, run the corresponding
-(all would be still better) tests.
+After making any modifications in the package, please, run the
+corresponding (all would be still better) tests.
 
-For further information about `unittest`, check
-[unittest's official documentation](https://docs.python.org/3/library/unittest.html).
+### Running all tests with `setup.py`
+
+As said in [Setup.py](#setup.py), you can run all tests in the `tests/` directory
+by running:
+
+```
+$ python setup.py test
+```
 
 ## Documenting
 
-We are currently using Sphinx to document our project.
+We are currently using _Sphinx_ to document our project.
 
 Documentation is in the `docs/` directory, but it is generated mostly from the
 docstrings in the Python code. The docstring format in use is the _numpydoc_.
@@ -102,8 +159,8 @@ $ make html
 
 The generated code will be in the `docs/_build/html/` directory.
 
-One simple way to navigate through these files is creating an ephemeral server
-with the `SimpleHTTPServer` Python built-in module:
+One simple way to navigate through these files is creating an ephemeral server with
+the `SimpleHTTPServer` Python built-in module. From the `docs/_build/html/` directory, run:
 
 ```
 $ python -m SimpleHTTPServer
