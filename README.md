@@ -126,6 +126,28 @@ $ python -m unittest tests/aggregator_test.py
 After making any modifications in the package, please, run the
 corresponding (all would be still better) tests.
 
+### Running test suites
+
+You can run multiple test modules, known as _test suite_, through
+the `test_suites.py` script. Test suites are intended to group together tests
+that are related to each other, for instance, by functionality.
+
+In order to create a new test suite, add the test
+suite name and a list of existing modules (from `tests/`) in the `test_suites`
+field of `config_tests.json`.
+
+For example, to run the test suite _aggregator_, do (from `tests/` directory):
+
+```
+$ python test_suites.py aggregator
+```
+
+To run all test suites in `config_tests.json`, just suppress the test suite:
+
+```
+$ python test_suites.py
+```
+
 ### Running all tests with `setup.py`
 
 As said in [Setup.py](#setup.py), you can run all tests in the `tests/` directory
