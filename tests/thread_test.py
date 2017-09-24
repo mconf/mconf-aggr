@@ -15,9 +15,7 @@ class TestPublisher(unittest.TestCase):
         subscriber = Subscriber(channel, callback_mock)
         self.thread = SubscriberThread(subscriber=subscriber)
 
-    @mock.patch('mconf_aggr.aggregator.Subscriber')
-    @mock.patch('mconf_aggr.aggregator.SubscriberThread')
-    def test_stop_is_false(self, MockThread, MockSubscriber):
+    def test_stop_is_false(self):
         self.assertFalse(self.thread._stopevent.is_set())
 
     def test_start_exit(self):
