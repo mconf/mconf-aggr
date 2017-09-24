@@ -1,0 +1,11 @@
+{
+    "verbosity": 3,
+    "logging": false,
+    "test_suites": {
+        "aggregator": ["aggregator_test",
+                       "publisher_test",
+                       "callback_test",
+                       "channel_test",
+                       "thread_test"]
+    }
+}
