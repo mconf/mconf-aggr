@@ -46,33 +46,6 @@ this is that calling it explicitly will use the Python version as defined by `py
 If you run the script as an executable, it will check for system's Python
 (possibly with the wrong version).
 
-## Setup.py
-
-Although this package is not distributed by _Distutils_ (or available on _PyPI_),
-it does come with a `setup.py` script. It makes developing, testing, and
-(maybe in future) distributing easier.
-
-To install the package for development:
-
-```
-$ python setup.py develop
-```
-
-To really install the package:
-
-```
-$ python setup.py install
-```
-
-To run all tests in the `tests/` directory:
-
-```
-$ python setup.py test
-```
-
-Other commands are also available. Check this
-[Getting Started With setuptools and setup.py](https://pythonhosted.org/an_example_pypi_project/setuptools.html).
-
 ## Dependencies
 
 We are currently using the following third-party packages:
@@ -102,6 +75,37 @@ It should run successfuly.
 
 > Note: _Sphinx_ is actually used to generate documentation. It makes little
 sense to import it.
+
+## Setup.py
+
+Although this package is not distributed by _Distutils_ (or available on _PyPI_),
+it does come with a `setup.py` script. It makes developing, testing, and
+(maybe in future) distributing easier.
+
+To install the package for development:
+
+```
+$ python setup.py develop
+```
+
+To really install the package:
+
+```
+$ python setup.py install
+```
+
+To run all tests in the `tests/` directory:
+
+```
+$ python setup.py test
+```
+
+Other commands are also available. Check this
+[Getting Started With setuptools and setup.py](https://pythonhosted.org/an_example_pypi_project/setuptools.html).
+
+> Note: Before proceeding, you may need to install it in develop mode with
+the command shown above. Some commands below may not work correctly as they fail
+to find the `mconf_aggr` package.
 
 ## Testing
 
