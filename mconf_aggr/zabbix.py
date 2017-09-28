@@ -189,16 +189,24 @@ class ServerMetricDAO:
 
     def update(self, data):
         server_id = self.session.query(ServerTable).filter(ServerTable.name == data['server_name']).first()
-        metric = data['metric']
 
         metric = self.session.query(ServerMetricTable) \
                              .filter(ServerMetricTable.server_id == server_id.id,
                                      ServerMetricTable.name == data['metric']) \
                              .first()
 
-        metric.value = data['value']
-        metric.zabbix_server = data['zabbix_server']
-        metric.updated_at = data['updatedat']
+        if metric:
+            metric.value = data['value']
+            metric.zabbix_server = data['zabbix_server']
+            metric.updated_at = data['updatedat']
+        else:
+            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            metric = ServerMetricTable(server_id=server_id.id,
+                                       zabbix_server=data['zabbix_server'],
+                                       name=data['metric'],
+                                       value=data['value'],
+                                       created_at=now,
+                                       updated_at=now)
 
         self.session.add(metric)
 
