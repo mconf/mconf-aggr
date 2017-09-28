@@ -252,11 +252,11 @@ def make_data(data):
     metrics = []
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-    return [{'zabbixserver': server,
-             'serverid': host,
+    return [{'zabbix_server': server,
+             'server_name': host,
              'metric': item['name'],
              'value': item['lastvalue'],
-             'updatedat': now} for server, hosts in data.items()
+             'updated_at': now} for server, hosts in data.items()
                                for host, items in hosts.items()
                                for item in items]
 
