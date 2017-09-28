@@ -2,7 +2,11 @@
 
 
 import logging
+import sqlalchemy as sa
+from contextlib import contextmanager
 from datetime import datetime
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 from urllib.parse import urlsplit
 
 import psycopg2 as pg
@@ -10,9 +14,6 @@ import zabbix_api as api
 
 from . import cfg
 from .aggregator import AggregatorCallback
-import sqlalchemy as sa
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
 
 
 class ZabbixLoginError(Exception):
@@ -139,6 +140,21 @@ class ZabbixServer:
 
 
 Base = declarative_base()
+Session = sessionmaker()
+
+
+@contextmanager
+def session_scope():
+    """Provide a transactional scope around a series of operations."""
+    session = Session()
+    try:
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 class ServerMetricTable(Base):
@@ -146,6 +162,7 @@ class ServerMetricTable(Base):
 
     id = sa.Column(sa.Integer, primary_key=True)
     server_id = sa.Column(sa.Integer)
+    zabbix_server = sa.Column(sa.String)
     name = sa.Column(sa.String)
     value = sa.Column(sa.String)
     created_at = sa.Column(sa.Time)
@@ -167,66 +184,43 @@ class ServerTable(Base):
 
 
 class ServerMetricDAO:
-    def __init__(self, engine):
-        Session = sessionmaker(bind=engine)
-        self.session = Session()
+    def __init__(self, session):
+        self.session = session
 
     def update(self, data):
         server_id = self.session.query(ServerTable).filter(ServerTable.name == data['server_name']).first()
-        metric = self.session.query(ServerMetricTable).filter(ServerMetricTable.server_id == server_id.id).first()
+        metric = data['metric']
+
+        metric = self.session.query(ServerMetricTable) \
+                             .filter(ServerMetricTable.server_id == server_id.id,
+                                     ServerMetricTable.name == data['metric']) \
+                             .first()
 
         metric.value = data['value']
+        metric.zabbix_server = data['zabbix_server']
         metric.updated_at = data['updatedat']
 
         self.session.add(metric)
 
-        self.session.commit()
-
 
 class PostgresConnector:
-    def __init__(self, logger=None):
+    def __init__(self, database_uri, logger=None):
         self.config = cfg.config['database'] # Change it.
-        self.conn = None
-        self.cursor = None
+        self.database_uri = database_uri
         self.logger = logger or logging.getLogger(__name__)
 
     def connect(self):
-        self.logger.debug("Connecting to PostgreSQL.")
-        try:
-            self.conn = pg.connect(host=self.config['host'],
-                                   database=self.config['database'],
-                                   user=self.config['user'],
-                                   password=self.config['password'])
-
-            self.cursor = self.conn.cursor()
-        except pg.DatabaseError:
-            self.logger.exception(
-                "Something went wrong while connecting to the database."
-            )
-
-            raise
+        self.logger.debug("Creating new database session.")
+        engine = sa.create_engine(self.database_uri)
+        Session.configure(bind=engine)
 
     def close(self):
-        self.logger.info("Closing connection to PostgreSQL.")
-        if self.conn is not None:
-            self.conn.close()
+        self.logger.info("Closing connection to PostgreSQL. Nothing to do.")
+        pass
 
     def update(self, data):
-        update_sql = "UPDATE metrics " \
-                     "SET " \
-                        "value = %s, " \
-                        "updatedat = %s " \
-                     "WHERE serverid = %s AND metric = %s"
-
-        try:
-            self.cursor.execute(update_sql, (data['value'],
-                                             data['updatedat'],
-                                             data['serverid'],
-                                             data['metric']))
-        except DatabaseError:
-            self.logger.expcetion("Update to PostgreSQL has failed.")
-        else:
-            self.conn.commit()
+        with session_scope() as session:
+            ServerMetricDAO(session).update(data)
 
 
 class ZabbixDataWriter(AggregatorCallback):
@@ -257,8 +251,8 @@ def make_data(data):
              'metric': item['name'],
              'value': item['lastvalue'],
              'updated_at': now} for server, hosts in data.items()
-                               for host, items in hosts.items()
-                               for item in items]
+                                for host, items in hosts.items()
+                                for item in items]
 
 
 class ZabbixDataReader():
