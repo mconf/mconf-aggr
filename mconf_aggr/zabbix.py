@@ -10,6 +10,9 @@ import zabbix_api as api
 
 from . import cfg
 from .aggregator import AggregatorCallback
+import sqlalchemy as sa
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker
 
 
 class ZabbixLoginError(Exception):
@@ -133,6 +136,51 @@ class ZabbixServer:
 
     def __str__(self):
         return self.name
+
+
+Base = declarative_base()
+
+
+class ServerMetricTable(Base):
+    __tablename__ = "server_metrics"
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    server_id = sa.Column(sa.Integer)
+    name = sa.Column(sa.String)
+    value = sa.Column(sa.String)
+    created_at = sa.Column(sa.Time)
+    updated_at = sa.Column(sa.Time)
+
+    def __repr__(self):
+        return "<ServerMetric(name={}, value={}m, updated_at={})" \
+                .format(self.name, self.value, self.updated_at)
+
+
+class ServerTable(Base):
+    __tablename__ = "servers"
+
+    id = sa.Column(sa.Integer, primary_key=True)
+    name = sa.Column(sa.String)
+
+    def __repr__(self):
+        return "<Server(name={})".format(self.name)
+
+
+class ServerMetricDAO:
+    def __init__(self, engine):
+        Session = sessionmaker(bind=engine)
+        self.session = Session()
+
+    def update(self, data):
+        server_id = self.session.query(ServerTable).filter(ServerTable.name == data['server_name']).first()
+        metric = self.session.query(ServerMetricTable).filter(ServerMetricTable.server_id == server_id.id).first()
+
+        metric.value = data['value']
+        metric.updated_at = data['updatedat']
+
+        self.session.add(metric)
+
+        self.session.commit()
 
 
 class PostgresConnector:
