@@ -13,8 +13,11 @@ from .aggregator import AggregatorCallback
 
 
 class ZabbixLoginError(Exception):
-    def __init__(self, msg):
-        super().__init__(msg)
+    pass
+
+
+class ZabbixNoConnectionError(Exception):
+    pass
 
 
 class ServersPool:
@@ -105,10 +108,10 @@ class ZabbixServer:
             raise ZabbixNoConnectionError()
 
         results = dict()
-        for host in self.hosts.items():
-            parameters['hostids'] = host[0]
+        for hostid, host in self.hosts.items():
+            parameters['hostids'] = hostid
             try:
-                results[host[1]] = self.connection.item.get(parameters)
+                results[host] = self.connection.item.get(parameters)
             except:
                 # Suppress stack trace from this exception as it logs
                 # many not so useful information.
@@ -119,7 +122,8 @@ class ZabbixServer:
 
                 # Remove the host from results.
                 # Returning None avoids it raising KeyError.
-                results.pop(host[1], None)
+                # Is it necessary?
+                results.pop(host, None)
                 self._ok = False
 
                 raise
