@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.6aggregator_test
+#!/usr/bin/env python3.6
 
 
 import unittest
@@ -14,7 +14,7 @@ class TestZabbixServer(unittest.TestCase):
         self.login = "login"
         self.password = "password"
         self.zabbix_server = ZabbixServer(self.url, self.login, self.password)
-        
+
         self.hosts = hosts = {'hostid_1': 'host_1', 'hostid_2': 'host_2'}
         self.parameters = parameters = {'parameter_1': 'value_1'}
 
