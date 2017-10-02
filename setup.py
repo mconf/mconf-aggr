@@ -19,6 +19,6 @@ setup(
    author_email="kmyokoyama@inf.ufrgs.br",
    url="https://github.com/mconftec/mconf-aggr",
    packages=["mconf_aggr"],
-   install_requires=["psycopg2", "zabbix-api", "sphinx"],
+   install_requires=["psycopg2", "zabbix-api", "sphinx", "sqlalchemy"],
    test_suite="tests"
 )
