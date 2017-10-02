@@ -33,10 +33,14 @@ class ServersPool:
 
     def remove_server(self, server):
         self.logger.info("Removing server {} from server pool.".format(server))
-        self.servers.remove(server)
+        try:
+            self.servers.remove(server)
+        except:
+            self.logger.warn("Invalid server {} to remove.".format(server))
 
     def connect(self):
         self.logger.info("Connecting to servers.")
+        failed_servers = []
         for server in self.servers:
             try:
                 server.connect()
@@ -45,7 +49,10 @@ class ServersPool:
                     "Login to server {} has failed. Removing it from server pool." \
                     .format(server)
                 )
-                self.remove_server(server)
+                failed_servers.append(server)
+
+        for failed_server in failed_servers:
+            self.remove_server(failed_server)
 
     def close(self):
         self.logger.info("Closing server pool.")
