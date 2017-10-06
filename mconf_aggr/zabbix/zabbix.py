@@ -12,8 +12,8 @@ from urllib.parse import urlsplit
 import psycopg2 as pg
 import zabbix_api as api
 
-from . import cfg
-from .aggregator import AggregatorCallback
+from mconf_aggr import cfg
+from mconf_aggr.aggregator import AggregatorCallback
 
 
 class ZabbixLoginError(Exception):

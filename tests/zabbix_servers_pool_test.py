@@ -6,7 +6,7 @@ import unittest
 import unittest.mock as mock
 
 import zabbix_api
-from mconf_aggr.zabbix import ServersPool, ZabbixLoginError, ZabbixNoConnectionError
+from mconf_aggr.zabbix.zabbix import ServersPool, ZabbixLoginError, ZabbixNoConnectionError
 
 
 class TestServersPool(unittest.TestCase):
