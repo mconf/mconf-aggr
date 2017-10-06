@@ -1,3 +1,21 @@
+alabaster==0.7.10
+Babel==2.5.1
+certifi==2017.7.27.1
+chardet==3.0.4
+docutils==0.14
+idna==2.6
+imagesize==0.7.1
+Jinja2==2.9.6
+MarkupSafe==1.0
+-e git+git@github.com:kmyokoyama/mconf-aggr.git@1dc46b7f14a0c837480b167f420c6917c88cd86f#egg=mconf_aggr
+psycopg2==2.7.3.1
+Pygments==2.2.0
+pytz==2017.2
+requests==2.18.4
+six==1.11.0
+snowballstemmer==1.2.1
 Sphinx==1.6.4
+sphinxcontrib-websupport==1.0.1
 SQLAlchemy==1.2.0b2
+urllib3==1.22
 zabbix-api==0.5.3
