@@ -17,8 +17,11 @@ from .aggregator import AggregatorCallback
 
 
 class ZabbixLoginError(Exception):
-    def __init__(self, msg):
-        super().__init__(msg)
+    pass
+
+
+class ZabbixNoConnectionError(Exception):
+    pass
 
 
 class ServersPool:
@@ -34,10 +37,14 @@ class ServersPool:
 
     def remove_server(self, server):
         self.logger.info("Removing server {} from server pool.".format(server))
-        self.servers.remove(server)
+        try:
+            self.servers.remove(server)
+        except:
+            self.logger.warn("Invalid server {} to remove.".format(server))
 
     def connect(self):
         self.logger.info("Connecting to servers.")
+        failed_servers = []
         for server in self.servers:
             try:
                 server.connect()
@@ -46,7 +53,10 @@ class ServersPool:
                     "Login to server {} has failed. Removing it from server pool." \
                     .format(server)
                 )
-                self.remove_server(server)
+                failed_servers.append(server)
+
+        for failed_server in failed_servers:
+            self.remove_server(failed_server)
 
     def close(self):
         self.logger.info("Closing server pool.")
@@ -109,10 +119,10 @@ class ZabbixServer:
             raise ZabbixNoConnectionError()
 
         results = dict()
-        for host in self.hosts.items():
-            parameters['hostids'] = host[0]
+        for hostid, host in self.hosts.items():
+            parameters['hostids'] = hostid
             try:
-                results[host[1]] = self.connection.item.get(parameters)
+                results[host] = self.connection.item.get(parameters)
             except:
                 # Suppress stack trace from this exception as it logs
                 # many not so useful information.
@@ -123,7 +133,8 @@ class ZabbixServer:
 
                 # Remove the host from results.
                 # Returning None avoids it raising KeyError.
-                results.pop(host[1], None)
+                # Is it necessary?
+                results.pop(host, None)
                 self._ok = False
 
                 raise
