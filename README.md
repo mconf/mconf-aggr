@@ -33,8 +33,9 @@ You should see an output like this:
 Python 3.6.0
 ```
 
-From now on, every Python-related command you use in this project should be
-provided by `pyenv`. For instance, the output for the `which pip3` command should be similar to this:
+From now on, every Python-related command you use in this project (outside a virtual
+environment, see below) should be provided by `pyenv`.
+For instance, the output for the `which pip3` command should be similar to this:
 
 ```
 /home/john_doe/.pyenv/shims/pip3
@@ -46,6 +47,63 @@ this is that calling it explicitly will use the Python version as defined by `py
 If you run the script as an executable, it will check for system's Python
 (possibly with the wrong version).
 
+## Virtual environment
+
+In order to keep Python's version and related libraries under control, we use
+virtual environments as provided by `venv` (builtin module in Python since 3.4).
+It is a pretty common pattern in development with Python.
+
+If you don't have a virtual envoriment directory set yet, create one and
+set `venv` to use it:
+
+```
+$ mkdir venv
+$ python -m venv ./venv
+```
+
+> Note: Remember to add this new directory to `.gitignore`.
+
+To activate the virtual environment, run:
+
+```
+$ source ./venv/bin/activate
+```
+
+It should now include a `(venv)` string at the beginning of your prompt. It
+makes clear that you are running a virtual environment and so all your Python
+commands will be provided by `venv`.
+
+From now on, every Python-related command you use in this project should be
+provided by `venv`. For instance, the output for the `which pip3` command should be similar to this:
+
+```
+/home/john_doe/myproject/venv/bin/pip3
+```
+
+When running a script in the project, call Python explicitly as in `python main.py`.
+**Do not** make the script executable and then call it directly. The reason for
+this is that calling it explicitly will use the Python version as defined by `venv` as expected.
+If you run the script as an executable, it will check for system's Python
+(possibly with the wrong version).
+
+To deactivate the session, simply run:
+
+```
+$ deactivate
+```
+
+To save the current dependencies, run:
+
+```
+$ pip freeze > requirements.txt
+```
+
+To install the packages needed for development, run:
+
+```
+$ pip install -r requirements.txt
+```
+
 ## Dependencies
 
 We are currently using the following third-party packages:
@@ -53,6 +111,7 @@ We are currently using the following third-party packages:
 * `psycopg2` version 2.7.3.1 or later ([official site](http://initd.org/psycopg/))
 * `zabbix-api` ([GitHub repository](https://github.com/gescheit/scripts/tree/master/zabbix))
 * `sphinx` version 1.6.3 or later ([official site](http://www.sphinx-doc.org/en/stable/))
+* `sqlalchemy` version 1.2.0b2 or later ([official site](https://www.sqlalchemy.org/))
 
 They can be easily installed with:
 
@@ -60,6 +119,7 @@ They can be easily installed with:
 $ pip3 install psycopg2
 $ pip3 install zabbix-api
 $ pip3 install sphinx
+$ pip3 install sqlalchemy
 ```
 
 To check if the installation ran successfuly, try to import them
@@ -69,6 +129,7 @@ To check if the installation ran successfuly, try to import them
 $ python -c "import psycopg2"
 $ python -c "import zabbix_api"
 $ python -c "import sphinx"
+$ python -c "import sqlalchemy"
 ```
 
 It should run successfuly.
