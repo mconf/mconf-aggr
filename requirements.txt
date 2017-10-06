@@ -1,0 +1,3 @@
+Sphinx==1.6.4
+SQLAlchemy==1.2.0b2
+zabbix-api==0.5.3
