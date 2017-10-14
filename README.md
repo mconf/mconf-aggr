@@ -171,21 +171,29 @@ to find the `mconf_aggr` package.
 ## Testing
 
 We use the standard `unittest` package to run tests. All tests go in the
-`tests/` directory.
-
-For further information about `unittest`, check
-[unittest's official documentation](https://docs.python.org/3/library/unittest.html).
+`tests/` directory with the filename pattern `*_test.py`. The main script for
+tests is `tests.py` in the project's root directory and its configuration
+file is `config/tests.json`.
 
 > Note: After making any modifications in the package, please, run the
 corresponding (all would be still better) tests.
 
+For further information about `unittest`, check
+[unittest's official documentation](https://docs.python.org/3/library/unittest.html).
+
 ### Running individual tests
 
-To run the unit tests, we simply call `unittest` on a test file in the
-`tests/` directory.
+If you want to test, say `aggregator_test.py`, you have two approaches:
 
-For instance, if you want to test `aggregator_test.py`, run
-(from the project's root directory):
+* You can run individual tests by passing the test filename (_with_ extension) to
+the `tests.py` script as follows:
+
+```
+$ python tests.py aggregator_test.py
+```
+
+* Alternatively, you can simply call `unittest` on the test file in the
+`tests/` directory.
 
 ```
 $ python -m unittest tests/aggregator_test.py
@@ -193,31 +201,32 @@ $ python -m unittest tests/aggregator_test.py
 
 ### Running test suites
 
-You can run multiple test modules, known as _test suite_, through
-the `test_suites.py` script. Test suites are intended to group together tests
+You can also run multiple test modules, known as _test suite_, through
+the `tests.py` script. Test suites are intended to group together tests
 that are related to each other, for instance, by functionality.
 
 In order to create a new test suite, add the test
 suite name and a list of existing modules (from `tests/`) in the `test_suites`
-field of `config_tests.json`.
+field of `config/tests.json`.
 
-For example, to run the test suite _aggregator_, do (from `tests/` directory):
+For example, to run the test suite _aggregator_, do:
 
 ```
-$ python test_suites.py aggregator
+$ python tests.py aggregator
 ```
 
 ### Running all tests
 
+To run all tests, you also have two approaches:
 
-The recommended way to run all test files in `tests/` is by calling `test_suites.py`
-with no arguments:
+* The recommended way to run all test files in `tests/` is by calling the
+`tests.py` script with no arguments:
 
 ```
-$ python test_suites.py
+$ python tests.py
 ```
 
-As said in [Setup.py](#setup.py), you can also run all tests in
+* Alternatively, as said in [Setup.py](#setup.py), you can also run all tests in
 the `tests/` directory by running:
 
 ```
