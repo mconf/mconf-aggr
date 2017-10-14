@@ -1,6 +1,8 @@
 import json
 import importlib
 import logging
+import re
+import os
 import sys
 import unittest
 
@@ -9,6 +11,17 @@ def print_help():
     print("""usage: python test_suites.py [suite]\n
 suite\tA suite in 'test_suites' of config_tests.json.
 If no suite is supplied, all is implied.""")
+
+
+TEST_FILE_RE = re.compile(r'\w+\_test\.py$')
+
+
+def is_test_file(file):
+    return os.path.isfile(file) and TEST_FILE_RE.match(file)
+
+
+def remove_ext(file):
+    return os.path.splitext(file)[0]
 
 
 if __name__ == '__main__':
@@ -26,7 +39,8 @@ if __name__ == '__main__':
     suite = unittest.TestSuite()
 
     if len(sys.argv) == 1:
-        modules = {module for modules in test_suites.values() for module in modules}
+        modules = [remove_ext(name) for name in os.listdir(os.getcwd())
+                                    if is_test_file(name)]
     elif len(sys.argv) == 2:
         test_suite = str(sys.argv[1])
         try:

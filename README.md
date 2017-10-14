@@ -176,6 +176,9 @@ We use the standard `unittest` package to run tests. All tests go in the
 For further information about `unittest`, check
 [unittest's official documentation](https://docs.python.org/3/library/unittest.html).
 
+> Note: After making any modifications in the package, please, run the
+corresponding (all would be still better) tests.
+
 ### Running individual tests
 
 To run the unit tests, we simply call `unittest` on a test file in the
@@ -187,9 +190,6 @@ For instance, if you want to test `aggregator_test.py`, run
 ```
 $ python -m unittest tests/aggregator_test.py
 ```
-
-After making any modifications in the package, please, run the
-corresponding (all would be still better) tests.
 
 ### Running test suites
 
@@ -207,16 +207,18 @@ For example, to run the test suite _aggregator_, do (from `tests/` directory):
 $ python test_suites.py aggregator
 ```
 
-To run all test suites in `config_tests.json`, just suppress the test suite:
+### Running all tests
+
+
+The recommended way to run all test files in `tests/` is by calling `test_suites.py`
+with no arguments:
 
 ```
 $ python test_suites.py
 ```
 
-### Running all tests with `setup.py`
-
-As said in [Setup.py](#setup.py), you can run all tests in the `tests/` directory
-by running:
+As said in [Setup.py](#setup.py), you can also run all tests in
+the `tests/` directory by running:
 
 ```
 $ python setup.py test
