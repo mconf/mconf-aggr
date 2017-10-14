@@ -1,6 +1,3 @@
-#!/usr/bin/env python3.6
-
-
 import threading
 import unittest
 import unittest.mock as mock

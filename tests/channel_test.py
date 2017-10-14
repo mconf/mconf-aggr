@@ -1,6 +1,3 @@
-#!/usr/bin/env python3.6
-
-
 import unittest
 
 from mconf_aggr.aggregator import Channel
