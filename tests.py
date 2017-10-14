@@ -12,7 +12,8 @@ def print_help():
 suite\tA suite in 'test_suites' of config_tests.json.
 If no suite is supplied, all is implied.""")
 
-
+CONFIG_DIR = "config"
+TESTS_DIR = "tests"
 TEST_FILE_RE = re.compile(r'\w+\_test\.py$')
 
 
@@ -25,7 +26,8 @@ def remove_ext(file):
 
 
 if __name__ == '__main__':
-    with open("config_tests.json", 'r') as f:
+    config_file = os.path.join(CONFIG_DIR, "tests.json")
+    with open(config_file, 'r') as f:
         config = json.load(f)
 
     verbosity = config['verbosity']
@@ -37,6 +39,8 @@ if __name__ == '__main__':
 
     loader = unittest.TestLoader()
     suite = unittest.TestSuite()
+
+    os.chdir(TESTS_DIR)
 
     if len(sys.argv) == 1:
         modules = [remove_ext(name) for name in os.listdir(os.getcwd())
@@ -56,6 +60,7 @@ if __name__ == '__main__':
         sys.exit(1)
 
     for module in modules:
+        module = TESTS_DIR + "." + module
         try:
             importlib.import_module(module)
         except ModuleNotFoundError as err:
