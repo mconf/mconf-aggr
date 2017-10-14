@@ -42,12 +42,15 @@ if __name__ == '__main__':
         modules = [remove_ext(name) for name in os.listdir(os.getcwd())
                                     if is_test_file(name)]
     elif len(sys.argv) == 2:
-        test_suite = str(sys.argv[1])
-        try:
-            modules = test_suites[test_suite]
-        except KeyError as err:
-            print("Invalid suite '{}'.".format(test_suite))
-            sys.exit(1)
+        if is_test_file(sys.argv[1]):
+            modules = [remove_ext(sys.argv[1])]
+        else:
+            test_suite = str(sys.argv[1])
+            try:
+                modules = test_suites[test_suite]
+            except KeyError as err:
+                print("Invalid suite '{}'.".format(test_suite))
+                sys.exit(1)
     else:
         print_help()
         sys.exit(1)
