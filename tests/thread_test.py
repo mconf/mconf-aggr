@@ -35,8 +35,7 @@ class TestPublisher(unittest.TestCase):
         data  = "data"
         self.thread.subscriber.channel.publish(data)
 
-        import time
-        time.sleep(1)
+        self.thread.exit()
 
         try:
             self.thread.subscriber.callback.run.assert_called_with(data)
