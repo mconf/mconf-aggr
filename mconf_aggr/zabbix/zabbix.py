@@ -1,6 +1,21 @@
 #!/usr/bin/env python3.6
 
 
+"""This module provides all classes related to the Zabbix API.
+
+It provides the means to fetch data from the Zabbix API on a Zabbix server
+that monitors possibly many server hosts and to persist that data into a
+database (but it is extensible for other storage systems).
+
+A client of this modules needs only to know its two main classes, namely,
+`ZabbixDataReader` and `ZabbixDataWriter`. The former is responsible for
+gathering data from a set of Zabbix servers (data regarding their monitored
+hosts) and the latter for storing it.
+
+The `ZabbixDataWriter` concrete class implements the `AggregatorCallback`
+interface.
+"""
+
 import logging
 import sqlalchemy as sa
 from contextlib import contextmanager
@@ -17,14 +32,20 @@ from mconf_aggr.aggregator import AggregatorCallback
 
 
 class ZabbixLoginError(Exception):
+    """Raised if logging in Zabbix server fails.
+    """
     pass
 
 
 class ZabbixNoConnectionError(Exception):
+    """Raised if there is not currently active connection to Zabbix server.
+    """
     pass
 
 
 class ServersPool:
+    """This class represents the set of Zabbix servers from which data is fetch.
+    """
     def __init__(self, logger=None):
         self.servers = []
         self.logger = logger or logging.getLogger(__name__)
