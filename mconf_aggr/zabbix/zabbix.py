@@ -15,47 +15,47 @@ hosts) and the latter for storing it.
 The `ZabbixDataWriter` concrete class implements the `AggregatorCallback`
 interface.
 
-The data is retrieved by `ZabbixDataReader` from Zabbix servers in the format:
+The data is retrieved by `ZabbixDataReader` from Zabbix servers in the format::
 
-{
-    "server_1":
     {
-        "host_1":
-        [
-            {"name": "item_1", "lastvalue": "lastvalue_1", ...},
-            {"name": "item_2", "lastvalue": "lastvalue_2", ...},
+        "server_1":
+        {
+            "host_1":
+            [
+                {"name": "item_1", "lastvalue": "lastvalue_1", ...},
+                {"name": "item_2", "lastvalue": "lastvalue_2", ...},
+                ...
+            ],
+            "host_2":
+            [
+                ...
+            ]
+        },
+        "server_2":
+        {
             ...
-        ],
-        "host_2":
-        [
-            ...
-        ]
-    },
-    "server_2":
-    {
-        ...
+        }
     }
-}
 
-The data is transformed in this format to be processed by `ZabbixDataWriter`:
+The data is transformed in this format to be processed by `ZabbixDataWriter`::
 
-[
-    {
-        "zabbix_server": "server_1",
-        "server_name": "host_1",
-        "metric": "item_1",
-        "value": "lastvalue_1",
-        "updated_at": "<now>"
-    },
-    {
-        "zabbix_server": "server_1",
-        "server_name": "host_1",
-        "metric": "item_2",
-        "value": "lastvalue_2",
-        "updated_at": "<now>"
-    },
-    ...
-]
+    [
+        {
+            "zabbix_server": "server_1",
+            "server_name": "host_1",
+            "metric": "item_1",
+            "value": "lastvalue_1",
+            "updated_at": "<now>"
+        },
+        {
+            "zabbix_server": "server_1",
+            "server_name": "host_1",
+            "metric": "item_2",
+            "value": "lastvalue_2",
+            "updated_at": "<now>"
+        },
+        ...
+    ]
 
 This format must be known and respected by the various components that deal
 with data inside this module. However, this format does not need to be known

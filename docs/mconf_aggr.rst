@@ -1,5 +1,5 @@
 mconf-aggr modules
-**********************
+******************
 
 cfg module
 ----------
@@ -8,7 +8,13 @@ cfg module
     :members:
 
 aggregator module
-----------------------
+-----------------
 
 .. automodule:: aggregator
+    :members:
+
+zabbix module
+-------------
+
+.. automodule:: zabbix.zabbix
     :members:
