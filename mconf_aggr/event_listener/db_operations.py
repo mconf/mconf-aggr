@@ -6,11 +6,11 @@ from sqlalchemy import (BigInteger,
                         Boolean,
                         create_engine,
                         Column,
+                        DateTime,
                         ForeignKey,
                         Integer,
                         JSON,
-                        String,
-                        Time)
+                        String)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (backref,
                             sessionmaker,
@@ -30,8 +30,8 @@ class Meetings(Base):
      meeting_event_id = Column(Integer, ForeignKey("MeetingsEvents.id"))
      meeting_event = relationship("MeetingsEvents", backref=backref("Meetings", uselist=False))
 
-     created_at = Column(Time, default=datetime.datetime.now)
-     updated_at = Column(Time, onupdate=datetime.datetime.now)
+     created_at = Column(DateTime, default=datetime.datetime.now)
+     updated_at = Column(DateTime, onupdate=datetime.datetime.now)
 
      running = Column(Boolean)
      has_user_joined = Column(Boolean)
@@ -68,8 +68,8 @@ class MeetingsEvents(Base):
     server_guid = Column(String)
     server_url = Column(String)
 
-    created_at = Column(Time, default=datetime.datetime.now)
-    updated_at = Column(Time, onupdate=datetime.datetime.now)
+    created_at = Column(DateTime, default=datetime.datetime.now)
+    updated_at = Column(DateTime, onupdate=datetime.datetime.now)
 
     external_meeting_id = Column(String) #index?
     internal_meeting_id = Column(String, unique=True) #index?
@@ -125,8 +125,8 @@ class Recordings(Base):
 
     id = Column(Integer, primary_key=True)
 
-    createdAt = Column(Time, default=datetime.datetime.now)
-    updatedAt = Column(Time, onupdate=datetime.datetime.now)
+    createdAt = Column(DateTime, default=datetime.datetime.now)
+    updatedAt = Column(DateTime, onupdate=datetime.datetime.now)
 
     name = Column(String)
     status = Column(String)
@@ -177,8 +177,8 @@ class UsersEvents(Base):
 
     meeting_event = relationship("MeetingsEvents")
 
-    created_at = Column(Time, default=datetime.datetime.now)
-    updated_at = Column(Time, onupdate=datetime.datetime.now)
+    created_at = Column(DateTime, default=datetime.datetime.now)
+    updated_at = Column(DateTime, onupdate=datetime.datetime.now)
 
     name = Column(String)
     role = Column(String)
