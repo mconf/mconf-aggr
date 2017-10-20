@@ -1,27 +1,25 @@
-import falcon
-import db as DB
 import json
-import DBMapping
+
+import falcon
+
+import db_operations
+import db_mapping
 
 # Falcon follows the REST architectural style, meaning (among
 # other things) that you think in terms of resources and state
 # transitions, which map to HTTP verbs.
 class HookListener(object):
     def on_post(self, req, resp):
+        # TODO: Treat when receiving multiple events on POST
         """Handles POST requests"""
+        # Parse received message
+        post_data = req.stream.read()
+        posted_obj = json.loads(post_data)
+        # Map message
+        mapped_msg = db_mapping.map_message_to_db(posted_obj)
+        # Update DB
+        db_operations.db_event_selector(posted_obj,mapped_msg)
 
-        postData = req.stream.read()
-        postedObj = json.loads(postData)
-
-        mappedMsg = DBMapping.mapMessageToDB(postedObj)
-        DB.dbEventSelector(postedObj,mappedMsg)
-
-
-        # TODO: MAP RECEIVED MESSAGE TO INTERNAL OBJ
-        # TODO: Check which DB event to call
-        # TODO: Test with webhooks app
-        # TODO: See proper structure
-        # TODO: Set to work together with aggr app
         resp.status = falcon.HTTP_200  # This is the default status
 
 # falcon.API instances are callable WSGI apps
