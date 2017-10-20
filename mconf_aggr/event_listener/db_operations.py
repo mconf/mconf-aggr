@@ -125,8 +125,8 @@ class Recordings(Base):
 
     id = Column(Integer, primary_key=True)
 
-    createdAt = Column(DateTime, default=datetime.datetime.now)
-    updatedAt = Column(DateTime, onupdate=datetime.datetime.now)
+    created_at = Column(DateTime, default=datetime.datetime.now)
+    updated_at = Column(DateTime, onupdate=datetime.datetime.now)
 
     name = Column(String)
     status = Column(String)
