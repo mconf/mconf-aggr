@@ -193,6 +193,10 @@ class Channel:
         It simply puts None in the queue to signal that the channel must be
         closed.
         """
+        self.logger.debug("Closing channel {}.".format(self.name))
+        if not self.empty():
+            self.logger.warn("There are data not consumed in channel {}." \
+                .format(self.name))
         self.queue.put(None)
 
     def publish(self, data):
@@ -227,7 +231,8 @@ class Channel:
         data = self.queue.get()
 
         if data is None:
-            self.logger.debug("Closing channel {}.".format(self.name))
+            self.logger.debug("Signaling closing channel {} for clients \
+                waiting for data.".format(self.name))
             raise ChannelClosed()
 
         self.queue.task_done()
