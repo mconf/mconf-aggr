@@ -30,8 +30,8 @@ class Meetings(Base):
      meeting_event_id = Column(Integer, ForeignKey("MeetingsEvents.id"))
      meeting_event = relationship("MeetingsEvents", backref=backref("Meetings", uselist=False))
 
-     created_at = Column(Time, default=datetime.datetime.now())
-     updated_at = Column(Time, onupdate=datetime.datetime.now())
+     created_at = Column(Time, default=datetime.datetime.now)
+     updated_at = Column(Time, onupdate=datetime.datetime.now)
 
      running = Column(Boolean)
      has_user_joined = Column(Boolean)
@@ -68,8 +68,8 @@ class MeetingsEvents(Base):
     server_guid = Column(String)
     server_url = Column(String)
 
-    created_at = Column(Time, default=datetime.datetime.now())
-    updated_at = Column(Time, onupdate=datetime.datetime.now())
+    created_at = Column(Time, default=datetime.datetime.now)
+    updated_at = Column(Time, onupdate=datetime.datetime.now)
 
     external_meeting_id = Column(String) #index?
     internal_meeting_id = Column(String, unique=True) #index?
@@ -125,8 +125,8 @@ class Recordings(Base):
 
     id = Column(Integer, primary_key=True)
 
-    createdAt = Column(Time, default=datetime.datetime.now())
-    updatedAt = Column(Time, onupdate=datetime.datetime.now())
+    createdAt = Column(Time, default=datetime.datetime.now)
+    updatedAt = Column(Time, onupdate=datetime.datetime.now)
 
     name = Column(String)
     status = Column(String)
@@ -177,8 +177,8 @@ class UsersEvents(Base):
 
     meeting_event = relationship("MeetingsEvents")
 
-    created_at = Column(Time, default=datetime.datetime.now())
-    updated_at = Column(Time, onupdate=datetime.datetime.now())
+    created_at = Column(Time, default=datetime.datetime.now)
+    updated_at = Column(Time, onupdate=datetime.datetime.now)
 
     name = Column(String)
     role = Column(String)
@@ -298,16 +298,16 @@ def user_join(webhook_msg, db_msg):
     except:
         session.rollback()
 
-def meeting_ended(map):
+def meeting_ended(mapped_msg):
     #TODO: When ending a meeting with users still inside, should update their leaveTime
     global session
-    int_id = map["internal_meeting_id"]
+    int_id = mapped_msg["internal_meeting_id"]
 
     # MeetingsEvents table to be updated
     meeting_evt_table = session.query(MeetingsEvents).\
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
     meeting_evt_table = session.query(MeetingsEvents).get(meeting_evt_table.id)
-    meeting_evt_table.end_time= map["end_time"]
+    meeting_evt_table.end_time= mapped_msg["end_time"]
 
     # Meeting table to be updated
     meeting_table = session.query(Meetings).\
@@ -362,10 +362,10 @@ def user_left(webhook_msg,db_msg):
     except:
         session.rollback()
 
-def user_info_update(map):
+def user_info_update(mapped_msg):
     global session
-    user_id = map["internal_user_id"]
-    int_id = map["internal_meeting_id"]
+    user_id = mapped_msg["internal_user_id"]
+    int_id = mapped_msg["internal_meeting_id"]
 
     # Meeting table to be updated
     meeting_table = session.query(Meetings).\
@@ -374,7 +374,6 @@ def user_info_update(map):
     meeting_table = session.query(Meetings).get(meeting_table.id)
 
     def update_attendees(base, update):
-        print("map", update)
         if(update["event_name"] == "user-audio-voice-enabled"):
             attr = "hasJoinedVoice"
             value = True
@@ -398,7 +397,7 @@ def user_info_update(map):
                 attendee[attr] = value
         return base
 
-    meeting_table.attendees = update_attendees(meeting_table.attendees, map)
+    meeting_table.attendees = update_attendees(meeting_table.attendees, mapped_msg)
     meeting_table.participant_count = len(meeting_table.attendees)
     meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"] == "MODERATOR")
     meeting_table.listening_only = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
@@ -411,9 +410,9 @@ def user_info_update(map):
     except:
         session.rollback()
 
-def rap_events(map):
+def rap_events(mapped_msg):
     global session
-    int_id = map["internal_meeting_id"]
+    int_id = mapped_msg["internal_meeting_id"]
     # Check if table already exists
     try:
         record_table = session.query(Recordings.id).\
@@ -422,7 +421,7 @@ def rap_events(map):
         record_table = session.query(Recordings).get(record_table.id)
     except:
         # Create table
-        record_table = Recordings(**map)
+        record_table = Recordings(**mapped_msg)
         record_table.participants = int(session.query(UsersEvents.id).\
                                     join(MeetingsEvents).\
                                     filter(MeetingsEvents.internal_meeting_id == int_id).\
@@ -433,24 +432,24 @@ def rap_events(map):
         record_table = session.query(Recordings).get(record_table.id)
     finally:
         # When publish end update most of information
-        if(map["current_step"] == "rap-publish-ended"):
-            record_table.name = map["name"]
-            record_table.is_breakout = map["is_breakout"]
-            record_table.start_time = map["start_time"]
-            record_table.end_time = map["end_time"]
-            record_table.size = map["size"]
-            record_table.raw_size = map["raw_size"]
-            record_table.meta_data = map["meta_data"]
-            record_table.playback = map["playback"]
-            record_table.download = map["download"]
-        record_table.current_step = map["current_step"]
+        if(mapped_msg["current_step"] == "rap-publish-ended"):
+            record_table.name = mapped_msg["name"]
+            record_table.is_breakout = mapped_msg["is_breakout"]
+            record_table.start_time = mapped_msg["start_time"]
+            record_table.end_time = mapped_msg["end_time"]
+            record_table.size = mapped_msg["size"]
+            record_table.raw_size = mapped_msg["raw_size"]
+            record_table.meta_data = mapped_msg["meta_data"]
+            record_table.playback = mapped_msg["playback"]
+            record_table.download = mapped_msg["download"]
+        record_table.current_step = mapped_msg["current_step"]
 
         # Update status based on event
-        if(map["current_step"] == "rap-process-started"):
+        if(mapped_msg["current_step"] == "rap-process-started"):
             record_table.status= "processing"
-        elif(map["current_step"] == "rap-process-ended"):
+        elif(mapped_msg["current_step"] == "rap-process-ended"):
             record_table.status= "processed"
-        elif(map["current_step"] == "rap-publish-ended"):
+        elif(mapped_msg["current_step"] == "rap-publish-ended"):
             record_table.status= "published"
             record_table.published= True
         # treat "unpublished" and "deleted" when webhooks are emitting those events
@@ -460,20 +459,20 @@ def rap_events(map):
         except:
             session.rollback()
 
-def db_event_selector(post, map):
+def db_event_selector(post, mapped_msg):
     id = post["data"]["id"]
     if(id == "meeting-created"):
-        create_meeting(map)
+        create_meeting(mapped_msg)
     elif(id == "user-joined"):
-        user_join(post,map)
+        user_join(post,mapped_msg)
     elif(id == "user-left"):
-        user_left(post,map)
+        user_left(post,mapped_msg)
     elif(id == "meeting-ended"):
-        meeting_ended(map)
+        meeting_ended(mapped_msg)
     elif(id in ["user-audio-listen-only-enabled","user-audio-listen-only-disabled",
                 "user-audio-voice-enabled","user-audio-voice-disabled",
                 "user-cam-broadcast-start","user-cam-broadcast-end"]):
-        user_info_update(map)
+        user_info_update(mapped_msg)
     elif(id in ["rap-archive-started","rap-archive-ended",
                 "rap-sanity-started","rap-sanity-ended",
                 "rap-post-archive-started","rap-post-archive-ended",
@@ -481,4 +480,4 @@ def db_event_selector(post, map):
                 "rap-post-process-started","rap-post-process-ended",
                 "rap-publish-started","rap-publish-ended",
                 "rap-post-publish-started","rap-post-publish-ended"]):
-        rap_events(map)
+        rap_events(mapped_msg)
