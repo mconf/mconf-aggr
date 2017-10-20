@@ -103,7 +103,7 @@ class ServersPool:
         Parameters
         ----------
         logger : logging.Logger
-            If not supplied, it will instatiated a new logger from __name__.
+            If not supplied, it will instantiate a new logger from __name__.
         """
         self.servers = []
         self.logger = logger or logging.getLogger(__name__)
@@ -191,7 +191,7 @@ class ZabbixServer:
         password : str
             The password that is used to authenticate to the server API.
         logger : logging.Logger
-            If not supplied, it will instatiated a new logger from __name__.
+            If not supplied, it will instantiate a new logger from __name__.
         """
         self.url = url # It must start with http(s)://.
         self.login = login
@@ -467,7 +467,7 @@ class PostgresConnector:
         database_uri : str
             URI of the PostgreSQL database instance either local or remote.
         logger : logging.Logger
-            If not supplied, it will instatiated a new logger from __name__.
+            If not supplied, it will instantiate a new logger from __name__.
         """
         self.database_uri = database_uri
         self.logger = logger or logging.getLogger(__name__)
@@ -522,7 +522,7 @@ class ZabbixDataWriter(AggregatorCallback):
         connector : Database connector (driver).
             If not supplied, it will instantiate a new `PostgresConnector`.
         logger : logging.Logger
-            If not supplied, it will instatiated a new logger from __name__.
+            If not supplied, it will instantiate a new logger from __name__.
         """
         self.connector = connector or PostgresConnector()
         self.logger = logger or logging.getLogger(__name__)
@@ -593,7 +593,7 @@ class ZabbixDataReader():
         pool : ServersPool
             Pool of Zabbix servers from which it retrieves data.
         logger : logging.Logger
-            If not supplied, it will instatiated a new logger from __name__.
+            If not supplied, it will instantiate a new logger from __name__.
         """
         super().__init__()
         self.pool = None
