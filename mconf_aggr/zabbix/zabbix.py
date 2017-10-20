@@ -9,6 +9,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from urllib.parse import urlsplit
 
+import cachetools
 import psycopg2 as pg
 import zabbix_api as api
 
@@ -194,25 +195,42 @@ class ServerTable(Base):
         return "<Server(name={})".format(self.name)
 
 
+server_cache = cachetools.TTLCache(maxsize=20, ttl=9)
+
+
 class ServerMetricDAO:
-    def __init__(self, session):
+    def __init__(self, session, logger=None):
         self.session = session
+        self.logger = logger or logging.getLogger(__name__)
 
     def update(self, data):
-        server_id = self.session.query(ServerTable).filter(ServerTable.name == data['server_name']).first()
+        if data['server_name'] not in server_cache:
+            self.logger.debug("Server {} not found in server cache."\
+                .format(data['server_name']))
+
+            server_id = self.session.query(ServerTable) \
+                            .filter(ServerTable.name == data['server_name'])\
+                            .first().id
+
+            server_cache[data['server_name']] = server_id
+        else:
+            self.logger.debug("Server {} found in server cache."\
+                .format(data['server_name']))
+
+            server_id = server_cache[data['server_name']]
 
         metric = self.session.query(ServerMetricTable) \
-                             .filter(ServerMetricTable.server_id == server_id.id,
+                             .filter(ServerMetricTable.server_id == server_id,
                                      ServerMetricTable.name == data['metric']) \
                              .first()
 
         if metric:
             metric.value = data['value']
             metric.zabbix_server = data['zabbix_server']
-            metric.updated_at = data['updatedat']
+            metric.updated_at = data['updated_at']
         else:
-            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            metric = ServerMetricTable(server_id=server_id.id,
+            now = datetime.now()
+            metric = ServerMetricTable(server_id=server_id,
                                        zabbix_server=data['zabbix_server'],
                                        name=data['metric'],
                                        value=data['value'],
@@ -223,9 +241,9 @@ class ServerMetricDAO:
 
 
 class PostgresConnector:
-    def __init__(self, database_uri, logger=None):
-        self.config = cfg.config['database'] # Change it.
-        self.database_uri = database_uri
+    def __init__(self, database_uri=None, logger=None):
+        self.config = cfg.config['database']
+        self.database_uri = database_uri or self._build_uri()
         self.logger = logger or logging.getLogger(__name__)
 
     def connect(self):
@@ -240,6 +258,12 @@ class PostgresConnector:
     def update(self, data):
         with session_scope() as session:
             ServerMetricDAO(session).update(data)
+
+    def _build_uri(self):
+        return "postgresql+psycopg2://{}:{}@{}/{}".format(self.config['user'],
+                                                          self.config['password'],
+                                                          self.config['host'],
+                                                          self.config['database'])
 
 
 class ZabbixDataWriter(AggregatorCallback):
@@ -263,7 +287,7 @@ class ZabbixDataWriter(AggregatorCallback):
 
 def make_data(data):
     metrics = []
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    now = datetime.now()
 
     return [{'zabbix_server': server,
              'server_name': host,
