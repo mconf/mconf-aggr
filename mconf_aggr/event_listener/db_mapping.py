@@ -24,30 +24,30 @@ def map_message_to_db(message):
 def map_end_message(message):
     # Transform meeting-ended message to MeetingEventsObj
     return {
-        "externalMeetingId" : message["data"]["attributes"]["meeting"]["external-meeting-id"],
-        "internalMeetingId" : message["data"]["attributes"]["meeting"]["internal-meeting-id"],
-        "endTime": message["data"]["attributes"]["event"]["ts"]
+        "external_meeting_id" : message["data"]["attributes"]["meeting"]["external-meeting-id"],
+        "internal_meeting_id" : message["data"]["attributes"]["meeting"]["internal-meeting-id"],
+        "end_time": message["data"]["attributes"]["event"]["ts"]
     }
 
 def map_create_message(message):
     # Transform meeting-created  message to MeetingEventsObj
     return {
-        "externalMeetingId" : message["data"]["attributes"]["meeting"]["external-meeting-id"],
-        "internalMeetingId" : message["data"]["attributes"]["meeting"]["internal-meeting-id"],
+        "external_meeting_id" : message["data"]["attributes"]["meeting"]["external-meeting-id"],
+        "internal_meeting_id" : message["data"]["attributes"]["meeting"]["internal-meeting-id"],
         "name" :  message["data"]["attributes"]["meeting"]["name"],
-        "createTime" :  message["data"]["attributes"]["meeting"]["create-time"],
-        "createDate" : message["data"]["attributes"]["meeting"]["create-date"],
-        "voiceBridge" : message["data"]["attributes"]["meeting"]["voice-conf"],
-        "dialNumber" : message["data"]["attributes"]["meeting"]["dial-number"],
-        "attendeePW" : message["data"]["attributes"]["meeting"]["viewer-pass"],
-        "moderatorPW" : message["data"]["attributes"]["meeting"]["moderator-pass"],
+        "create_time" :  message["data"]["attributes"]["meeting"]["create-time"],
+        "create_date" : message["data"]["attributes"]["meeting"]["create-date"],
+        "voice_bridge" : message["data"]["attributes"]["meeting"]["voice-conf"],
+        "dial_number" : message["data"]["attributes"]["meeting"]["dial-number"],
+        "attendee_pw" : message["data"]["attributes"]["meeting"]["viewer-pass"],
+        "moderator_pw" : message["data"]["attributes"]["meeting"]["moderator-pass"],
         "duration" : message["data"]["attributes"]["meeting"]["duration"],
         "recording" : message["data"]["attributes"]["meeting"]["record"],
         # different event from webhooks? "hasBeenForciblyEnded" :
         # "startTime" :
         # "endTime" : need to define when to update start/end time and which timestamp
-        "maxUsers" : message["data"]["attributes"]["meeting"]["max-users"],
-        "isBreakout" : message["data"]["attributes"]["meeting"]["is-breakout"],
+        "max_users" : message["data"]["attributes"]["meeting"]["max-users"],
+        "is_breakout" : message["data"]["attributes"]["meeting"]["is-breakout"],
         "meta_data" : message["data"]["attributes"]["meeting"]["metadata"]
     }
 
@@ -57,26 +57,26 @@ def map_user_join_left(message, id):
         return {
             "name" : message["data"]["attributes"]["user"]["name"],
             "role" : message["data"]["attributes"]["user"]["role"],
-            "internalUserId" : message["data"]["attributes"]["user"]["internal-user-id"],
-            "externalUserId" : message["data"]["attributes"]["user"]["external-user-id"],
-            "joinTime" : message["data"]["attributes"]["event"]["ts"]
+            "internal_user_id" : message["data"]["attributes"]["user"]["internal-user-id"],
+            "external_user_id" : message["data"]["attributes"]["user"]["external-user-id"],
+            "join_time" : message["data"]["attributes"]["event"]["ts"]
             # "meta_data" : message["data"]["attributes"]["user"]["metadata"]
         }
     elif(id == "user-left"):
         return {
-            "internalUserId" : message["data"]["attributes"]["user"]["internal-user-id"],
-            "externalUserId" : message["data"]["attributes"]["user"]["external-user-id"],
-            "leaveTime" : message["data"]["attributes"]["event"]["ts"]
+            "internal_user_id" : message["data"]["attributes"]["user"]["internal-user-id"],
+            "external_user_id" : message["data"]["attributes"]["user"]["external-user-id"],
+            "leave_time" : message["data"]["attributes"]["event"]["ts"]
             # "meta_data" : message["data"]["attributes"]["user"]["metadata"]
         }
 
 def map_user_events(message, id):
     return {
-        "internalUserId" : message["data"]["attributes"]["user"]["internal-user-id"],
-        "externalUserId" : message["data"]["attributes"]["user"]["external-user-id"],
-        "externalMeetingId" : message["data"]["attributes"]["meeting"]["external-meeting-id"],
-        "internalMeetingId" : message["data"]["attributes"]["meeting"]["internal-meeting-id"],
-        "eventName" : id
+        "internal_user_id" : message["data"]["attributes"]["user"]["internal-user-id"],
+        "external_user_id" : message["data"]["attributes"]["user"]["external-user-id"],
+        "external_meeting_id" : message["data"]["attributes"]["meeting"]["external-meeting-id"],
+        "internal_meeting_id" : message["data"]["attributes"]["meeting"]["internal-meeting-id"],
+        "event_name" : id
     }
 
 def map_rap_events(message, id):
@@ -84,21 +84,21 @@ def map_rap_events(message, id):
     if(id == "rap-publish-ended"):
         return {
             "name" : message["data"]["attributes"]["recording"]["name"],
-            "isBreakout" : message["data"]["attributes"]["recording"]["isBreakout"],
-            "startTime" : message["data"]["attributes"]["recording"]["startTime"],
-            "endTime" : message["data"]["attributes"]["recording"]["endTime"],
+            "is_breakout" : message["data"]["attributes"]["recording"]["isBreakout"],
+            "start_time" : message["data"]["attributes"]["recording"]["startTime"],
+            "end_time" : message["data"]["attributes"]["recording"]["endTime"],
             "size" : message["data"]["attributes"]["recording"]["size"],
-            "rawSize" : message["data"]["attributes"]["recording"]["rawSize"],
+            "raw_size" : message["data"]["attributes"]["recording"]["rawSize"],
             "meta_data" : message["data"]["attributes"]["recording"]["metadata"],
             "playback" : message["data"]["attributes"]["recording"]["playback"],
             "download" : message["data"]["attributes"]["recording"]["download"],
-            "externalMeetingId" : message["data"]["attributes"]["meeting"]["external-meeting-id"],
-            "internalMeetingId" : message["data"]["attributes"]["meeting"]["internal-meeting-id"],
-            "currentStep" : id
+            "external_meeting_id" : message["data"]["attributes"]["meeting"]["external-meeting-id"],
+            "internal_meeting_id" : message["data"]["attributes"]["meeting"]["internal-meeting-id"],
+            "current_step" : id
         }
     else:
         return {
-            "externalMeetingId" : message["data"]["attributes"]["meeting"]["external-meeting-id"],
-            "internalMeetingId" : message["data"]["attributes"]["meeting"]["internal-meeting-id"],
-            "currentStep" : id
+            "external_meeting_id" : message["data"]["attributes"]["meeting"]["external-meeting-id"],
+            "internal_meeting_id" : message["data"]["attributes"]["meeting"]["internal-meeting-id"],
+            "current_step" : id
         }

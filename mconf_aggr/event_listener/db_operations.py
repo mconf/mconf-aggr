@@ -6,11 +6,11 @@ from sqlalchemy import (BigInteger,
                         Boolean,
                         create_engine,
                         Column,
-                        DateTime,
                         ForeignKey,
                         Integer,
                         JSON,
-                        String)
+                        String,
+                        Time)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import (backref,
                             sessionmaker,
@@ -27,33 +27,33 @@ class Meetings(Base):
      __tablename__ = "Meetings"
 
      id = Column(Integer, primary_key=True)
-     meetingEvent_id = Column(Integer, ForeignKey("MeetingsEvents.id"))
-     meetingEvent = relationship("MeetingsEvents", backref=backref("Meetings", uselist=False))
+     meeting_event_id = Column(Integer, ForeignKey("MeetingsEvents.id"))
+     meeting_event = relationship("MeetingsEvents", backref=backref("Meetings", uselist=False))
 
-     createdAt = Column(String, default=datetime.datetime.now().strftime("%y-%m-%d %H:%M"))
-     updatedAt = Column(String, onupdate=datetime.datetime.now().strftime("%y-%m-%d %H:%M"))
+     created_at = Column(Time, default=datetime.datetime.now())
+     updated_at = Column(Time, onupdate=datetime.datetime.now())
 
      running = Column(Boolean)
-     hasUserJoined = Column(Boolean)
-     participantCount = Column(Integer)
-     listenerCount = Column(Integer)
-     voiceParticipantCount = Column(Integer)
-     videoCount = Column(Integer)
-     moderatorCount = Column(Integer)
+     has_user_joined = Column(Boolean)
+     participant_count = Column(Integer)
+     listener_count = Column(Integer)
+     voice_participant_count = Column(Integer)
+     video_count = Column(Integer)
+     moderator_count = Column(Integer)
      attendees = Column(JSON)
 
      def __repr__(self):
          return ("<Meetings("
                 + "id=" + str(self.id)
-                + ", createdAt=" + str(self.createdAt)
-                + ", updatedAt=" + str(self.updatedAt)
+                + ", created_at=" + str(self.created_at)
+                + ", updated_at=" + str(self.updated_at)
                 + ", running=" + str(self.running)
-                + ", hasUserJoined=" + str(self.hasUserJoined)
-                + ", participantCount=" + str(self.participantCount)
-                + ", listenerCount=" + str(self.listenerCount)
-                + ", voiceParticipantCount=" + str(self.voiceParticipantCount)
-                + ", videoCount=" + str(self.videoCount)
-                + ", moderatorCount=" + str(self.moderatorCount)
+                + ", has_user_joined=" + str(self.has_user_joined)
+                + ", participant_count=" + str(self.participant_count)
+                + ", listener_count=" + str(self.listener_count)
+                + ", voice_participant_count=" + str(self.voice_participant_count)
+                + ", video_count=" + str(self.video_count)
+                + ", moderator_count=" + str(self.moderator_count)
                 + ", attendees=" + str(self. attendees)
                 + ")>")
 
@@ -63,59 +63,59 @@ class MeetingsEvents(Base):
 
     id = Column(Integer, primary_key=True)
 
-    sharedSecretGuid = Column(String) #index?
-    sharedSecretName = Column(String)
-    serverGuid = Column(String)
-    serverUrl = Column(String)
+    shared_secret_guid = Column(String) #index?
+    shared_secret_name = Column(String)
+    server_guid = Column(String)
+    server_url = Column(String)
 
-    createdAt = Column(String, default=datetime.datetime.now().strftime("%y-%m-%d %H:%M"))
-    updatedAt = Column(String, onupdate=datetime.datetime.now().strftime("%y-%m-%d %H:%M"))
+    created_at = Column(Time, default=datetime.datetime.now())
+    updated_at = Column(Time, onupdate=datetime.datetime.now())
 
-    externalMeetingId = Column(String) #index?
-    internalMeetingId = Column(String, unique=True) #index?
+    external_meeting_id = Column(String) #index?
+    internal_meeting_id = Column(String, unique=True) #index?
     name = Column(String)
-    createTime = Column(BigInteger)
-    createDate = Column(String)
-    voiceBridge = Column(Integer)
-    dialNumber = Column(String)
-    attendeePW = Column(String)
-    moderatorPW = Column(String)
+    create_time = Column(BigInteger)
+    create_date = Column(String)
+    voice_bridge = Column(Integer)
+    dial_number = Column(String)
+    attendee_pw = Column(String)
+    moderator_pw = Column(String)
     duration = Column(Integer)
     recording = Column(Boolean)
-    hasBeenForciblyEnded = Column(Boolean)
-    startTime = Column(BigInteger)
-    endTime = Column(BigInteger)
-    maxUsers = Column(Integer)
-    isBreakout = Column(Boolean)
-    uniqueUsers = Column(Integer)
+    has_been_forcibly_ended = Column(Boolean)
+    start_time = Column(BigInteger)
+    end_time = Column(BigInteger)
+    max_users = Column(Integer)
+    is_breakout = Column(Boolean)
+    unique_users = Column(Integer)
     meta_data = Column(JSON)
 
     def __repr__(self):
         return ("<MeetingsEvents("
                 + "id=" + str(self.id)
-                + ", sharedSecretGuid=" + str(self. sharedSecretGuid)
-                + ", sharedSecretName=" + str(self. sharedSecretName)
-                + ", serverGuid=" + str(self. serverGuid)
-                + ", serverUrl=" + str(self.serverUrl)
-                + ", createdAt=" + str(self.createdAt)
-                + ", updatedAt=" + str(self.updatedAt)
-                + ", externalMeetingId=" + str(self.externalMeetingId)
-                + ", internalMeetingId=" + str(self.internalMeetingId)
+                + ", shared_secret_guid=" + str(self. shared_secret_guid)
+                + ", shared_secret_name=" + str(self. shared_secret_name)
+                + ", server_guid=" + str(self. server_guid)
+                + ", server_url=" + str(self.server_url)
+                + ", created_at=" + str(self.created_at)
+                + ", updated_at=" + str(self.updated_at)
+                + ", external_meeting_id=" + str(self.external_meeting_id)
+                + ", internal_meeting_id=" + str(self.internal_meeting_id)
                 + ", name=" + str(self.name)
-                + ", createTime=" + str(self.createTime)
-                + ", createDate=" + str(self.createDate)
-                + ", voiceBridge=" + str(self.voiceBridge)
-                + ", dialNumber=" + str(self.dialNumber)
-                + ", attendeePW=" + str(self.attendeePW)
-                + ", moderatorPW=" + str(self.moderatorPW)
+                + ", create_time=" + str(self.create_time)
+                + ", create_date=" + str(self.create_date)
+                + ", voice_bridge=" + str(self.voice_bridge)
+                + ", dial_number=" + str(self.dial_number)
+                + ", attendee_pw=" + str(self.attendee_pw)
+                + ", moderator_pw=" + str(self.moderator_pw)
                 + ", duration=" + str(self.duration)
                 + ", recording=" + str(self.recording)
-                + ", hasBeenForciblyEnded=" + str(self.hasBeenForciblyEnded)
-                + ", startTime=" + str(self.startTime)
-                + ", endTime=" + str(self.endTime)
-                + ", maxUsers=" + str(self.maxUsers)
-                + ", isBreakout=" + str(self.isBreakout)
-                + ", uniqueUsers=" + str(self.uniqueUsers)
+                + ", has_been_forcibly_ended=" + str(self.has_been_forcibly_ended)
+                + ", start_time=" + str(self.start_time)
+                + ", end_time=" + str(self.end_time)
+                + ", max_users=" + str(self.max_users)
+                + ", is_breakout=" + str(self.is_breakout)
+                + ", unique_users=" + str(self.unique_users)
                 + ", meta_data=" + str(self.meta_data)
                 + ")>")
 
@@ -125,22 +125,22 @@ class Recordings(Base):
 
     id = Column(Integer, primary_key=True)
 
-    createdAt = Column(String, default=datetime.datetime.now().strftime("%y-%m-%d %H:%M"))
-    updatedAt = Column(String, onupdate=datetime.datetime.now().strftime("%y-%m-%d %H:%M"))
+    createdAt = Column(Time, default=datetime.datetime.now())
+    updatedAt = Column(Time, onupdate=datetime.datetime.now())
 
     name = Column(String)
     status = Column(String)
-    internalMeetingId = Column(String, unique=True)
-    externalMeetingId = Column(String)
+    internal_meeting_id = Column(String, unique=True)
+    external_meeting_id = Column(String)
 
-    isBreakout = Column(Boolean)
+    is_breakout = Column(Boolean)
     published = Column(Boolean)
-    startTime = Column(BigInteger)
-    endTime = Column(BigInteger)
+    start_time = Column(BigInteger)
+    end_time = Column(BigInteger)
     participants = Column(Integer)
     size = Column(BigInteger)
-    rawSize = Column(BigInteger)
-    currentStep = Column(String)
+    raw_size = Column(BigInteger)
+    current_step = Column(String)
 
     meta_data = Column(JSON)
     playback = Column(JSON)
@@ -149,20 +149,20 @@ class Recordings(Base):
     def __repr__(self):
      return ("<Recordings("
             + "id=" + str(self.id)
-            + ", createdAt=" + str(self.createdAt)
-            + ", updatedAt=" + str(self.updatedAt)
+            + ", created_at=" + str(self.created_at)
+            + ", updated_at=" + str(self.updated_at)
             + ", name=" + str(self.name)
             + ", status=" + str(self.status)
-            + ", isBreakout=" + str(self.isBreakout)
+            + ", is_breakout=" + str(self.is_breakout)
             + ", published=" + str(self.published)
-            + ", startTime=" + str(self.startTime)
-            + ", endTime=" + str(self.endTime)
+            + ", start_time=" + str(self.start_time)
+            + ", end_time=" + str(self.end_time)
             + ", participants=" + str(self.participants)
             + ", size=" + str(self.size)
-            + ", rawSize=" + str(self.rawSize)
-            + ", currentStep=" + str(self.currentStep)
-            + ", internalMeetingId=" + str(self.internalMeetingId)
-            + ", externalMeetingId=" + str(self.externalMeetingId)
+            + ", raw_size=" + str(self.raw_size)
+            + ", current_step=" + str(self.current_step)
+            + ", internal_meeting_id=" + str(self.internal_meeting_id)
+            + ", external_meeting_id=" + str(self.external_meeting_id)
             + ", meta_data=" + str(self. meta_data)
             + ", playback=" + str(self. playback)
             + ", download=" + str(self. download)
@@ -173,19 +173,19 @@ class UsersEvents(Base):
     __tablename__ = "UsersEvents"
 
     id = Column(Integer, primary_key=True)
-    meetingEvent_Id = Column(Integer, ForeignKey("MeetingsEvents.id"))
+    meeting_event_Id = Column(Integer, ForeignKey("MeetingsEvents.id"))
 
-    meetingEvent = relationship("MeetingsEvents")
+    meeting_event = relationship("MeetingsEvents")
 
-    createdAt = Column(String, default=datetime.datetime.now().strftime("%y-%m-%d %H:%M"))
-    updatedAt = Column(String, onupdate=datetime.datetime.now().strftime("%y-%m-%d %H:%M"))
+    created_at = Column(Time, default=datetime.datetime.now())
+    updated_at = Column(Time, onupdate=datetime.datetime.now())
 
     name = Column(String)
     role = Column(String)
-    joinTime = Column(BigInteger)
-    leaveTime = Column(BigInteger)
-    internalUserId = Column(String, unique=True)
-    externalUserId = Column(String)
+    join_time = Column(BigInteger)
+    leave_time = Column(BigInteger)
+    internal_user_id = Column(String, unique=True)
+    external_user_id = Column(String)
 
     meta_data = Column(JSON)
 
@@ -193,14 +193,14 @@ class UsersEvents(Base):
     def __repr__(self):
         return ("<UsersEvents("
                 + "id=" + str(self.id)
-                + ", createdAt=" + str(self.createdAt)
-                + ", updatedAt=" + str(self.updatedAt)
+                + ", created_at=" + str(self.created_at)
+                + ", updated_at=" + str(self.updated_at)
                 + ", name=" + str(self.name)
                 + ", role=" + str(self.role)
-                + ", joinTime=" + str(self.joinTime)
-                + ", leaveTime=" + str(self.leaveTime)
-                + ", internalUserId=" + str(self.internalUserId)
-                + ", externalUserId=" + str(self.externalUserId)
+                + ", join_time=" + str(self.join_time)
+                + ", leave_time=" + str(self.leave_time)
+                + ", internal_user_id=" + str(self.internal_user_id)
+                + ", external_user_id=" + str(self.external_user_id)
                 + ")>")
 
 # This block is likely to be removed after dev stage
@@ -217,20 +217,18 @@ def create_meeting(db_msg):
     # Create MeetingsEvents and Meetings table
     new_meeting_evt = MeetingsEvents(**db_msg)
     new_meeting = Meetings(running=False,
-                           hasUserJoined=False,
-                           participantCount=0,
-                           listenerCount=0,
-                           voiceParticipantCount=0,
-                           videoCount=0,
-                           moderatorCount=0,
+                           has_user_joined=False,
+                           participant_count=0,
+                           listener_count=0,
+                           voice_participant_count=0,
+                           video_count=0,
+                           moderator_count=0,
                            attendees="{}")
-    new_meeting.meetingEvent = new_meeting_evt
+    new_meeting.meeting_event = new_meeting_evt
     session.add(new_meeting)
 
-    try:
-        session.commit()
-    except:
-        session.rollback()
+    session.commit()
+    session.rollback()
 
 def user_join(webhook_msg, db_msg):
     global session
@@ -241,25 +239,25 @@ def user_join(webhook_msg, db_msg):
 
     # Create attendee json for meeting table
     attendee = {
-        "isPresenter" : webhook_msg["data"]["attributes"]["user"]["presenter"],
-        "isListeningOnly" : webhook_msg["data"]["attributes"]["user"]["listening-only"],
-        "hasJoinedVoice" : webhook_msg["data"]["attributes"]["user"]["sharing-mic"],
-        "hasVideo" : webhook_msg["data"]["attributes"]["user"]["stream"],
-        "extUserId" : webhook_msg["data"]["attributes"]["user"]["external-user-id"],
-        "intUserId" : webhook_msg["data"]["attributes"]["user"]["internal-user-id"],
-        "fullName" : webhook_msg["data"]["attributes"]["user"]["name"],
+        "is_presenter" : webhook_msg["data"]["attributes"]["user"]["presenter"],
+        "is_listening_only" : webhook_msg["data"]["attributes"]["user"]["listening-only"],
+        "has_joined_voice" : webhook_msg["data"]["attributes"]["user"]["sharing-mic"],
+        "has_video" : webhook_msg["data"]["attributes"]["user"]["stream"],
+        "ext_user_id" : webhook_msg["data"]["attributes"]["user"]["external-user-id"],
+        "int_user_id" : webhook_msg["data"]["attributes"]["user"]["internal-user-id"],
+        "full_name" : webhook_msg["data"]["attributes"]["user"]["name"],
         "role" : webhook_msg["data"]["attributes"]["user"]["role"]
     }
 
     # Query for MeetingsEvents to link with UsersEvents table
     meeting_evt_table = session.query(MeetingsEvents).\
-                        filter(MeetingsEvents.internalMeetingId.match(int_id)).first()
-    new_user.meetingEvent = meeting_evt_table
+                        filter(MeetingsEvents.internal_meeting_id.match(int_id)).first()
+    new_user.meeting_event = meeting_evt_table
 
     # Meeting table to be updated
     meeting_table = session.query(Meetings).\
-                    join(Meetings.meetingEvent).\
-                    filter(MeetingsEvents.internalMeetingId == int_id).first()
+                    join(Meetings.meeting_event).\
+                    filter(MeetingsEvents.internal_meeting_id == int_id).first()
     meeting_table = session.query(Meetings).get(meeting_table.id)
 
     def attendee_json(base,new):
@@ -270,19 +268,19 @@ def user_join(webhook_msg, db_msg):
         else:
             arr = base
             for elem in arr:
-                if(elem["intUserId"] == new["intUserId"]):
+                if(elem["int_user_id"] == new["int_user_id"]):
                     return arr
             arr.append(new)
             return arr
 
     meeting_table.running = True
-    meeting_table.hasUserJoined = True
+    meeting_table.has_user_joined = True
     meeting_table.attendees = attendee_json(meeting_table.attendees,attendee)
-    meeting_table.participantCount = len(meeting_table.attendees)
-    meeting_table.moderatorCount = sum(1 for a in meeting_table.attendees if a["role"] == "MODERATOR")
-    meeting_table.listenerCount = sum(1 for a in meeting_table.attendees if a["isListeningOnly"])
-    meeting_table.voiceParticipantCount = sum(1 for a in meeting_table.attendees if a["hasJoinedVoice"])
-    meeting_table.videoCount = sum(1 for a in meeting_table.attendees if a["hasVideo"])
+    meeting_table.participant_count = len(meeting_table.attendees)
+    meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"] == "MODERATOR")
+    meeting_table.listener_count = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
+    meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
+    meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
 
     # SQLAlchemy was not considering the attendees array as modified, so it had to be forced
     flag_modified(meeting_table, "attendees")
@@ -293,8 +291,8 @@ def user_join(webhook_msg, db_msg):
         # Update unique users
         meeting_evt_table = session.query(MeetingsEvents).get(meeting_evt_table.id)
         meeting_evt_table.uniqueUsers = int(session.query(UsersEvents.id).\
-                                        join(UsersEvents.meetingEvent).\
-                                        filter(MeetingsEvents.internalMeetingId == int_id).\
+                                        join(UsersEvents.meeting_event).\
+                                        filter(MeetingsEvents.internal_meeting_id == int_id).\
                                         count())
         session.commit()
     except:
@@ -303,18 +301,18 @@ def user_join(webhook_msg, db_msg):
 def meeting_ended(map):
     #TODO: When ending a meeting with users still inside, should update their leaveTime
     global session
-    int_id = map["internalMeetingId"]
+    int_id = map["internal_meeting_id"]
 
     # MeetingsEvents table to be updated
     meeting_evt_table = session.query(MeetingsEvents).\
-                        filter(MeetingsEvents.internalMeetingId == int_id).first()
+                        filter(MeetingsEvents.internal_meeting_id == int_id).first()
     meeting_evt_table = session.query(MeetingsEvents).get(meeting_evt_table.id)
-    meeting_evt_table.endTime= map["endTime"]
+    meeting_evt_table.end_time= map["end_time"]
 
     # Meeting table to be updated
     meeting_table = session.query(Meetings).\
-                    join(Meetings.meetingEvent).\
-                    filter(MeetingsEvents.internalMeetingId == int_id).first()
+                    join(Meetings.meeting_event).\
+                    filter(MeetingsEvents.internal_meeting_id == int_id).first()
     meeting_table = session.query(Meetings).get(meeting_table.id)
     session.delete(meeting_table)
 
@@ -325,36 +323,36 @@ def meeting_ended(map):
 
 def user_left(webhook_msg,db_msg):
     global session
-    user_id = db_msg["internalUserId"]
+    user_id = db_msg["internal_user_id"]
     int_id = webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
 
     # Meeting table to be updated
     meeting_table = session.query(Meetings).\
-                    join(Meetings.meetingEvent).\
-                    filter(MeetingsEvents.internalMeetingId == int_id).first()
+                    join(Meetings.meeting_event).\
+                    filter(MeetingsEvents.internal_meeting_id == int_id).first()
     meeting_table = session.query(Meetings).get(meeting_table.id)
 
     # User table to be updated
     users_table = session.query(UsersEvents).\
-                    filter(UsersEvents.internalUserId == user_id).first()
+                    filter(UsersEvents.internal_user_id == user_id).first()
     users_table = session.query(UsersEvents).get(users_table.id)
 
     # Update UsersEvents table
-    users_table.leaveTime = db_msg["leaveTime"]
+    users_table.leave_time = db_msg["leave_time"]
 
     def remove_attendee(base,remove):
         for idx,attendee in enumerate(base):
-            if(attendee["intUserId"] == remove):
+            if(attendee["int_user_id"] == remove):
                 del base[idx]
         return base
 
     # Update Meetings table
     meeting_table.attendees = remove_attendee(meeting_table.attendees,user_id)
-    meeting_table.participantCount = len(meeting_table.attendees)
-    meeting_table.moderatorCount = sum(1 for a in meeting_table.attendees if a["role"]=="MODERATOR")
-    meeting_table.listenerCount = sum(1 for a in meeting_table.attendees if a["isListeningOnly"])
-    meeting_table.voiceParticipantCount = sum(1 for a in meeting_table.attendees if a["hasJoinedVoice"])
-    meeting_table.videoCount = sum(1 for a in meeting_table.attendees if a["hasVideo"])
+    meeting_table.participant_count = len(meeting_table.attendees)
+    meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"]=="MODERATOR")
+    meeting_table.listener_count = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
+    meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
+    meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
 
     # Mark Meetings.attendees as modified for SQLAlchemy
     flag_modified(meeting_table,"attendees")
@@ -366,46 +364,46 @@ def user_left(webhook_msg,db_msg):
 
 def user_info_update(map):
     global session
-    user_id = map["internalUserId"]
-    int_id = map["internalMeetingId"]
+    user_id = map["internal_user_id"]
+    int_id = map["internal_meeting_id"]
 
     # Meeting table to be updated
     meeting_table = session.query(Meetings).\
-                    join(Meetings.meetingEvent).\
-                    filter(MeetingsEvents.internalMeetingId == int_id).first()
+                    join(Meetings.meeting_event).\
+                    filter(MeetingsEvents.internal_meeting_id == int_id).first()
     meeting_table = session.query(Meetings).get(meeting_table.id)
 
     def update_attendees(base, update):
         print("map", update)
-        if(update["eventName"] == "user-audio-voice-enabled"):
+        if(update["event_name"] == "user-audio-voice-enabled"):
             attr = "hasJoinedVoice"
             value = True
-        elif(update["eventName"] == "user-audio-voice-disabled"):
+        elif(update["event_name"] == "user-audio-voice-disabled"):
             attr = "hasJoinedVoice"
             value = False
-        elif(update["eventName"] == "user-audio-listen-only-enabled"):
+        elif(update["event_name"] == "user-audio-listen-only-enabled"):
             attr = "isListeningOnly"
             value = True
-        elif(update["eventName"] == "user-audio-listen-only-disabled"):
+        elif(update["event_name"] == "user-audio-listen-only-disabled"):
             attr = "isListeningOnly"
             value = False
-        elif(update["eventName"] == "user-cam-broadcast-start"):
+        elif(update["event_name"] == "user-cam-broadcast-start"):
             attr = "hasVideo"
             value = True
-        elif(update["eventName"] == "user-cam-broadcast-end"):
+        elif(update["event_name"] == "user-cam-broadcast-end"):
             attr = "hasVideo"
             value = False
         for attendee in base:
-            if(attendee["intUserId"] == user_id):
+            if(attendee["int_user_id"] == user_id):
                 attendee[attr] = value
         return base
 
     meeting_table.attendees = update_attendees(meeting_table.attendees, map)
-    meeting_table.participantCount = len(meeting_table.attendees)
-    meeting_table.moderatorCount = sum(1 for a in meeting_table.attendees if a["role"] == "MODERATOR")
-    meeting_table.listenerCount = sum(1 for a in meeting_table.attendees if a["isListeningOnly"])
-    meeting_table.voiceParticipantCount = sum(1 for a in meeting_table.attendees if a["hasJoinedVoice"])
-    meeting_table.videoCount = sum(1 for a in meeting_table.attendees if a["hasVideo"])
+    meeting_table.participant_count = len(meeting_table.attendees)
+    meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"] == "MODERATOR")
+    meeting_table.listening_only = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
+    meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
+    meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
     flag_modified(meeting_table,"attendees")
 
     try:
@@ -415,11 +413,11 @@ def user_info_update(map):
 
 def rap_events(map):
     global session
-    int_id = map["internalMeetingId"]
+    int_id = map["internal_meeting_id"]
     # Check if table already exists
     try:
         record_table = session.query(Recordings.id).\
-                        filter(Recordings.internalMeetingId == int_id).first()
+                        filter(Recordings.internal_meeting_id == int_id).first()
         # Check if there's record_table
         record_table = session.query(Recordings).get(record_table.id)
     except:
@@ -427,32 +425,32 @@ def rap_events(map):
         record_table = Recordings(**map)
         record_table.participants = int(session.query(UsersEvents.id).\
                                     join(MeetingsEvents).\
-                                    filter(MeetingsEvents.internalMeetingId == int_id).\
+                                    filter(MeetingsEvents.internal_meeting_id == int_id).\
                                     count())
         session.add(record_table)
         record_table = session.query(Recordings.id).\
-                        filter(Recordings.internalMeetingId == int_id).first()
+                        filter(Recordings.internal_meeting_id == int_id).first()
         record_table = session.query(Recordings).get(record_table.id)
     finally:
         # When publish end update most of information
-        if(map["currentStep"] == "rap-publish-ended"):
-            record_table.name= map["name"]
-            record_table.isBreakout= map["isBreakout"]
-            record_table.startTime= map["startTime"]
-            record_table.endTime= map["endTime"]
-            record_table.size= map["size"]
-            record_table.rawSize= map["rawSize"]
-            record_table.meta_data= map["meta_data"]
-            record_table.playback= map["playback"]
-            record_table.download= map["download"]
-        record_table.currentStep= map["currentStep"]
+        if(map["current_step"] == "rap-publish-ended"):
+            record_table.name = map["name"]
+            record_table.is_breakout = map["is_breakout"]
+            record_table.start_time = map["start_time"]
+            record_table.end_time = map["end_time"]
+            record_table.size = map["size"]
+            record_table.raw_size = map["raw_size"]
+            record_table.meta_data = map["meta_data"]
+            record_table.playback = map["playback"]
+            record_table.download = map["download"]
+        record_table.current_step = map["current_step"]
 
         # Update status based on event
-        if(map["currentStep"] == "rap-process-started"):
+        if(map["current_step"] == "rap-process-started"):
             record_table.status= "processing"
-        elif(map["currentStep"] == "rap-process-ended"):
+        elif(map["current_step"] == "rap-process-ended"):
             record_table.status= "processed"
-        elif(map["currentStep"] == "rap-publish-ended"):
+        elif(map["current_step"] == "rap-publish-ended"):
             record_table.status= "published"
             record_table.published= True
         # treat "unpublished" and "deleted" when webhooks are emitting those events
