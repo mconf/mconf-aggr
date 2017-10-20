@@ -117,7 +117,7 @@ class SubscriberThread(threading.Thread):
         subscriber : Subscriber
             A Subscriber with channel and callback objetcs.
         logger : logging.Logger
-            If not supplied, it will instatiated a new logger from __name__.
+            If not supplied, it will instantiate a new logger from __name__.
         """
         threading.Thread.__init__(self, group=group, target=target,
                                   name=name, daemon=daemon)
@@ -181,7 +181,7 @@ class Channel:
             The maximum size of the channel. If it is zero or negative, the
             channel accepts any number of elements.
         logger : logging.Logger
-            If not supplied, it will instatiated a new logger from __name__.
+            If not supplied, it will instantiate a new logger from __name__.
         """
         self.name = name
         self.queue = queue.Queue(maxsize=maxsize)
@@ -277,7 +277,7 @@ class Publisher:
         Parameters
         ----------
         logger : logging.Logger
-            If not supplied, it will instatiated a new logger from __name__.
+            If not supplied, it will instantiate a new logger from __name__.
         """
         self.channels = None
         self.logger = logger or logging.getLogger(__name__)
@@ -331,7 +331,7 @@ class Aggregator:
     publisher : Publisher
         Data publisher that effectively publishes data to subscribers.
     logger : logging.Logger
-        If not supplied, it will instatiated a new logger from __name__.
+        If not supplied, it will instantiate a new logger from __name__.
     """
     def __init__(self, logger=None):
         self.channels = {}
