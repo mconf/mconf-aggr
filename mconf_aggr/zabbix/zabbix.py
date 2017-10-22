@@ -352,10 +352,10 @@ class ServerMetricTable(Base):
         Name of the metric.
     value : Column of type String
         Value of the metric.
-    created_at : Column of type Time
-        Time of creation the metric.
-    updated_at : Column of type Time
-        Last time the metric was updated.
+    created_at : Column of type DateTime
+        Datetime of creation the metric.
+    updated_at : Column of type DateTime
+        Last datetime the metric was updated.
     """
     __tablename__ = "server_metrics"
 
@@ -364,8 +364,8 @@ class ServerMetricTable(Base):
     zabbix_server = sa.Column(sa.String)
     name = sa.Column(sa.String)
     value = sa.Column(sa.String)
-    created_at = sa.Column(sa.Time)
-    updated_at = sa.Column(sa.Time)
+    created_at = sa.Column(sa.DateTime)
+    updated_at = sa.Column(sa.DateTime)
 
     def __repr__(self):
         return "<ServerMetric(name={}, value={}m, updated_at={})" \
