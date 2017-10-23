@@ -70,6 +70,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from urllib.parse import urlsplit
 
+import cachetools
 import psycopg2 as pg
 import zabbix_api as api
 
@@ -351,10 +352,10 @@ class ServerMetricTable(Base):
         Name of the metric.
     value : Column of type String
         Value of the metric.
-    created_at : Column of type Time
-        Time of creation the metric.
-    updated_at : Column of type Time
-        Last time the metric was updated.
+    created_at : Column of type DateTime
+        Datetime of creation the metric.
+    updated_at : Column of type DateTime
+        Last datetime the metric was updated.
     """
     __tablename__ = "server_metrics"
 
@@ -363,8 +364,8 @@ class ServerMetricTable(Base):
     zabbix_server = sa.Column(sa.String)
     name = sa.Column(sa.String)
     value = sa.Column(sa.String)
-    created_at = sa.Column(sa.Time)
-    updated_at = sa.Column(sa.Time)
+    created_at = sa.Column(sa.DateTime)
+    updated_at = sa.Column(sa.DateTime)
 
     def __repr__(self):
         return "<ServerMetric(name={}, value={}m, updated_at={})" \
@@ -393,20 +394,26 @@ class ServerTable(Base):
         return "<Server(name={})".format(self.name)
 
 
+server_cache = cachetools.TTLCache(maxsize=20, ttl=9)
+
+
 class ServerMetricDAO:
     """Data Access Object of server metrics.
 
     It provides the main method to update rows in the server_metrics table.
     """
-    def __init__(self, session):
+    def __init__(self, session, logger=None):
         """Constructor of the ServerMetricDAO.
 
         Parameters
         ----------
         session : sqlalchemy.Session
             Session used by SQLAlchemy to interact with the database.
+        logger : logging.Logger
+            If not supplied, it will instantiate a new logger from __name__.
         """
         self.session = session
+        self.logger = logger or logging.getLogger(__name__)
 
     def update(self, data):
         """Update the server_metrics table with some new data.
@@ -425,20 +432,33 @@ class ServerMetricDAO:
             provided the data, the name of the metric being updated and its
             current value.
         """
-        server_id = self.session.query(ServerTable).filter(ServerTable.name == data['server_name']).first()
+        if data['server_name'] not in server_cache:
+            self.logger.debug("Server {} not found in server cache."\
+                .format(data['server_name']))
+
+            server_id = self.session.query(ServerTable) \
+                            .filter(ServerTable.name == data['server_name'])\
+                            .first().id
+
+            server_cache[data['server_name']] = server_id
+        else:
+            self.logger.debug("Server {} found in server cache."\
+                .format(data['server_name']))
+
+            server_id = server_cache[data['server_name']]
 
         metric = self.session.query(ServerMetricTable) \
-                             .filter(ServerMetricTable.server_id == server_id.id,
+                             .filter(ServerMetricTable.server_id == server_id,
                                      ServerMetricTable.name == data['metric']) \
                              .first()
 
         if metric:
             metric.value = data['value']
             metric.zabbix_server = data['zabbix_server']
-            metric.updated_at = data['updatedat']
+            metric.updated_at = data['updated_at']
         else:
-            now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-            metric = ServerMetricTable(server_id=server_id.id,
+            now = datetime.now()
+            metric = ServerMetricTable(server_id=server_id,
                                        zabbix_server=data['zabbix_server'],
                                        name=data['metric'],
                                        value=data['value'],
@@ -459,7 +479,7 @@ class PostgresConnector:
     When finished, one must call `close()` to definitely close the connection
     to the database (currently it does nothing).
     """
-    def __init__(self, database_uri, logger=None):
+    def __init__(self, database_uri=None, logger=None):
         """Constructor of the PostgresConnector.
 
         Parameters
@@ -469,7 +489,8 @@ class PostgresConnector:
         logger : logging.Logger
             If not supplied, it will instantiate a new logger from __name__.
         """
-        self.database_uri = database_uri
+        self.config = cfg.config['database']
+        self.database_uri = database_uri or self._build_uri()
         self.logger = logger or logging.getLogger(__name__)
 
     def connect(self):
@@ -500,6 +521,12 @@ class PostgresConnector:
         """
         with session_scope() as session:
             ServerMetricDAO(session).update(data)
+
+    def _build_uri(self):
+        return "postgresql+psycopg2://{}:{}@{}/{}".format(self.config['user'],
+                                                          self.config['password'],
+                                                          self.config['host'],
+                                                          self.config['database'])
 
 
 class ZabbixDataWriter(AggregatorCallback):
@@ -567,7 +594,7 @@ def make_data(data):
         A list of metrics in the format discussed in the module's documentation.
     """
     metrics = []
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    now = datetime.now()
 
     return [{'zabbix_server': server,
              'server_name': host,

@@ -95,7 +95,7 @@
             "propagate": false
         },
 
-        "mconf_aggr.zabbix": {
+        "mconf_aggr.zabbix.zabbix": {
             "level": "DEBUG",
             "handlers": [
                 "zabbix_debug_file_handler",
