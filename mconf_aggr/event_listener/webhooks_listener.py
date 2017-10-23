@@ -15,14 +15,14 @@ class HookListener(object):
         # TODO: Validade checksum
         # Parse received message
         post_data = req.stream.read()
+        # Message will be in format event={data}&timestamp=BigInteger and encoded
         decoded_data = urllib.unquote_plus(post_data)
         decoded_data = decoded_data.split('&')
-
+        # Set {data} in event={data} to events variable
         events = decoded_data[0].split('=',1)[1]
         timestamp = decoded_data[1].split('=',1)[1]
 
         posted_obj = json.loads(events)
-        print posted_obj
         for obj in posted_obj:
             # Map message
             mapped_msg = db_mapping.map_message_to_db(obj)
@@ -39,4 +39,5 @@ app = falcon.API()
 hook = HookListener()
 
 # hook will handle all requests to the '/' URL path
+# TODO: When setting add_route to Reader.setup, get route from config file
 app.add_route('/', hook)

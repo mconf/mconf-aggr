@@ -1,3 +1,4 @@
+# Receive parsed message from webhooks as dict
 def map_message_to_db(message):
     #print(message)
     id = message["data"]["id"]
@@ -71,6 +72,7 @@ def map_user_join_left(message, id):
         }
 
 def map_user_events(message, id):
+    # Transform general user events to UsersEventsObj
     return {
         "internal_user_id" : message["data"]["attributes"]["user"]["internal-user-id"],
         "external_user_id" : message["data"]["attributes"]["user"]["external-user-id"],
@@ -80,7 +82,7 @@ def map_user_events(message, id):
     }
 
 def map_rap_events(message, id):
-    # Transorm rap- messages to RecordingsOb
+    # Transform rap-messages to RecordingsObj
     if(id == "rap-publish-ended"):
         return {
             "name" : message["data"]["attributes"]["recording"]["name"],
