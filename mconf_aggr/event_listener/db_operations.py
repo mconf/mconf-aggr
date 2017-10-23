@@ -2,6 +2,7 @@ import datetime
 import json
 
 import sqlalchemy
+from contextlib import contextmanager
 from sqlalchemy import (BigInteger,
                         Boolean,
                         create_engine,
@@ -481,3 +482,63 @@ def db_event_selector(post, mapped_msg):
                 "rap-publish-started","rap-publish-ended",
                 "rap-post-publish-started","rap-post-publish-ended"]):
         rap_events(mapped_msg)
+
+@contextmanager
+def session_scope():
+    """Provide a transactional scope around a series of operations.
+    """
+    session = Session()
+    try:
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+class ClassThatWillUpdate: # can't figure out a name
+    def __init__(self, session):
+        self.session = session
+    def update(self, data):
+        # code to update tables here
+
+
+class PostgresConnector:
+
+    def __init__(self, database_uri=None):
+        self.config = cfg.config['database']
+        self.database_uri = database_uri or self._build_uri()
+
+    def connect(self):
+        engine = sa.create_engine(self.database_uri)
+        Session.configure(bind=engine)
+
+    def close(self):
+        pass
+
+    def update(self, data):
+        with session_scope() as session:
+            ClassThatWillUpdate(session).update(data)
+
+    def _build_uri(self):
+        return "postgresql://{}:{}@{}/{}".format(self.config['user'],
+                                                 self.config['password'],
+                                                 self.config['host'],
+                                                 self.config['database'])
+
+
+class DataWritter(AggregatorCallback):
+
+    def __init__(self, connector=None):
+        self.connector = connector or PostgresConnector()
+
+    def setup(self):
+        self.connector.connect()
+
+    def teardown(self):
+        self.connector.close()
+
+    def run(self, data):
+        self.connector.update(data)
