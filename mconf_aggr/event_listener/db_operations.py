@@ -206,282 +206,10 @@ class UsersEvents(Base):
 
 # This block is likely to be removed after dev stage
 #Base.metadata.drop_all(engine)
-Base.metadata.create_all(engine)
+#Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
-session = Session()
 
 # TODO: Lock tables when performing SELECTs/UPDATEs
-
-def create_meeting(db_msg):
-    global sessions
-
-    # Create MeetingsEvents and Meetings table
-    new_meeting_evt = MeetingsEvents(**db_msg)
-    new_meeting = Meetings(running=False,
-                           has_user_joined=False,
-                           participant_count=0,
-                           listener_count=0,
-                           voice_participant_count=0,
-                           video_count=0,
-                           moderator_count=0,
-                           attendees="{}")
-    new_meeting.meeting_event = new_meeting_evt
-    session.add(new_meeting)
-
-    session.commit()
-    session.rollback()
-
-def user_join(webhook_msg, db_msg):
-    global session
-    int_id = webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
-
-    # Create user table
-    new_user = UsersEvents(**db_msg)
-
-    # Create attendee json for meeting table
-    attendee = {
-        "is_presenter" : webhook_msg["data"]["attributes"]["user"]["presenter"],
-        "is_listening_only" : webhook_msg["data"]["attributes"]["user"]["listening-only"],
-        "has_joined_voice" : webhook_msg["data"]["attributes"]["user"]["sharing-mic"],
-        "has_video" : webhook_msg["data"]["attributes"]["user"]["stream"],
-        "ext_user_id" : webhook_msg["data"]["attributes"]["user"]["external-user-id"],
-        "int_user_id" : webhook_msg["data"]["attributes"]["user"]["internal-user-id"],
-        "full_name" : webhook_msg["data"]["attributes"]["user"]["name"],
-        "role" : webhook_msg["data"]["attributes"]["user"]["role"]
-    }
-
-    # Query for MeetingsEvents to link with UsersEvents table
-    meeting_evt_table = session.query(MeetingsEvents).\
-                        filter(MeetingsEvents.internal_meeting_id.match(int_id)).first()
-    new_user.meeting_event = meeting_evt_table
-
-    # Meeting table to be updated
-    meeting_table = session.query(Meetings).\
-                    join(Meetings.meeting_event).\
-                    filter(MeetingsEvents.internal_meeting_id == int_id).first()
-    meeting_table = session.query(Meetings).get(meeting_table.id)
-
-    def attendee_json(base,new):
-        if(base == "{}"):
-            arr = []
-            arr.append(new)
-            return arr
-        else:
-            arr = base
-            for elem in arr:
-                if(elem["int_user_id"] == new["int_user_id"]):
-                    return arr
-            arr.append(new)
-            return arr
-
-    meeting_table.running = True
-    meeting_table.has_user_joined = True
-    meeting_table.attendees = attendee_json(meeting_table.attendees,attendee)
-    meeting_table.participant_count = len(meeting_table.attendees)
-    meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"] == "MODERATOR")
-    meeting_table.listener_count = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
-    meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
-    meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
-
-    # SQLAlchemy was not considering the attendees array as modified, so it had to be forced
-    flag_modified(meeting_table, "attendees")
-
-    try:
-        session.add(new_user)
-
-        # Update unique users
-        meeting_evt_table = session.query(MeetingsEvents).get(meeting_evt_table.id)
-        meeting_evt_table.uniqueUsers = int(session.query(UsersEvents.id).\
-                                        join(UsersEvents.meeting_event).\
-                                        filter(MeetingsEvents.internal_meeting_id == int_id).\
-                                        count())
-        session.commit()
-    except:
-        session.rollback()
-
-def meeting_ended(mapped_msg):
-    #TODO: When ending a meeting with users still inside, should update their leaveTime
-    global session
-    int_id = mapped_msg["internal_meeting_id"]
-
-    # MeetingsEvents table to be updated
-    meeting_evt_table = session.query(MeetingsEvents).\
-                        filter(MeetingsEvents.internal_meeting_id == int_id).first()
-    meeting_evt_table = session.query(MeetingsEvents).get(meeting_evt_table.id)
-    meeting_evt_table.end_time= mapped_msg["end_time"]
-
-    # Meeting table to be updated
-    meeting_table = session.query(Meetings).\
-                    join(Meetings.meeting_event).\
-                    filter(MeetingsEvents.internal_meeting_id == int_id).first()
-    meeting_table = session.query(Meetings).get(meeting_table.id)
-    session.delete(meeting_table)
-
-    try:
-        session.commit()
-    except:
-        session.rollback()
-
-def user_left(webhook_msg,db_msg):
-    global session
-    user_id = db_msg["internal_user_id"]
-    int_id = webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
-
-    # Meeting table to be updated
-    meeting_table = session.query(Meetings).\
-                    join(Meetings.meeting_event).\
-                    filter(MeetingsEvents.internal_meeting_id == int_id).first()
-    meeting_table = session.query(Meetings).get(meeting_table.id)
-
-    # User table to be updated
-    users_table = session.query(UsersEvents).\
-                    filter(UsersEvents.internal_user_id == user_id).first()
-    users_table = session.query(UsersEvents).get(users_table.id)
-
-    # Update UsersEvents table
-    users_table.leave_time = db_msg["leave_time"]
-
-    def remove_attendee(base,remove):
-        for idx,attendee in enumerate(base):
-            if(attendee["int_user_id"] == remove):
-                del base[idx]
-        return base
-
-    # Update Meetings table
-    meeting_table.attendees = remove_attendee(meeting_table.attendees,user_id)
-    meeting_table.participant_count = len(meeting_table.attendees)
-    meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"]=="MODERATOR")
-    meeting_table.listener_count = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
-    meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
-    meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
-
-    # Mark Meetings.attendees as modified for SQLAlchemy
-    flag_modified(meeting_table,"attendees")
-
-    try:
-        session.commit()
-    except:
-        session.rollback()
-
-def user_info_update(mapped_msg):
-    global session
-    user_id = mapped_msg["internal_user_id"]
-    int_id = mapped_msg["internal_meeting_id"]
-
-    # Meeting table to be updated
-    meeting_table = session.query(Meetings).\
-                    join(Meetings.meeting_event).\
-                    filter(MeetingsEvents.internal_meeting_id == int_id).first()
-    meeting_table = session.query(Meetings).get(meeting_table.id)
-
-    def update_attendees(base, update):
-        if(update["event_name"] == "user-audio-voice-enabled"):
-            attr = "hasJoinedVoice"
-            value = True
-        elif(update["event_name"] == "user-audio-voice-disabled"):
-            attr = "hasJoinedVoice"
-            value = False
-        elif(update["event_name"] == "user-audio-listen-only-enabled"):
-            attr = "isListeningOnly"
-            value = True
-        elif(update["event_name"] == "user-audio-listen-only-disabled"):
-            attr = "isListeningOnly"
-            value = False
-        elif(update["event_name"] == "user-cam-broadcast-start"):
-            attr = "hasVideo"
-            value = True
-        elif(update["event_name"] == "user-cam-broadcast-end"):
-            attr = "hasVideo"
-            value = False
-        for attendee in base:
-            if(attendee["int_user_id"] == user_id):
-                attendee[attr] = value
-        return base
-
-    meeting_table.attendees = update_attendees(meeting_table.attendees, mapped_msg)
-    meeting_table.participant_count = len(meeting_table.attendees)
-    meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"] == "MODERATOR")
-    meeting_table.listening_only = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
-    meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
-    meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
-    flag_modified(meeting_table,"attendees")
-
-    try:
-        session.commit()
-    except:
-        session.rollback()
-
-def rap_events(mapped_msg):
-    global session
-    int_id = mapped_msg["internal_meeting_id"]
-    # Check if table already exists
-    try:
-        record_table = session.query(Recordings.id).\
-                        filter(Recordings.internal_meeting_id == int_id).first()
-        # Check if there's record_table
-        record_table = session.query(Recordings).get(record_table.id)
-    except:
-        # Create table
-        record_table = Recordings(**mapped_msg)
-        record_table.participants = int(session.query(UsersEvents.id).\
-                                    join(MeetingsEvents).\
-                                    filter(MeetingsEvents.internal_meeting_id == int_id).\
-                                    count())
-        session.add(record_table)
-        record_table = session.query(Recordings.id).\
-                        filter(Recordings.internal_meeting_id == int_id).first()
-        record_table = session.query(Recordings).get(record_table.id)
-    finally:
-        # When publish end update most of information
-        if(mapped_msg["current_step"] == "rap-publish-ended"):
-            record_table.name = mapped_msg["name"]
-            record_table.is_breakout = mapped_msg["is_breakout"]
-            record_table.start_time = mapped_msg["start_time"]
-            record_table.end_time = mapped_msg["end_time"]
-            record_table.size = mapped_msg["size"]
-            record_table.raw_size = mapped_msg["raw_size"]
-            record_table.meta_data = mapped_msg["meta_data"]
-            record_table.playback = mapped_msg["playback"]
-            record_table.download = mapped_msg["download"]
-        record_table.current_step = mapped_msg["current_step"]
-
-        # Update status based on event
-        if(mapped_msg["current_step"] == "rap-process-started"):
-            record_table.status= "processing"
-        elif(mapped_msg["current_step"] == "rap-process-ended"):
-            record_table.status= "processed"
-        elif(mapped_msg["current_step"] == "rap-publish-ended"):
-            record_table.status= "published"
-            record_table.published= True
-        # treat "unpublished" and "deleted" when webhooks are emitting those events
-
-        try:
-            session.commit()
-        except:
-            session.rollback()
-
-def db_event_selector(post, mapped_msg):
-    id = post["data"]["id"]
-    if(id == "meeting-created"):
-        create_meeting(mapped_msg)
-    elif(id == "user-joined"):
-        user_join(post,mapped_msg)
-    elif(id == "user-left"):
-        user_left(post,mapped_msg)
-    elif(id == "meeting-ended"):
-        meeting_ended(mapped_msg)
-    elif(id in ["user-audio-listen-only-enabled","user-audio-listen-only-disabled",
-                "user-audio-voice-enabled","user-audio-voice-disabled",
-                "user-cam-broadcast-start","user-cam-broadcast-end"]):
-        user_info_update(mapped_msg)
-    elif(id in ["rap-archive-started","rap-archive-ended",
-                "rap-sanity-started","rap-sanity-ended",
-                "rap-post-archive-started","rap-post-archive-ended",
-                "rap-process-started","rap-process-ended",
-                "rap-post-process-started","rap-post-process-ended",
-                "rap-publish-started","rap-publish-ended",
-                "rap-post-publish-started","rap-post-publish-ended"]):
-        rap_events(mapped_msg)
 
 @contextmanager
 def session_scope():
@@ -498,11 +226,251 @@ def session_scope():
         session.close()
 
 
-class ClassThatWillUpdate: # can't figure out a name
-    def __init__(self, session):
+class DataProcessor:
+
+    def __init__(self, session, webhook_msg, mapped_msg):
         self.session = session
-    def update(self, data):
-        # code to update tables here
+        self.webhook_msg = webhook_msg
+        self.mapped_msg = mapped_msg
+
+    def create_meeting(self):
+        # Create MeetingsEvents and Meetings table
+        new_meeting_evt = MeetingsEvents(**self.mapped_msg)
+        new_meeting = Meetings(running=False,
+                               has_user_joined=False,
+                               participant_count=0,
+                               listener_count=0,
+                               voice_participant_count=0,
+                               video_count=0,
+                               moderator_count=0,
+                               attendees="{}")
+        new_meeting.meeting_event = new_meeting_evt
+        session.add(new_meeting)
+
+    def user_join(self):
+        int_id = self.webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
+
+        # Create user table
+        new_user = UsersEvents(**self.mapped_msg)
+
+        # Create attendee json for meeting table
+        attendee = {
+            "is_presenter" : self.webhook_msg["data"]["attributes"]["user"]["presenter"],
+            "is_listening_only" : self.webhook_msg["data"]["attributes"]["user"]["listening-only"],
+            "has_joined_voice" : self.webhook_msg["data"]["attributes"]["user"]["sharing-mic"],
+            "has_video" : self.webhook_msg["data"]["attributes"]["user"]["stream"],
+            "ext_user_id" : self.webhook_msg["data"]["attributes"]["user"]["external-user-id"],
+            "int_user_id" : self.webhook_msg["data"]["attributes"]["user"]["internal-user-id"],
+            "full_name" : self.webhook_msg["data"]["attributes"]["user"]["name"],
+            "role" : self.webhook_msg["data"]["attributes"]["user"]["role"]
+        }
+
+        # Query for MeetingsEvents to link with UsersEvents table
+        meeting_evt_table = session.query(MeetingsEvents).\
+                            filter(MeetingsEvents.internal_meeting_id.match(int_id)).first()
+        new_user.meeting_event = meeting_evt_table
+
+        # Meeting table to be updated
+        meeting_table = session.query(Meetings).\
+                        join(Meetings.meeting_event).\
+                        filter(MeetingsEvents.internal_meeting_id == int_id).first()
+        meeting_table = session.query(Meetings).get(meeting_table.id)
+
+        def attendee_json(base,new):
+            if(base == "{}"):
+                arr = []
+                arr.append(new)
+                return arr
+            else:
+                arr = base
+                for elem in arr:
+                    if(elem["int_user_id"] == new["int_user_id"]):
+                        return arr
+                arr.append(new)
+                return arr
+
+        meeting_table.running = True
+        meeting_table.has_user_joined = True
+        meeting_table.attendees = attendee_json(meeting_table.attendees,attendee)
+        meeting_table.participant_count = len(meeting_table.attendees)
+        meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"] == "MODERATOR")
+        meeting_table.listener_count = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
+        meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
+        meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
+
+        # SQLAlchemy was not considering the attendees array as modified, so it had to be forced
+        flag_modified(meeting_table, "attendees")
+
+        session.add(new_user)
+
+        # Update unique users
+        meeting_evt_table = session.query(MeetingsEvents).get(meeting_evt_table.id)
+        meeting_evt_table.uniqueUsers = int(session.query(UsersEvents.id).\
+                                        join(UsersEvents.meeting_event).\
+                                        filter(MeetingsEvents.internal_meeting_id == int_id).\
+                                        count())
+
+    def meeting_ended(self):
+        int_id = self.mapped_msg["internal_meeting_id"]
+
+        # MeetingsEvents table to be updated
+        meeting_evt_table = session.query(MeetingsEvents).\
+                            filter(MeetingsEvents.internal_meeting_id == int_id).first()
+        meeting_evt_table = session.query(MeetingsEvents).get(meeting_evt_table.id)
+        meeting_evt_table.end_time= self.mapped_msg["end_time"]
+
+        # Meeting table to be updated
+        meeting_table = session.query(Meetings).\
+                        join(Meetings.meeting_event).\
+                        filter(MeetingsEvents.internal_meeting_id == int_id).first()
+        meeting_table = session.query(Meetings).get(meeting_table.id)
+        session.delete(meeting_table)
+
+    def user_left(self):
+        user_id = self.mapped_msg["internal_user_id"]
+        int_id = self.webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
+
+        # Meeting table to be updated
+        meeting_table = session.query(Meetings).\
+                        join(Meetings.meeting_event).\
+                        filter(MeetingsEvents.internal_meeting_id == int_id).first()
+        meeting_table = session.query(Meetings).get(meeting_table.id)
+
+        # User table to be updated
+        users_table = session.query(UsersEvents).\
+                        filter(UsersEvents.internal_user_id == user_id).first()
+        users_table = session.query(UsersEvents).get(users_table.id)
+
+        # Update UsersEvents table
+        users_table.leave_time = self.mapped_msg["leave_time"]
+
+        def remove_attendee(base,remove):
+            for idx,attendee in enumerate(base):
+                if(attendee["int_user_id"] == remove):
+                    del base[idx]
+            return base
+
+        # Update Meetings table
+        meeting_table.attendees = remove_attendee(meeting_table.attendees,user_id)
+        meeting_table.participant_count = len(meeting_table.attendees)
+        meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"]=="MODERATOR")
+        meeting_table.listener_count = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
+        meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
+        meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
+
+        # Mark Meetings.attendees as modified for SQLAlchemy
+        flag_modified(meeting_table,"attendees")
+
+    def user_info_update(self):
+        user_id = self.mapped_msg["internal_user_id"]
+        int_id = self.mapped_msg["internal_meeting_id"]
+
+        # Meeting table to be updated
+        meeting_table = session.query(Meetings).\
+                        join(Meetings.meeting_event).\
+                        filter(MeetingsEvents.internal_meeting_id == int_id).first()
+        meeting_table = session.query(Meetings).get(meeting_table.id)
+
+        def update_attendees(base, update):
+            if(update["event_name"] == "user-audio-voice-enabled"):
+                attr = "hasJoinedVoice"
+                value = True
+            elif(update["event_name"] == "user-audio-voice-disabled"):
+                attr = "hasJoinedVoice"
+                value = False
+            elif(update["event_name"] == "user-audio-listen-only-enabled"):
+                attr = "isListeningOnly"
+                value = True
+            elif(update["event_name"] == "user-audio-listen-only-disabled"):
+                attr = "isListeningOnly"
+                value = False
+            elif(update["event_name"] == "user-cam-broadcast-start"):
+                attr = "hasVideo"
+                value = True
+            elif(update["event_name"] == "user-cam-broadcast-end"):
+                attr = "hasVideo"
+                value = False
+            for attendee in base:
+                if(attendee["int_user_id"] == user_id):
+                    attendee[attr] = value
+            return base
+
+        meeting_table.attendees = update_attendees(meeting_table.attendees, self.mapped_msg)
+        meeting_table.participant_count = len(meeting_table.attendees)
+        meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"] == "MODERATOR")
+        meeting_table.listening_only = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
+        meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
+        meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
+        flag_modified(meeting_table,"attendees")
+
+    def rap_events(self):
+        int_id = self.mapped_msg["internal_meeting_id"]
+        # Check if table already exists
+        try:
+            record_table = session.query(Recordings.id).\
+                            filter(Recordings.internal_meeting_id == int_id).first()
+            # Check if there's record_table
+            record_table = session.query(Recordings).get(record_table.id)
+        except:
+            # Create table
+            record_table = Recordings(**self.mapped_msg)
+            record_table.participants = int(session.query(UsersEvents.id).\
+                                        join(MeetingsEvents).\
+                                        filter(MeetingsEvents.internal_meeting_id == int_id).\
+                                        count())
+            session.add(record_table)
+            record_table = session.query(Recordings.id).\
+                            filter(Recordings.internal_meeting_id == int_id).first()
+            record_table = session.query(Recordings).get(record_table.id)
+        finally:
+            # When publish end update most of information
+            if(self.mapped_msg["current_step"] == "rap-publish-ended"):
+                record_table.name = self.mapped_msg["name"]
+                record_table.is_breakout = self.mapped_msg["is_breakout"]
+                record_table.start_time = self.mapped_msg["start_time"]
+                record_table.end_time = self.mapped_msg["end_time"]
+                record_table.size = self.mapped_msg["size"]
+                record_table.raw_size = self.mapped_msg["raw_size"]
+                record_table.meta_data = self.mapped_msg["meta_data"]
+                record_table.playback = self.mapped_msg["playback"]
+                record_table.download = self.mapped_msg["download"]
+            record_table.current_step = self.mapped_msg["current_step"]
+
+            # Update status based on event
+            if(self.mapped_msg["current_step"] == "rap-process-started"):
+                record_table.status= "processing"
+            elif(self.mapped_msg["current_step"] == "rap-process-ended"):
+                record_table.status= "processed"
+            elif(self.mapped_msg["current_step"] == "rap-publish-ended"):
+                record_table.status= "published"
+                record_table.published= True
+            # treat "unpublished" and "deleted" when webhooks are emitting those events
+
+    def db_event_selector(self):
+        id = self.webhook_msg["data"]["id"]
+        if(id == "meeting-created"):
+            self.create_meeting(self.mapped_msg)
+        elif(id == "user-joined"):
+            self.user_join(self.webhook_msg,self.mapped_msg)
+        elif(id == "user-left"):
+            self.user_left(self.webhook_msg,self.mapped_msg)
+        elif(id == "meeting-ended"):
+            self.meeting_ended(self.mapped_msg)
+        elif(id in ["user-audio-listen-only-enabled","user-audio-listen-only-disabled",
+                    "user-audio-voice-enabled","user-audio-voice-disabled",
+                    "user-cam-broadcast-start","user-cam-broadcast-end"]):
+            self.user_info_update(self.mapped_msg)
+        elif(id in ["rap-archive-started","rap-archive-ended",
+                    "rap-sanity-started","rap-sanity-ended",
+                    "rap-post-archive-started","rap-post-archive-ended",
+                    "rap-process-started","rap-process-ended",
+                    "rap-post-process-started","rap-post-process-ended",
+                    "rap-publish-started","rap-publish-ended",
+                    "rap-post-publish-started","rap-post-publish-ended"]):
+            self.rap_events(self.mapped_msg)
+
+    def update(self):
+        self.db_event_selector()
 
 
 class PostgresConnector:
@@ -512,15 +480,15 @@ class PostgresConnector:
         self.database_uri = database_uri or self._build_uri()
 
     def connect(self):
-        engine = sa.create_engine(self.database_uri)
+        engine = create_engine(self.database_uri)
         Session.configure(bind=engine)
 
     def close(self):
         pass
 
-    def update(self, data):
+    def update(self, webhook_msg, mapped_msg):
         with session_scope() as session:
-            ClassThatWillUpdate(session).update(data)
+            DataProcessor(session, webhook_msg, mapped_msg).update()
 
     def _build_uri(self):
         return "postgresql://{}:{}@{}/{}".format(self.config['user'],
@@ -540,5 +508,5 @@ class DataWritter(AggregatorCallback):
     def teardown(self):
         self.connector.close()
 
-    def run(self, data):
-        self.connector.update(data)
+    def run(self, webhook_msg, mapped_msg):
+        self.connector.update(webhook_msg,mapped_msg)
