@@ -12,21 +12,43 @@ class HookListener(object):
     def on_post(self, req, resp):
         # TODO: Treat when receiving multiple events on POST
         """Handles POST requests"""
-        # Parse received message
-        post_data = req.stream.read()
-        posted_obj = json.loads(post_data)
-        # Map message
-        mapped_msg = db_mapping.map_message_to_db(posted_obj)
-        # Update DB
-        db_operations.db_event_selector(posted_obj,mapped_msg)
+        DataReader.read(req)
 
         resp.status = falcon.HTTP_200  # This is the default status
 
-# falcon.API instances are callable WSGI apps
-app = falcon.API()
 
-# Resources are represented by long-lived class instances
-hook = HookListener()
+class DataReader():
 
-# hook will handle all requests to the '/' URL path
-app.add_route('/', hook)
+    def __init__(self):
+        self.route = cfg.config['route']
+        self.hook = HookListener()
+
+    def setup(self):
+        # falcon.API instances are callable WSGI apps
+        self.app = falcon.API()
+        # hook will handle all requests to the self.route URL path
+        self.app.add_route(self.route, self.hook)
+
+    def stop(self):
+        # stop falcon?
+
+    def read(self, data):
+        # TODO: Validade checksum
+        # Parse received message
+        post_data = data.stream.read()
+
+        # Message will be in format event={data}&timestamp=BigInteger and encoded
+        decoded_data = urllib.unquote_plus(post_data)
+        decoded_data = decoded_data.split('&')
+
+        # Set {data} in event={data} to events variable
+        events = decoded_data[0].split('=',1)[1]
+        timestamp = decoded_data[1].split('=',1)[1]
+
+        posted_obj = json.loads(events)
+        for webhook_msg in posted_obj:
+            # Map message
+            mapped_msg = db_mapping.map_message_to_db(webhook_msg)
+
+            # Return data to writer
+            return webhook_msg, mapped_msg
