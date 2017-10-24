@@ -449,17 +449,17 @@ class DataProcessor:
     def db_event_selector(self):
         id = self.webhook_msg["data"]["id"]
         if(id == "meeting-created"):
-            self.create_meeting(self.mapped_msg)
+            self.create_meeting()
         elif(id == "user-joined"):
-            self.user_join(self.webhook_msg,self.mapped_msg)
+            self.user_join()
         elif(id == "user-left"):
-            self.user_left(self.webhook_msg,self.mapped_msg)
+            self.user_left()
         elif(id == "meeting-ended"):
-            self.meeting_ended(self.mapped_msg)
+            self.meeting_ended()
         elif(id in ["user-audio-listen-only-enabled","user-audio-listen-only-disabled",
                     "user-audio-voice-enabled","user-audio-voice-disabled",
                     "user-cam-broadcast-start","user-cam-broadcast-end"]):
-            self.user_info_update(self.mapped_msg)
+            self.user_info_update()
         elif(id in ["rap-archive-started","rap-archive-ended",
                     "rap-sanity-started","rap-sanity-ended",
                     "rap-post-archive-started","rap-post-archive-ended",
@@ -467,7 +467,7 @@ class DataProcessor:
                     "rap-post-process-started","rap-post-process-ended",
                     "rap-publish-started","rap-publish-ended",
                     "rap-post-publish-started","rap-post-publish-ended"]):
-            self.rap_events(self.mapped_msg)
+            self.rap_events()
 
     def update(self):
         self.db_event_selector()
