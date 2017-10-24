@@ -2,7 +2,6 @@ import json
 
 import falcon
 
-import db_operations
 import db_mapping
 
 # Falcon follows the REST architectural style, meaning (among
@@ -23,11 +22,12 @@ class DataReader():
         self.route = cfg.config['route']
         self.hook = HookListener()
 
-    def setup(self):
+    def setup(self, publisher):
         # falcon.API instances are callable WSGI apps
         self.app = falcon.API()
         # hook will handle all requests to the self.route URL path
         self.app.add_route(self.route, self.hook)
+        self.publisher = publisher
 
     def stop(self):
         # stop falcon?
@@ -50,5 +50,8 @@ class DataReader():
             # Map message
             mapped_msg = db_mapping.map_message_to_db(webhook_msg)
 
-            # Return data to writer
-            return webhook_msg, mapped_msg
+            if(mapped_msg):
+                try:
+                    self.publisher.publish(webhook_msg, mapped_msg, channel='name_tbd')
+                except PublishError as err:
+                    continue
