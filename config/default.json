@@ -1,18 +1,29 @@
 {
-  "period": 30,
-  "application": "LB",
-  "servers": [],
-  "database": {
-      "host": "localhost",
-      "user": "kmyokoyama",
-      "password": "postgres",
-      "database": "zabbix",
-      "table": "security"
-  },
-  "setup_file": "config",
-  "debug": {
-      "enabled": true,
-      "read_delay": 1,
-      "write_delay": 1
-  }
+    "zabbix": {
+        "period": 30,
+        "application": "LB",
+        "servers": [],
+        "database": {
+            "host": "localhost",
+            "user": "kmyokoyama",
+            "password": "postgres",
+            "database": "zabbix",
+            "table": "security"
+        },
+        "setup_file": "config",
+        "debug": {
+            "enabled": true,
+            "read_delay": 1,
+            "write_delay": 1
+        }
+    },
+    "event_listener": {
+        "database": {
+            "user": "postgres",
+            "password": "postgres",
+            "host": "localhost",
+            "database": "LB"
+        },
+        "route":"/"
+    }
 }
