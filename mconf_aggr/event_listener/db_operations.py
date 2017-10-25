@@ -18,8 +18,10 @@ from sqlalchemy.orm import (backref,
                             relationship)
 from sqlalchemy.orm.attributes import flag_modified
 
+from mconf_aggr import cfg
+from mconf_aggr.aggregator import AggregatorCallback
+
 # This block is likely to be removed after dev stage
-engine = create_engine("postgresql://postgres:postgres@localhost/testdb3", echo=True)
 Base = declarative_base()
 
 
@@ -207,7 +209,7 @@ class UsersEvents(Base):
 # This block is likely to be removed after dev stage
 #Base.metadata.drop_all(engine)
 #Base.metadata.create_all(engine)
-Session = sessionmaker(bind=engine)
+Session = sessionmaker()
 
 # TODO: Lock tables when performing SELECTs/UPDATEs
 
@@ -476,11 +478,11 @@ class DataProcessor:
 class PostgresConnector:
 
     def __init__(self, database_uri=None):
-        self.config = cfg.config['database']
+        self.config = cfg.config['event_listener']['database']
         self.database_uri = database_uri or self._build_uri()
 
     def connect(self):
-        engine = create_engine(self.database_uri)
+        engine = create_engine(self.database_uri, echo=True)
         Session.configure(bind=engine)
 
     def close(self):
