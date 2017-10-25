@@ -2,7 +2,8 @@ import json
 
 import falcon
 
-import db_mapping
+from mconf_aggr import cfg
+from mconf_aggr.event_listener import db_mapping
 
 # Falcon follows the REST architectural style, meaning (among
 # other things) that you think in terms of resources and state
@@ -15,22 +16,24 @@ class HookListener(object):
 
         resp.status = falcon.HTTP_200  # This is the default status
 
+# falcon.API instances are callable WSGI apps
+app = falcon.API()
+
 
 class DataReader():
 
     def __init__(self):
-        self.route = cfg.config['route']
+        self.route = cfg.config['event_listener']['route']
         self.hook = HookListener()
 
     def setup(self, publisher):
-        # falcon.API instances are callable WSGI apps
-        self.app = falcon.API()
         # hook will handle all requests to the self.route URL path
-        self.app.add_route(self.route, self.hook)
+        app.add_route(self.route, self.hook)
         self.publisher = publisher
 
     def stop(self):
         # stop falcon?
+        pass
 
     def read(self, data):
         # TODO: Validade checksum
@@ -52,6 +55,6 @@ class DataReader():
 
             if(mapped_msg):
                 try:
-                    self.publisher.publish(webhook_msg, mapped_msg, channel='name_tbd')
+                    self.publisher.publish(webhook_msg, mapped_msg, channel='webhooks')
                 except PublishError as err:
                     continue
