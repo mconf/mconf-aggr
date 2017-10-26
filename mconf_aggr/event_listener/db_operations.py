@@ -226,9 +226,10 @@ def create_meeting(db_msg):
                            attendees="{}")
     new_meeting.meeting_event = new_meeting_evt
     session.add(new_meeting)
-
-    session.commit()
-    session.rollback()
+    try:
+        session.commit()
+    except:
+        session.rollback()
 
 def user_join(webhook_msg, db_msg):
     global session
@@ -299,7 +300,6 @@ def user_join(webhook_msg, db_msg):
         session.rollback()
 
 def meeting_ended(mapped_msg):
-    #TODO: When ending a meeting with users still inside, should update their leaveTime
     global session
     int_id = mapped_msg["internal_meeting_id"]
 
@@ -316,6 +316,13 @@ def meeting_ended(mapped_msg):
     meeting_table = session.query(Meetings).get(meeting_table.id)
     session.delete(meeting_table)
 
+    # When ending meeting, set leaveTime to users that didn't left before
+    users_table = session.query(UsersEvents).\
+                    join(UsersEvents.meetingEvent).\
+                    filter(MeetingsEvents.internalMeetingId == int_id).all()
+    for user in users_table:
+        current_user = session.query(UsersEvents).get(user.id)
+        current_user.leaveTime = mapped_msg["endTime"]
     try:
         session.commit()
     except:

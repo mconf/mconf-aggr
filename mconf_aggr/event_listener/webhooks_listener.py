@@ -1,4 +1,5 @@
 import json
+import urllib
 
 import falcon
 
@@ -10,15 +11,24 @@ import db_mapping
 # transitions, which map to HTTP verbs.
 class HookListener(object):
     def on_post(self, req, resp):
-        # TODO: Treat when receiving multiple events on POST
         """Handles POST requests"""
+        # TODO: Validade checksum
         # Parse received message
         post_data = req.stream.read()
-        posted_obj = json.loads(post_data)
-        # Map message
-        mapped_msg = db_mapping.map_message_to_db(posted_obj)
-        # Update DB
-        db_operations.db_event_selector(posted_obj,mapped_msg)
+        # Message will be in format event={data}&timestamp=BigInteger and encoded
+        decoded_data = urllib.unquote_plus(post_data)
+        decoded_data = decoded_data.split('&')
+        # Set {data} in event={data} to events variable
+        events = decoded_data[0].split('=',1)[1]
+        timestamp = decoded_data[1].split('=',1)[1]
+
+        posted_obj = json.loads(events)
+        for obj in posted_obj:
+            # Map message
+            mapped_msg = db_mapping.map_message_to_db(obj)
+
+            # Update DB
+            db_operations.db_event_selector(obj,mapped_msg)
 
         resp.status = falcon.HTTP_200  # This is the default status
 
@@ -29,4 +39,5 @@ app = falcon.API()
 hook = HookListener()
 
 # hook will handle all requests to the '/' URL path
+# TODO: When setting add_route to Reader.setup, get route from config file
 app.add_route('/', hook)
