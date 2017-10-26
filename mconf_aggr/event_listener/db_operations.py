@@ -230,10 +230,10 @@ def session_scope():
 
 class DataProcessor:
 
-    def __init__(self, session, webhook_msg, mapped_msg):
+    def __init__(self, session, data):
         self.session = session
-        self.webhook_msg = webhook_msg
-        self.mapped_msg = mapped_msg
+        self.webhook_msg = data[0]
+        self.mapped_msg = data[1]
 
     def create_meeting(self):
         # Create MeetingsEvents and Meetings table
@@ -247,7 +247,7 @@ class DataProcessor:
                                moderator_count=0,
                                attendees="{}")
         new_meeting.meeting_event = new_meeting_evt
-        session.add(new_meeting)
+        self.session.add(new_meeting)
 
     def user_join(self):
         int_id = self.webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
@@ -268,15 +268,15 @@ class DataProcessor:
         }
 
         # Query for MeetingsEvents to link with UsersEvents table
-        meeting_evt_table = session.query(MeetingsEvents).\
+        meeting_evt_table = self.session.query(MeetingsEvents).\
                             filter(MeetingsEvents.internal_meeting_id.match(int_id)).first()
         new_user.meeting_event = meeting_evt_table
 
         # Meeting table to be updated
-        meeting_table = session.query(Meetings).\
+        meeting_table = self.session.query(Meetings).\
                         join(Meetings.meeting_event).\
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
-        meeting_table = session.query(Meetings).get(meeting_table.id)
+        meeting_table = self.session.query(Meetings).get(meeting_table.id)
 
         def attendee_json(base,new):
             if(base == "{}"):
@@ -303,11 +303,11 @@ class DataProcessor:
         # SQLAlchemy was not considering the attendees array as modified, so it had to be forced
         flag_modified(meeting_table, "attendees")
 
-        session.add(new_user)
+        self.session.add(new_user)
 
         # Update unique users
-        meeting_evt_table = session.query(MeetingsEvents).get(meeting_evt_table.id)
-        meeting_evt_table.uniqueUsers = int(session.query(UsersEvents.id).\
+        meeting_evt_table = self.session.query(MeetingsEvents).get(meeting_evt_table.id)
+        meeting_evt_table.uniqueUsers = int(self.session.query(UsersEvents.id).\
                                         join(UsersEvents.meeting_event).\
                                         filter(MeetingsEvents.internal_meeting_id == int_id).\
                                         count())
@@ -316,32 +316,32 @@ class DataProcessor:
         int_id = self.mapped_msg["internal_meeting_id"]
 
         # MeetingsEvents table to be updated
-        meeting_evt_table = session.query(MeetingsEvents).\
+        meeting_evt_table = self.session.query(MeetingsEvents).\
                             filter(MeetingsEvents.internal_meeting_id == int_id).first()
-        meeting_evt_table = session.query(MeetingsEvents).get(meeting_evt_table.id)
+        meeting_evt_table = self.session.query(MeetingsEvents).get(meeting_evt_table.id)
         meeting_evt_table.end_time= self.mapped_msg["end_time"]
 
         # Meeting table to be updated
-        meeting_table = session.query(Meetings).\
+        meeting_table = self.session.query(Meetings).\
                         join(Meetings.meeting_event).\
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
-        meeting_table = session.query(Meetings).get(meeting_table.id)
-        session.delete(meeting_table)
+        meeting_table = self.session.query(Meetings).get(meeting_table.id)
+        self.session.delete(meeting_table)
 
     def user_left(self):
         user_id = self.mapped_msg["internal_user_id"]
         int_id = self.webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
 
         # Meeting table to be updated
-        meeting_table = session.query(Meetings).\
+        meeting_table = self.session.query(Meetings).\
                         join(Meetings.meeting_event).\
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
-        meeting_table = session.query(Meetings).get(meeting_table.id)
+        meeting_table = self.session.query(Meetings).get(meeting_table.id)
 
         # User table to be updated
-        users_table = session.query(UsersEvents).\
+        users_table = self.session.query(UsersEvents).\
                         filter(UsersEvents.internal_user_id == user_id).first()
-        users_table = session.query(UsersEvents).get(users_table.id)
+        users_table = self.session.query(UsersEvents).get(users_table.id)
 
         # Update UsersEvents table
         users_table.leave_time = self.mapped_msg["leave_time"]
@@ -368,10 +368,10 @@ class DataProcessor:
         int_id = self.mapped_msg["internal_meeting_id"]
 
         # Meeting table to be updated
-        meeting_table = session.query(Meetings).\
+        meeting_table = self.session.query(Meetings).\
                         join(Meetings.meeting_event).\
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
-        meeting_table = session.query(Meetings).get(meeting_table.id)
+        meeting_table = self.session.query(Meetings).get(meeting_table.id)
 
         def update_attendees(base, update):
             if(update["event_name"] == "user-audio-voice-enabled"):
@@ -409,21 +409,21 @@ class DataProcessor:
         int_id = self.mapped_msg["internal_meeting_id"]
         # Check if table already exists
         try:
-            record_table = session.query(Recordings.id).\
+            record_table = self.session.query(Recordings.id).\
                             filter(Recordings.internal_meeting_id == int_id).first()
             # Check if there's record_table
-            record_table = session.query(Recordings).get(record_table.id)
+            record_table = self.session.query(Recordings).get(record_table.id)
         except:
             # Create table
             record_table = Recordings(**self.mapped_msg)
-            record_table.participants = int(session.query(UsersEvents.id).\
+            record_table.participants = int(self.session.query(UsersEvents.id).\
                                         join(MeetingsEvents).\
                                         filter(MeetingsEvents.internal_meeting_id == int_id).\
                                         count())
-            session.add(record_table)
-            record_table = session.query(Recordings.id).\
+            self.session.add(record_table)
+            record_table = self.session.query(Recordings.id).\
                             filter(Recordings.internal_meeting_id == int_id).first()
-            record_table = session.query(Recordings).get(record_table.id)
+            record_table = self.session.query(Recordings).get(record_table.id)
         finally:
             # When publish end update most of information
             if(self.mapped_msg["current_step"] == "rap-publish-ended"):
@@ -488,9 +488,9 @@ class PostgresConnector:
     def close(self):
         pass
 
-    def update(self, webhook_msg, mapped_msg):
+    def update(self, data):
         with session_scope() as session:
-            DataProcessor(session, webhook_msg, mapped_msg).update()
+            DataProcessor(session, data).update()
 
     def _build_uri(self):
         return "postgresql://{}:{}@{}/{}".format(self.config['user'],
@@ -510,5 +510,5 @@ class DataWritter(AggregatorCallback):
     def teardown(self):
         self.connector.close()
 
-    def run(self, webhook_msg, mapped_msg):
-        self.connector.update(webhook_msg,mapped_msg)
+    def run(self, data):
+        self.connector.update(data)
