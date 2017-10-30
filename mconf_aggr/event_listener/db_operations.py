@@ -214,7 +214,7 @@ Session = sessionmaker()
 # TODO: Lock tables when performing SELECTs/UPDATEs
 
 @contextmanager
-def session_scope():
+def session_scope(raise_exception=False):
     """Provide a transactional scope around a series of operations.
     """
     session = Session()
@@ -223,7 +223,8 @@ def session_scope():
         session.commit()
     except:
         session.rollback()
-        raise
+        if raise_exception:
+            raise
     finally:
         session.close()
 

@@ -12,7 +12,6 @@ from mconf_aggr.event_listener import db_mapping
 from mconf_aggr.event_listener.db_operations import DataWritter
 from mconf_aggr.aggregator import Aggregator, SetupError, PublishError
 
-
 # Falcon follows the REST architectural style, meaning (among
 # other things) that you think in terms of resources and state
 # transitions, which map to HTTP verbs.
@@ -64,6 +63,7 @@ class DataReader():
                     self.publisher.publish(data, channel='webhooks')
                 except PublishError as err:
                     continue
+
 
 cfg.config.setup_config("config/config.json")
 

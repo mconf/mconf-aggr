@@ -4,7 +4,7 @@
 """This module provides all classes related to the main logic of the aggregator.
 
 The client of aggregator needs only to know the main class `Aggregator` and
-the interface `ÀggregatorCallback` which client's callback should inherit from.
+the interface `AggregatorCallback` which client's callback should inherit from.
 All other classes are for internal use and should not be instantiated outside
 this module.
 """
