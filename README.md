@@ -258,5 +258,5 @@ the `SimpleHTTPServer` Python built-in module. From the `docs/_build/html/` dire
 $ python -m http.server
 ```
 
-It will create a server on _localhost:4000_. You can check it out in
+It will create a server on _localhost:8000_. You can check it out in
 your browser.

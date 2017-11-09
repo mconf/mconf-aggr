@@ -41,7 +41,8 @@ class Config:
         # Load default configurations.
         self.setup_config()
         # Load custom configurations if a config file was provided.
-        if custom_config: self.setup_config(self.custom_config)
+        if custom_config:
+            self.setup_config(self.custom_config)
 
     def setup_config(self, config_file=None):
         """Load general configuration from JSON file.

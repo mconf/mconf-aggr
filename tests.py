@@ -12,6 +12,7 @@ def print_help():
 suite\tA suite in 'test_suites' of config_tests.json.
 If no suite is supplied, all is implied.""")
 
+
 CONFIG_DIR = "config"
 TESTS_DIR = "tests"
 TEST_FILE_RE = re.compile(r'\w+\_test\.py$')
@@ -44,7 +45,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) == 1:
         modules = [remove_ext(name) for name in os.listdir(os.getcwd())
-                                    if is_test_file(name)]
+                   if is_test_file(name)]
     elif len(sys.argv) == 2:
         if is_test_file(sys.argv[1]):
             modules = [remove_ext(sys.argv[1])]
@@ -68,7 +69,9 @@ if __name__ == '__main__':
             sys.exit(1)
 
         module_obj = sys.modules[module]
-        suite.addTests(unittest.defaultTestLoader.loadTestsFromModule(module_obj))
+        suite.addTests(unittest
+                       .defaultTestLoader
+                       .loadTestsFromModule(module_obj))
 
     runner = unittest.TextTestRunner(verbosity=verbosity)
 

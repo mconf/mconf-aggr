@@ -71,7 +71,6 @@ from sqlalchemy.orm import sessionmaker
 from urllib.parse import urlsplit
 
 import cachetools
-import psycopg2 as pg
 import zabbix_api as api
 
 from mconf_aggr import cfg
@@ -149,7 +148,7 @@ class ServersPool:
                 server.connect()
             except ZabbixLoginError:
                 self.logger.exception(
-                    "Login to server {} has failed. Removing it from server pool." \
+                    "Login to server {} has failed. Removing it from server pool."
                     .format(server)
                 )
                 failed_servers.append(server)
@@ -198,14 +197,14 @@ class ZabbixServer:
         logger : logging.Logger
             If not supplied, it will instantiate a new logger from __name__.
         """
-        self.url = url # It must start with http(s)://.
+        self.url = url  # It must start with http(s)://.
         self.login = login
         self.password = password
-        self.hosts = dict() # hosts is a hostid:hostname dictionary.
+        self.hosts = dict()  # hosts is a hostid:hostname dictionary.
         self.logger = logger or logging.getLogger(__name__)
         self._ok = False
 
-        self.name = urlsplit(self.url).netloc # Extract just the domain.
+        self.name = urlsplit(self.url).netloc  # Extract just the domain.
 
     def connect(self):
         """Connect to the Zabbix server.
@@ -220,7 +219,7 @@ class ZabbixServer:
             self.connection.login(self.login, self.password)
         except api.ZabbixAPIException:
             self.logger.exception(
-                "Something went wrong while trying to login to server {}." \
+                "Something went wrong while trying to login to server {}."
                 .format(self)
             )
             self.connection = None
@@ -295,7 +294,7 @@ class ZabbixServer:
                 # Suppress stack trace from this exception as it logs
                 # many not so useful information.
                 self.logger.error(
-                    "Something went wrong while getting items from {}." \
+                    "Something went wrong while getting items from {}."
                     .format(self)
                 )
 
@@ -308,7 +307,7 @@ class ZabbixServer:
                 raise
             else:
                 if not self._ok:
-                    self.logger.info("Connection to server {} restored." \
+                    self.logger.info("Connection to server {} restored."
                                      .format(self))
                     self._ok = True
 
@@ -441,8 +440,10 @@ class ServerMetricDAO:
             current value.
         """
         if data['server_name'] not in server_cache:
-            self.logger.debug("Server {} not found in server cache."\
-                .format(data['server_name']))
+            self.logger.debug(
+                "Server {} not found in server cache."
+                .format(data['server_name'])
+            )
 
             server_id = self.session.query(ServerTable) \
                             .filter(ServerTable.name == data['server_name'])\
@@ -450,14 +451,16 @@ class ServerMetricDAO:
 
             server_cache[data['server_name']] = server_id
         else:
-            self.logger.debug("Server {} found in server cache."\
-                .format(data['server_name']))
+            self.logger.debug(
+                "Server {} found in server cache."
+                .format(data['server_name'])
+            )
 
             server_id = server_cache[data['server_name']]
 
         metric = self.session.query(ServerMetricTable) \
                              .filter(ServerMetricTable.server_id == server_id,
-                                     ServerMetricTable.name == data['metric']) \
+                                     ServerMetricTable.name == data['metric'])\
                              .first()
 
         if metric:
@@ -609,16 +612,16 @@ def make_data(data):
     list
         A list of metrics in the format discussed in the module's documentation.
     """
-    metrics = []
     now = datetime.now()
 
     return [{'zabbix_server': server,
              'server_name': host,
              'metric': item['name'],
              'value': item['lastvalue'],
-             'updated_at': now} for server, hosts in data.items()
-                                for host, items in hosts.items()
-                                for item in items]
+             'updated_at': now}
+            for server, hosts in data.items()
+            for host, items in hosts.items()
+            for item in items]
 
 
 class ZabbixDataReader():
@@ -667,7 +670,7 @@ class ZabbixDataReader():
                 self.pool.remove_server(server)
             except Exception:
                 self.logger.exception(
-                    "Something went wrong when getting hosts for server {}." \
+                    "Something went wrong when getting hosts for server {}."
                     .format(server)
                 )
                 self.pool.remove_server(server)
@@ -696,13 +699,13 @@ class ZabbixDataReader():
         # Add each server to the server pool.
         for server in cfg.config['servers']:
             try:
-                url, login, password = server['url'], \
-                                       server['login'], \
-                                       server['password']
+                url, login, password = (server['url'],
+                                        server['login'],
+                                        server['password'])
             except KeyError:
                 self.logger.exception(
-                    "URL, login or password not supplied for server {}". \
-                    format(server)
+                    "URL, login or password not supplied for server {}"
+                    .format(server)
                 )
             else:
                 self.pool.add_server(ZabbixServer(url, login, password))
