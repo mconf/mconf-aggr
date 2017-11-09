@@ -272,6 +272,10 @@ class Channel:
         """
         return self.queue.full()
 
+    def __repr__(self):
+        return "{!s}(name={!r}, maxsize={!r})".format(
+            self.__class__.__name__, self.name, self.maxsize)
+
 
 class Publisher:
     """Data publisher.
@@ -321,6 +325,10 @@ class Publisher:
 
         for subscriber in self.channels[channel]:
             subscriber.channel.publish(data)
+
+    def __repr__(self):
+        return "{!s}(channels={!r})".format(self.__class__.__name__,
+                                            self.channels)
 
 
 class Aggregator:

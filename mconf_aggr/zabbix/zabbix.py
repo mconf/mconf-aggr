@@ -167,6 +167,10 @@ class ServersPool:
     def __iter__(self):
         return iter(self.servers)
 
+    def __repr__(self):
+        return "{!s}(servers={!r})".format(self.__class__.__name__,
+                                           self.servers)
+
 
 class ZabbixServer:
     """A Zabbix server.
@@ -310,6 +314,9 @@ class ZabbixServer:
 
         return {self.name: results}
 
+    def __repr__(self):
+        return "{!s}(url={!r})".format(self.__class__.__name__, self.url)
+
     def __str__(self):
         return self.name
 
@@ -368,8 +375,9 @@ class ServerMetricTable(Base):
     updated_at = sa.Column(sa.DateTime)
 
     def __repr__(self):
-        return "<ServerMetric(name={}, value={}m, updated_at={})" \
-                .format(self.name, self.value, self.updated_at)
+        return "{!s}(name={!r}, value={!r}, updated_at={!r})" \
+            .format(self.__class__.__name__, self.name,
+                    self.value, self.updated_at)
 
 
 class ServerTable(Base):
@@ -391,7 +399,7 @@ class ServerTable(Base):
     name = sa.Column(sa.String)
 
     def __repr__(self):
-        return "<Server(name={})".format(self.name)
+        return "{!s}(name={})".format(self.__class__.__name__, self.name)
 
 
 server_cache = cachetools.TTLCache(maxsize=20, ttl=9)
@@ -528,6 +536,10 @@ class PostgresConnector:
                                                           self.config['host'],
                                                           self.config['database'])
 
+    def __repr__(self):
+        return "{!s}(database_uri={!r})".format(self.__class__.__name__,
+                                                self.database)
+
 
 class ZabbixDataWriter(AggregatorCallback):
     """Writer of data retrieved from Zabbix servers.
@@ -578,6 +590,10 @@ class ZabbixDataWriter(AggregatorCallback):
         """
         for metric in data:
             self.connector.update(metric)
+
+    def __repr__(self):
+        return "{!s}(connector={!r})".format(self.__class__.__name__,
+                                             self.connector)
 
 
 def make_data(data):
@@ -726,3 +742,7 @@ class ZabbixDataReader():
         data = make_data(all_items)
 
         return data
+
+    def __repr__(self):
+        return "{!s}(pool={!r})".format(self.__class__.__name__,
+                                        self.pool)
