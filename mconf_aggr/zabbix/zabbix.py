@@ -63,6 +63,7 @@ outside the module.
 """
 
 import logging
+import reprlib
 import sqlalchemy as sa
 from contextlib import contextmanager
 from datetime import datetime
@@ -167,8 +168,8 @@ class ServersPool:
         return iter(self.servers)
 
     def __repr__(self):
-        return "{!s}(servers={!r})".format(self.__class__.__name__,
-                                           self.servers)
+        return "{!s}(servers={})".format(self.__class__.__name__,
+                                         reprlib.repr(self.servers))
 
 
 class ZabbixServer:

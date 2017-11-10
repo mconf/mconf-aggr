@@ -12,6 +12,7 @@ this module.
 import itertools
 import logging
 import queue
+import reprlib
 import threading
 from collections import namedtuple
 
@@ -327,8 +328,10 @@ class Publisher:
             subscriber.channel.publish(data)
 
     def __repr__(self):
+        channels = list(self.channels.keys())
+
         return "{!s}(channels={!r})".format(self.__class__.__name__,
-                                            self.channels)
+                                            reprlib.repr(channels))
 
 
 class Aggregator:
