@@ -489,7 +489,7 @@ class PostgresConnector:
         logger : logging.Logger
             If not supplied, it will instantiate a new logger from __name__.
         """
-        self.config = cfg.config['database']
+        self.config = cfg.config.zabbix['database']
         self.database_uri = database_uri or self._build_uri()
         self.logger = logger or logging.getLogger(__name__)
 
@@ -639,7 +639,7 @@ class ZabbixDataReader():
         self.connect()
 
         # Get all hosts of interest in each Zabbix server.
-        application = cfg.config['application']
+        application = cfg.config.zabbix['application']
         parameters = {"with_applications": application}
         for server in self.pool:
             try:
@@ -678,7 +678,7 @@ class ZabbixDataReader():
 
         self.logger.info("Adding servers to the server pool.")
         # Add each server to the server pool.
-        for server in cfg.config['servers']:
+        for server in cfg.config.zabbix['servers']:
             try:
                 url, login, password = server['url'], \
                                        server['login'], \
@@ -710,7 +710,7 @@ class ZabbixDataReader():
         # It iterates over all Zabbix servers reading a subset of the
         # monitored items.
         self.logger.debug("Fetching data from server pool.")
-        application = cfg.config['application']
+        application = cfg.config.zabbix['application']
         parameters = {"output": ["hostid", "name", "lastvalue"],
                       "application": application}
         all_items = dict()

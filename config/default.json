@@ -5,10 +5,10 @@
         "servers": [],
         "database": {
             "host": "localhost",
-            "user": "kmyokoyama",
-            "password": "postgres",
+            "user": "mconf",
+            "password": "changeme",
             "database": "zabbix",
-            "table": "security"
+            "table": "server_metrics"
         },
         "setup_file": "config",
         "debug": {
