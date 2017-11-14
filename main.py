@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.6
 
 
+import argparse
 import logging
 import time
 
@@ -10,7 +11,13 @@ from mconf_aggr.aggregator import Aggregator, SetupError, PublishError
 
 
 def main():
-    cfg.config.setup_config("config/config.json")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-c", "--config", help="custom JSON configuration file")
+    args = parser.parse_args()
+
+    if args.config:
+        cfg.config.setup_config(args.config)
+
     cfg.config.setup_logging()
 
     logger = logging.getLogger(__name__)
