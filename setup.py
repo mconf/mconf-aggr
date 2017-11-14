@@ -11,18 +11,18 @@ def read(fname):
 
 
 setup(
-   name="mconf-aggr",
-   version="0.0.1",
-   description="Mconf Aggregator",
-   long_description=read("README.md"),
-   author="Kazuki Yokoyama",
-   author_email="kmyokoyama@inf.ufrgs.br",
-   url="https://github.com/mconftec/mconf-aggr",
-   packages=["mconf_aggr"],
-   install_requires=["psycopg2",
-                     "zabbix-api",
-                     "sphinx",
-                     "sqlalchemy",
-                     "cachetools"],
-   test_suite="tests"
+    name="mconf-aggr",
+    version="0.0.1",
+    description="Mconf Aggregator",
+    long_description=read("README.md"),
+    author="Kazuki Yokoyama",
+    author_email="kmyokoyama@inf.ufrgs.br",
+    url="https://github.com/mconftec/mconf-aggr",
+    packages=["mconf_aggr"],
+    install_requires=["psycopg2",
+                      "zabbix-api",
+                      "sphinx",
+                      "sqlalchemy",
+                      "cachetools"],
+    test_suite="tests"
 )

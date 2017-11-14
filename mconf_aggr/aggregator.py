@@ -12,6 +12,7 @@ this module.
 import itertools
 import logging
 import queue
+import reprlib
 import threading
 from collections import namedtuple
 
@@ -130,11 +131,11 @@ class SubscriberThread(threading.Thread):
 
         It runs while the thread is signaled to exit (by calling its `exit`
         method). The data is popped out from the `subscriber`'s channel and
-        sent to the `subscriber`'s callback `run` method. When signaled to exit,
-        it simply returns and the thread is done.
+        sent to the `subscriber`'s callback `run` method. When signaled to
+        exit, it simply returns and the thread is done.
         """
         self.logger.debug(
-            "Running thread with callback {}" \
+            "Running thread with callback {}"
             .format(self.subscriber.callback)
         )
         while not self._stopevent.is_set():
@@ -159,7 +160,7 @@ class SubscriberThread(threading.Thread):
 
         threading.Thread.join(self)
         self.logger.debug(
-            "Thread with callback {} exited with success." \
+            "Thread with callback {} exited with success."
             .format(self.subscriber.callback)
         )
 
@@ -195,8 +196,8 @@ class Channel:
         """
         self.logger.debug("Closing channel {}.".format(self.name))
         if not self.empty():
-            self.logger.warn("There are data not consumed in channel {}." \
-                .format(self.name))
+            self.logger.warn("There are data not consumed in channel {}."
+                             .format(self.name))
         self.queue.put(None)
 
     def publish(self, data):
@@ -272,6 +273,10 @@ class Channel:
         """
         return self.queue.full()
 
+    def __repr__(self):
+        return "{!s}(name={!r}, maxsize={!r})".format(
+            self.__class__.__name__, self.name, self.maxsize)
+
 
 class Publisher:
     """Data publisher.
@@ -322,6 +327,12 @@ class Publisher:
         for subscriber in self.channels[channel]:
             subscriber.channel.publish(data)
 
+    def __repr__(self):
+        channels = list(self.channels.keys())
+
+        return "{!s}(channels={!r})".format(self.__class__.__name__,
+                                            reprlib.repr(channels))
+
 
 class Aggregator:
     """Aggregator main class.
@@ -352,10 +363,10 @@ class Aggregator:
         It calls `setup` method for each of its subscribers' callback and
         starts a thread for each of them.
 
-        If something goes wrong while starting a thread for a callback, it stops
-        every already running thread and raises a `SetupError`. In other words,
-        the aggregator only starts with success if _all_ threads are started
-        properly.
+        If something goes wrong while starting a thread for a callback, it
+        stops every already running thread and raises a `SetupError`.
+        In other words, the aggregator only starts with success if _all_
+        threads are started properly.
 
         Raises
         ------
@@ -366,19 +377,20 @@ class Aggregator:
 
         for subscriber in self.subscribers:
             try:
-                self.logger.debug("Setting up callback {}." \
+                self.logger.debug(
+                    "Setting up callback {}."
                     .format(subscriber.callback)
                 )
                 subscriber.callback.setup()
             except NotImplementedError as err:
                 self.logger.warn(
-                    "setup() not implemented for callback {}." \
+                    "setup() not implemented for callback {}."
                     .format(subscriber.callback)
                 )
                 continue
             except Exception as err:
                 self.logger.exception(
-                    "Something went wrong while setting up callback {}." \
+                    "Something went wrong while setting up callback {}."
                     .format(subscriber.callback)
                 )
                 self.remove_callback(subscriber.callback)
@@ -419,19 +431,19 @@ class Aggregator:
         for subscriber in self.subscribers:
             try:
                 self.logger.debug(
-                    "Tearing down callback {}."\
+                    "Tearing down callback {}."
                     .format(subscriber.callback)
                 )
                 subscriber.callback.teardown()
             except NotImplementedError as err:
                 self.logger.warn(
-                    "teardown() not implemented for callback {}." \
+                    "teardown() not implemented for callback {}."
                     .format(subscriber.callback)
                 )
                 continue
             except Exception as err:
                 self.logger.exception(
-                    "Something went wrong while tearing down callback {}." \
+                    "Something went wrong while tearing down callback {}."
                     .format(subscriber.callback)
                 )
                 continue
@@ -465,7 +477,7 @@ class Aggregator:
             subscribers = self.channels[channel]
         except KeyError:
             self.logger.debug(
-                "Creating new list of subscribers for channel {}."\
+                "Creating new list of subscribers for channel {}."
                 .format(channel)
             )
             subscribers = []
@@ -483,7 +495,7 @@ class Aggregator:
         This methods exists if you need to remove a callback for any reason.
         """
         self.logger.debug(
-            "Removing callback {} from subscribers." \
+            "Removing callback {} from subscribers."
             .format(callback)
         )
         for channel, subscribers in self.channels.items():
@@ -494,10 +506,10 @@ class Aggregator:
 
             self.channels[channel] = filtered_subscribers
 
-        self.channels = {channel: subscribers \
-                        for channel, subscribers \
-                        in self.channels.items() \
-                        if subscribers}
+        self.channels = {channel: subscribers
+                         for channel, subscribers
+                         in self.channels.items()
+                         if subscribers}
 
     @property
     def subscribers(self):

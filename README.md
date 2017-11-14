@@ -255,8 +255,8 @@ One simple way to navigate through these files is creating an ephemeral server w
 the `SimpleHTTPServer` Python built-in module. From the `docs/_build/html/` directory, run:
 
 ```
-$ python -m SimpleHTTPServer
+$ python -m http.server
 ```
 
-It will create a server on _localhost:4000_. You can check it out in
+It will create a server on _localhost:8000_. You can check it out in
 your browser.

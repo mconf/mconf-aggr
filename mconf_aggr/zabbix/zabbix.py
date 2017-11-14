@@ -63,6 +63,7 @@ outside the module.
 """
 
 import logging
+import reprlib
 import sqlalchemy as sa
 from contextlib import contextmanager
 from datetime import datetime
@@ -71,7 +72,6 @@ from sqlalchemy.orm import sessionmaker
 from urllib.parse import urlsplit
 
 import cachetools
-import psycopg2 as pg
 import zabbix_api as api
 
 from mconf_aggr import cfg
@@ -149,7 +149,7 @@ class ServersPool:
                 server.connect()
             except ZabbixLoginError:
                 self.logger.exception(
-                    "Login to server {} has failed. Removing it from server pool." \
+                    "Login to server {} has failed. Removing it from server pool."
                     .format(server)
                 )
                 failed_servers.append(server)
@@ -166,6 +166,10 @@ class ServersPool:
 
     def __iter__(self):
         return iter(self.servers)
+
+    def __repr__(self):
+        return "{!s}(servers={})".format(self.__class__.__name__,
+                                         reprlib.repr(self.servers))
 
 
 class ZabbixServer:
@@ -194,14 +198,14 @@ class ZabbixServer:
         logger : logging.Logger
             If not supplied, it will instantiate a new logger from __name__.
         """
-        self.url = url # It must start with http(s)://.
+        self.url = url  # It must start with http(s)://.
         self.login = login
         self.password = password
-        self.hosts = dict() # hosts is a hostid:hostname dictionary.
+        self.hosts = dict()  # hosts is a hostid:hostname dictionary.
         self.logger = logger or logging.getLogger(__name__)
         self._ok = False
 
-        self.name = urlsplit(self.url).netloc # Extract just the domain.
+        self.name = urlsplit(self.url).netloc  # Extract just the domain.
 
     def connect(self):
         """Connect to the Zabbix server.
@@ -216,7 +220,7 @@ class ZabbixServer:
             self.connection.login(self.login, self.password)
         except api.ZabbixAPIException:
             self.logger.exception(
-                "Something went wrong while trying to login to server {}." \
+                "Something went wrong while trying to login to server {}."
                 .format(self)
             )
             self.connection = None
@@ -291,7 +295,7 @@ class ZabbixServer:
                 # Suppress stack trace from this exception as it logs
                 # many not so useful information.
                 self.logger.error(
-                    "Something went wrong while getting items from {}." \
+                    "Something went wrong while getting items from {}."
                     .format(self)
                 )
 
@@ -304,11 +308,14 @@ class ZabbixServer:
                 raise
             else:
                 if not self._ok:
-                    self.logger.info("Connection to server {} restored." \
+                    self.logger.info("Connection to server {} restored."
                                      .format(self))
                     self._ok = True
 
         return {self.name: results}
+
+    def __repr__(self):
+        return "{!s}(url={!r})".format(self.__class__.__name__, self.url)
 
     def __str__(self):
         return self.name
@@ -368,8 +375,9 @@ class ServerMetricTable(Base):
     updated_at = sa.Column(sa.DateTime)
 
     def __repr__(self):
-        return "<ServerMetric(name={}, value={}m, updated_at={})" \
-                .format(self.name, self.value, self.updated_at)
+        return "{!s}(name={!r}, value={!r}, updated_at={!r})" \
+            .format(self.__class__.__name__, self.name,
+                    self.value, self.updated_at)
 
 
 class ServerTable(Base):
@@ -391,7 +399,7 @@ class ServerTable(Base):
     name = sa.Column(sa.String)
 
     def __repr__(self):
-        return "<Server(name={})".format(self.name)
+        return "{!s}(name={})".format(self.__class__.__name__, self.name)
 
 
 server_cache = cachetools.TTLCache(maxsize=20, ttl=9)
@@ -433,8 +441,10 @@ class ServerMetricDAO:
             current value.
         """
         if data['server_name'] not in server_cache:
-            self.logger.debug("Server {} not found in server cache."\
-                .format(data['server_name']))
+            self.logger.debug(
+                "Server {} not found in server cache."
+                .format(data['server_name'])
+            )
 
             server_id = self.session.query(ServerTable) \
                             .filter(ServerTable.name == data['server_name'])\
@@ -442,14 +452,16 @@ class ServerMetricDAO:
 
             server_cache[data['server_name']] = server_id
         else:
-            self.logger.debug("Server {} found in server cache."\
-                .format(data['server_name']))
+            self.logger.debug(
+                "Server {} found in server cache."
+                .format(data['server_name'])
+            )
 
             server_id = server_cache[data['server_name']]
 
         metric = self.session.query(ServerMetricTable) \
                              .filter(ServerMetricTable.server_id == server_id,
-                                     ServerMetricTable.name == data['metric']) \
+                                     ServerMetricTable.name == data['metric'])\
                              .first()
 
         if metric:
@@ -528,6 +540,10 @@ class PostgresConnector:
                                                           self.config['host'],
                                                           self.config['database'])
 
+    def __repr__(self):
+        return "{!s}(database_uri={!r})".format(self.__class__.__name__,
+                                                self.database)
+
 
 class ZabbixDataWriter(AggregatorCallback):
     """Writer of data retrieved from Zabbix servers.
@@ -579,6 +595,10 @@ class ZabbixDataWriter(AggregatorCallback):
         for metric in data:
             self.connector.update(metric)
 
+    def __repr__(self):
+        return "{!s}(connector={!r})".format(self.__class__.__name__,
+                                             self.connector)
+
 
 def make_data(data):
     """Transform data into a format that is understandable across the module.
@@ -593,16 +613,16 @@ def make_data(data):
     list
         A list of metrics in the format discussed in the module's documentation.
     """
-    metrics = []
     now = datetime.now()
 
     return [{'zabbix_server': server,
              'server_name': host,
              'metric': item['name'],
              'value': item['lastvalue'],
-             'updated_at': now} for server, hosts in data.items()
-                                for host, items in hosts.items()
-                                for item in items]
+             'updated_at': now}
+            for server, hosts in data.items()
+            for host, items in hosts.items()
+            for item in items]
 
 
 class ZabbixDataReader():
@@ -651,7 +671,7 @@ class ZabbixDataReader():
                 self.pool.remove_server(server)
             except Exception:
                 self.logger.exception(
-                    "Something went wrong when getting hosts for server {}." \
+                    "Something went wrong when getting hosts for server {}."
                     .format(server)
                 )
                 self.pool.remove_server(server)
@@ -680,13 +700,13 @@ class ZabbixDataReader():
         # Add each server to the server pool.
         for server in cfg.config['servers']:
             try:
-                url, login, password = server['url'], \
-                                       server['login'], \
-                                       server['password']
+                url, login, password = (server['url'],
+                                        server['login'],
+                                        server['password'])
             except KeyError:
                 self.logger.exception(
-                    "URL, login or password not supplied for server {}". \
-                    format(server)
+                    "URL, login or password not supplied for server {}"
+                    .format(server)
                 )
             else:
                 self.pool.add_server(ZabbixServer(url, login, password))
@@ -726,3 +746,7 @@ class ZabbixDataReader():
         data = make_data(all_items)
 
         return data
+
+    def __repr__(self):
+        return "{!s}(pool={!r})".format(self.__class__.__name__,
+                                        self.pool)
