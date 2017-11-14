@@ -6,7 +6,6 @@ import time
 
 import mconf_aggr.cfg as cfg
 from mconf_aggr.zabbix.zabbix import ZabbixDataWriter, ZabbixDataReader
-from mconf_aggr.dummy import FileWriter, DummyWriter
 from mconf_aggr.aggregator import Aggregator, SetupError, PublishError
 
 
@@ -32,7 +31,7 @@ def main():
 
     publisher = aggregator.publisher
 
-    period = cfg.config['period']
+    period = cfg.config.zabbix['period']
 
     while True:
         try:
