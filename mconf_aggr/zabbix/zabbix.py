@@ -531,8 +531,11 @@ class PostgresConnector:
         data : dict
             The data to be updated in the database.
         """
-        with session_scope() as session:
-            ServerMetricDAO(session).update(data)
+        try:
+            with session_scope() as session:
+                ServerMetricDAO(session).update(data)
+        except sa.exc.OperationalError as err:
+            self.logger.error(err)
 
     def _build_uri(self):
         return "postgresql+psycopg2://{}:{}@{}/{}".format(self.config['user'],

@@ -90,6 +90,7 @@
         "mconf_aggr.aggregator": {
             "level": "DEBUG",
             "handlers": [
+                "console",
                 "debug_file_handler"
             ],
             "propagate": false
@@ -98,6 +99,7 @@
         "mconf_aggr.zabbix.zabbix": {
             "level": "DEBUG",
             "handlers": [
+                "console",
                 "zabbix_debug_file_handler",
                 "zabbix_info_file_handler"
             ],
