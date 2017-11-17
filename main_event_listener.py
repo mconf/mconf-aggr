@@ -44,15 +44,9 @@ class DataReader():
 
     def read(self, data):
         # TODO: Validade checksum
-        # Message will be in format event={data}&timestamp=BigInteger and encoded
         decoded_data = unquote(data)
-        decoded_data = decoded_data.split('&')
+        posted_obj = json.loads(decoded_data)
 
-        # Set {data} in event={data} to events variable
-        events = decoded_data[0].split('=',1)[1]
-        timestamp = decoded_data[1].split('=',1)[1]
-
-        posted_obj = json.loads(events)
         for webhook_msg in posted_obj:
             # Map message
             mapped_msg = db_mapping.map_message_to_db(webhook_msg)
