@@ -75,7 +75,7 @@ import cachetools
 import zabbix_api as api
 
 from mconf_aggr import cfg
-from mconf_aggr.aggregator import AggregatorCallback
+from mconf_aggr.aggregator import AggregatorCallback, CallbackError
 
 
 class ZabbixLoginError(Exception):
@@ -537,6 +537,8 @@ class PostgresConnector:
         except sa.exc.OperationalError as err:
             self.logger.error(err)
 
+            raise
+
     def _build_uri(self):
         return "postgresql+psycopg2://{}:{}@{}/{}".format(self.config['user'],
                                                           self.config['password'],
@@ -596,7 +598,12 @@ class ZabbixDataWriter(AggregatorCallback):
             The data may be compound of many metrics of different server hosts.
         """
         for metric in data:
-            self.connector.update(metric)
+            try:
+                self.connector.update(metric)
+            except sa.exc.OperationalError as err:
+                self.logger.error("Operational error on database.")
+
+                raise CallbackError() from err
 
     def __repr__(self):
         return "{!s}(connector={!r})".format(self.__class__.__name__,
@@ -689,6 +696,7 @@ class ZabbixDataReader():
         """
         self.logger.info("Stopping ZabbixDataReader.")
         self.pool.close()
+        self.logger.info("ZabbixDataReader stopped.")
 
     def connect(self):
         """Connect to the Zabbix servers in its pool.

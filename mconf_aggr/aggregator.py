@@ -17,6 +17,24 @@ import threading
 from collections import namedtuple
 
 
+class AggregatorStopped(Exception):
+    """Raised if the aggregator has stopped for some reason.
+
+    It is raised to notify users of aggregator that it is no longer running.
+    """
+    pass
+
+
+class CallbackError(Exception):
+    """Raised if something goes wrong while running a callback.
+
+    It should be raised by callbacks (or Writers) when something goes wrong.
+    As an example of unexpected behavior that should trigger this error is
+    database operational error.
+    """
+    pass
+
+
 class SetupError(Exception):
     """Raised if something goes wrong while setting aggregator up.
     """
@@ -109,8 +127,8 @@ class AggregatorCallback:
 class SubscriberThread(threading.Thread):
     """This class represents the thread to be run for a subscriber.
     """
-    def __init__(self, subscriber, group=None, target=None, name=None,
-                 args=(), kwargs=None, daemon=None, logger=None):
+    def __init__(self, subscriber, errorevent, group=None, target=None,
+                 name=None, args=(), kwargs=None, daemon=None, logger=None):
         """Constructor of the `SubscriberThread`.
 
         Parameters
@@ -123,6 +141,7 @@ class SubscriberThread(threading.Thread):
         threading.Thread.__init__(self, group=group, target=target,
                                   name=name, daemon=daemon)
         self.subscriber = subscriber
+        self._errorevent = errorevent
         self._stopevent = threading.Event()
         self.logger = logger or logging.getLogger(__name__)
 
@@ -141,10 +160,13 @@ class SubscriberThread(threading.Thread):
         while not self._stopevent.is_set():
             try:
                 data = self.subscriber.channel.pop()
-            except ChannelClosed as err:
-                continue
-            else:
                 self.subscriber.callback.run(data)
+            except ChannelClosed:
+                continue
+            except CallbackError:
+                self.logger.info("An error occurred while running a subscriber. "
+                                 "Notifying aggregator to stop.")
+                self._errorevent.set()
 
         return
 
@@ -233,7 +255,7 @@ class Channel:
 
         if data is None:
             self.logger.debug("Signaling closing channel {} for clients "
-                "waiting for data.".format(self.name))
+                              "waiting for data.".format(self.name))
             raise ChannelClosed()
 
         self.queue.task_done()
@@ -290,6 +312,7 @@ class Publisher:
             If not supplied, it will instantiate a new logger from __name__.
         """
         self.channels = None
+        self._running = True
         self.logger = logger or logging.getLogger(__name__)
 
     def update_channels(self, channels):
@@ -318,20 +341,46 @@ class Publisher:
         PublishError
             If no channel was found.
         """
-        self.logger.debug("Publishing data to subscribers.")
+        if self._running:
+            self.logger.debug("Publishing data to subscribers.")
 
-        if self.channels is None:
-            self.logger.exception("No channel was found for this publisher.")
-            raise PublishError()
+            if self.channels is None:
+                self.logger.exception("No channel was found for this publisher.")
+                raise PublishError()
 
-        for subscriber in self.channels[channel]:
-            subscriber.channel.publish(data)
+            for subscriber in self.channels[channel]:
+                subscriber.channel.publish(data)
+        else:
+            raise AggregatorStopped()
+
+    def stop(self):
+        """Stop the publisher.
+        """
+        self.logger.debug("Stopping the publisher.")
+        self._running = False
 
     def __repr__(self):
         channels = list(self.channels.keys())
 
         return "{!s}(channels={!r})".format(self.__class__.__name__,
                                             reprlib.repr(channels))
+
+
+def error_handler(aggregator, errorevent):
+    """Error-waiting thread.
+
+    Parameters
+    ----------
+    aggregator : Aggregator
+        The aggregator object which this thread monitors errors for.
+    errorevent : threading.Event
+        Shared Event that serves as a channel for communicating errors between
+        subscriber threads and this one.
+    """
+    errorevent.wait()  # This call blocks until a thread set this Event.
+    aggregator.stop()  # Notify the aggregator to stop.
+
+    return
 
 
 class Aggregator:
@@ -353,6 +402,7 @@ class Aggregator:
         self.channels = {}
         self.publisher = Publisher()
         self.threads = []
+        self._running = False  # It is considered running only after its setup.
         self.logger = logger or logging.getLogger(__name__)
 
         self.logger.info("Aggregator created.")
@@ -396,12 +446,25 @@ class Aggregator:
                 self.remove_callback(subscriber.callback)
                 continue
 
+        errorevent = threading.Event()  # Shared Event between subscriber
+                                        # threads and error-waiting thread.
         self.threads = []
 
         for subscriber in self.subscribers:
-            self.threads.append(SubscriberThread(subscriber=subscriber))
+            self.threads.append(SubscriberThread(subscriber=subscriber,
+                                                 errorevent=errorevent))
 
+        # Create error-waiting thread.
+        self._error_thread = threading.Thread(name="error_handler",
+                                              target=error_handler,
+                                              args=(self, errorevent),
+                                              daemon=True)
+
+    def start(self):
         self.logger.info("Starting threads for callbacks.")
+
+        self._error_thread.start()
+
         try:
             for thread in self.threads:
                 thread.start()
@@ -416,6 +479,8 @@ class Aggregator:
         if all([thread.is_alive() for thread in self.threads]):
             self.logger.info("All threads started with success.")
 
+        self._running = True
+
         self.logger.info("Aggregator running.")
 
     def stop(self):
@@ -425,6 +490,11 @@ class Aggregator:
         stops all threads. The aggregator is considered to have stopped with
         success if all threads exit properly.
         """
+        if not self._running:
+            self.logger.info("Aggregator already stopped.")
+
+            return
+
         self.logger.info("Stopping aggregator.")
 
         self.logger.info("Tearing down callbacks.")
@@ -454,6 +524,10 @@ class Aggregator:
 
         if not any([thread.is_alive() for thread in self.threads]):
             self.logger.info("All threads exited with success.")
+
+        self.publisher.stop()
+
+        self._running = False
 
         self.logger.info("Aggregator finished with success.")
 
