@@ -221,21 +221,15 @@ class TestOperationsUsers(unittest.TestCase):
         data = [{
                   "data": {
                     "type": "event",
-                    "id": "user-joined",
+                    "id": "user-left",
                     "attributes": {
                       "meeting": {
                         "external-meeting-id": "mock",
                         "internal-meeting-id": "mock"
                       },
                       "user": {
-                        "name": "Mock_User",
-                        "role": "MODERATOR",
-                        "presenter": True,
                         "internal-user-id": "mock",
-                        "external-user-id": "mock",
-                        "sharing-mic": True,
-                        "stream": True,
-                        "listening-only": True
+                        "external-user-id": "mock"
                       },
                       "event": {
                         "ts": 999
