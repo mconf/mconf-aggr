@@ -27,6 +27,46 @@ class HookListener(object):
         resp.status = falcon.HTTP_200  # This is the default status
 
 
+class AuthMiddleware(object):
+    def process_request(self,req,resp):
+        """Process the request before routing it.
+
+        Args:
+            req: Request object that will eventually be
+                routed to an on_* responder method.
+            resp: Response object that will be routed to
+                the on_* responder.
+        """
+        token = req.get_header('Authorization')
+        challenges = ['Token type="Bearer"']
+
+        if token is None:
+            description = ('Please provide an auth token '
+                           'as part of the request.')
+
+            raise falcon.HTTPUnauthorized('Auth token required',
+                                          description,
+                                          challenges,
+                                          href='http://docs.example.com/auth')
+
+        if not self._token_is_valid(token):
+            description = ('The provided auth token is not valid. '
+                           'Please request a new token and try again.')
+
+            raise falcon.HTTPUnauthorized('Authentication required',
+                                          description,
+                                          challenges,
+                                          href='http://docs.example.com/auth')
+
+    def _token_is_valid(self, token):
+        expected = 'Bearer ' + cfg.config['event_listener']['auth']['token']
+
+        if(expected == token):
+            return True
+        else:
+            return False
+
+
 class DataReader():
 
     def __init__(self):
@@ -44,15 +84,9 @@ class DataReader():
 
     def read(self, data):
         # TODO: Validade checksum
-        # Message will be in format event={data}&timestamp=BigInteger and encoded
         decoded_data = unquote(data)
-        decoded_data = decoded_data.split('&')
+        posted_obj = json.loads(decoded_data)
 
-        # Set {data} in event={data} to events variable
-        events = decoded_data[0].split('=',1)[1]
-        timestamp = decoded_data[1].split('=',1)[1]
-
-        posted_obj = json.loads(events)
         for webhook_msg in posted_obj:
             # Map message
             mapped_msg = db_mapping.map_message_to_db(webhook_msg)
@@ -68,7 +102,7 @@ class DataReader():
 cfg.config.setup_config("config/config.json")
 
 # falcon.API instances are callable WSGI apps
-app = falcon.API()
+app = falcon.API(middleware=AuthMiddleware())
 
 db_reader = DataReader()
 db_writter = DataWritter()
