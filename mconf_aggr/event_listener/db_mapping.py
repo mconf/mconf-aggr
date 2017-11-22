@@ -10,7 +10,8 @@ def map_message_to_db(message):
         msg = map_user_join_left(message, id)
     elif(id in ["user-audio-voice-enabled","user-audio-voice-disabled",
                 "user-audio-listen-only-enabled","user-audio-listen-only-disabled",
-                "user-cam-broadcast-start","user-cam-broadcast-end"]):
+                "user-cam-broadcast-start","user-cam-broadcast-end",
+                "user-presenter-assigned", "user-presenter-unassigned"]):
         msg = map_user_events(message, id)
     elif(id in ["rap-archive-started","rap-archive-ended",
                 "rap-sanity-started","rap-sanity-ended",
