@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 import mconf_aggr.cfg as cfg
 from mconf_aggr.zabbix.zabbix import ZabbixDataWriter, ZabbixDataReader
-from mconf_aggr.aggregator import Aggregator, SetupError, PublishError, AggregatorStopped
+from mconf_aggr.aggregator import Aggregator, SetupError, PublishError, AggregatorNotRunning
 
 
 def main():
@@ -56,7 +56,7 @@ def main():
                     logger.warn("Something went wrong while publishing.")
 
                     continue
-                except AggregatorStopped:
+                except AggregatorNotRunning:
                     logger.info("Aggregator stopped.")
 
                     zabbix_reader.stop()

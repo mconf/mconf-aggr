@@ -17,7 +17,7 @@ import threading
 from collections import namedtuple
 
 
-class AggregatorStopped(Exception):
+class AggregatorNotRunning(Exception):
     """Raised if the aggregator has stopped for some reason.
 
     It is raised to notify users of aggregator that it is no longer running.
@@ -351,7 +351,7 @@ class Publisher:
             for subscriber in self.channels[channel]:
                 subscriber.channel.publish(data)
         else:
-            raise AggregatorStopped()
+            raise AggregatorNotRunning()
 
     def stop(self):
         """Stop the publisher.
