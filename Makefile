@@ -1,5 +1,6 @@
 AGGR_PATH=~/mconf-aggr
 CONFIG_PATH=~/config.json
+AGGR_PATH=`realpath .`
 
 run:
 	@python main.py -c $(CONFIG_PATH)
