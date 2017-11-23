@@ -542,7 +542,7 @@ class PostgresConnector:
 
     def __repr__(self):
         return "{!s}(database_uri={!r})".format(self.__class__.__name__,
-                                                self.database)
+                                                self.database_uri)
 
 
 class ZabbixDataWriter(AggregatorCallback):
