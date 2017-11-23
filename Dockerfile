@@ -2,10 +2,10 @@ FROM python:3
 
 LABEL maintainer="Kazuki Yokoyama (kmyokoyama@inf.ufrgs.br)"
 
-ADD . /mconf-aggr/
+ADD . /usr/src/mconf-aggr/
 
-RUN pip install -r /mconf-aggr/requirements.txt
+RUN pip install -r /usr/src/mconf-aggr/requirements.txt
 
-WORKDIR /mconf-aggr/
+WORKDIR /usr/src/mconf-aggr/
 
-CMD ["python", "main.py"]
+CMD ["python", "main.py", "-c", "/usr/src/mconf-aggr/config/config.json"]
