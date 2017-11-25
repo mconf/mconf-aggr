@@ -6,11 +6,12 @@ import logging
 import time
 import sys
 
-import sqlalchemy as sa
-
 import mconf_aggr.cfg as cfg
 from mconf_aggr.zabbix.zabbix import ZabbixDataWriter, ZabbixDataReader
-from mconf_aggr.aggregator import Aggregator, SetupError, PublishError, AggregatorNotRunning
+from mconf_aggr.aggregator import (Aggregator,
+                                   SetupError,
+                                   PublishError,
+                                   AggregatorNotRunning)
 
 
 def main():
