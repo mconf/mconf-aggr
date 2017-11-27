@@ -11,6 +11,9 @@ test:
 dep:
 	@pip install -r requirements.txt
 
+html:
+	@make -C docs/ html
+
 docker-build:
 	docker build -t mconf-aggr:$(TAG) .
 
