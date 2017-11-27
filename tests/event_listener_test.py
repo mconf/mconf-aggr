@@ -2,15 +2,15 @@ import json
 import unittest
 import unittest.mock as mock
 
-from main_event_listener import aggregator, DataReader
+from main_event_listener import aggregator
+from mconf_aggr.event_listener.event_listener import DataHandler
 
 class TestReader(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         publisher_mock = mock.Mock()
-        self.data_reader = DataReader()
-        self.data_reader.route = "/mock"
-        self.data_reader.setup(publisher_mock)
+        self.channel = 'webhooks'
+        self.data_reader = DataHandler(publisher_mock,self.channel)
 
     def test_reader_read(self):
         data = [{
@@ -58,8 +58,8 @@ class TestReader(unittest.TestCase):
                         "leave_time" : 999
                     }]
 
-        self.data_reader.read(data)
+        self.data_reader.process_data(data)
 
-        self.data_reader.publisher.publish.assert_called_with(expected,channel='webhooks')
+        self.data_reader.publisher.publish.assert_called_with(expected,channel=self.channel)
 
         aggregator.stop()
