@@ -274,6 +274,7 @@ shown below:
 * To build a Docker image for development: `$ make docker-build-dev`
 * To run a Docker image: `$ make docker-run CONFIG_PATH=path/to/config.json TAG=any_tag`
 * To run the Docker development image: `$ make docker-run-dev AGGR_PATH=path/to/here CONFIG_PATH=path/to/config`
+* To clean the project: `$ make clean`
 
 The `Makefile` also provides sensitive defaults:
 
