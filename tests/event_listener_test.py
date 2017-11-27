@@ -2,7 +2,6 @@ import json
 import unittest
 import unittest.mock as mock
 
-from main_event_listener import aggregator
 from mconf_aggr.event_listener.event_listener import DataHandler
 
 class TestReader(unittest.TestCase):
@@ -61,5 +60,3 @@ class TestReader(unittest.TestCase):
         self.data_reader.process_data(data)
 
         self.data_reader.publisher.publish.assert_called_with(expected,channel=self.channel)
-
-        aggregator.stop()
