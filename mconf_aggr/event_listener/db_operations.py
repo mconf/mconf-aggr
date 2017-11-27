@@ -246,7 +246,7 @@ class DataProcessor:
                                voice_participant_count=0,
                                video_count=0,
                                moderator_count=0,
-                               attendees="{}")
+                               attendees=[])
         new_meeting.meeting_event = new_meeting_evt
         self.session.add(new_meeting)
 
@@ -280,7 +280,7 @@ class DataProcessor:
         meeting_table = self.session.query(Meetings).get(meeting_table.id)
 
         def attendee_json(base,new):
-            if(base == "{}"):
+            if not base:
                 arr = []
                 arr.append(new)
                 return arr
@@ -301,14 +301,16 @@ class DataProcessor:
         meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
         meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
 
+
         # SQLAlchemy was not considering the attendees array as modified, so it had to be forced
         flag_modified(meeting_table, "attendees")
 
         self.session.add(new_user)
+        self.session.add(meeting_table)
 
         # Update unique users
         meeting_evt_table = self.session.query(MeetingsEvents).get(meeting_evt_table.id)
-        meeting_evt_table.uniqueUsers = int(self.session.query(UsersEvents.id).\
+        meeting_evt_table.unique_users = int(self.session.query(UsersEvents.id).\
                                         join(UsersEvents.meeting_event).\
                                         filter(MeetingsEvents.internal_meeting_id == int_id).\
                                         count())
@@ -320,7 +322,8 @@ class DataProcessor:
         meeting_evt_table = self.session.query(MeetingsEvents).\
                             filter(MeetingsEvents.internal_meeting_id == int_id).first()
         meeting_evt_table = self.session.query(MeetingsEvents).get(meeting_evt_table.id)
-        meeting_evt_table.end_time= self.mapped_msg["end_time"]
+        meeting_evt_table.end_time = self.mapped_msg["end_time"]
+        self.session.add(meeting_evt_table)
 
         # Meeting table to be updated
         meeting_table = self.session.query(Meetings).\
@@ -363,6 +366,7 @@ class DataProcessor:
 
         # Mark Meetings.attendees as modified for SQLAlchemy
         flag_modified(meeting_table,"attendees")
+        self.session.add(meeting_table)
 
     def user_info_update(self):
         user_id = self.mapped_msg["internal_user_id"]
@@ -376,22 +380,22 @@ class DataProcessor:
 
         def update_attendees(base, update):
             if(update["event_name"] == "user-audio-voice-enabled"):
-                attr = "hasJoinedVoice"
+                attr = "has_joined_voice"
                 value = True
             elif(update["event_name"] == "user-audio-voice-disabled"):
-                attr = "hasJoinedVoice"
+                attr = "has_joined_voice"
                 value = False
             elif(update["event_name"] == "user-audio-listen-only-enabled"):
-                attr = "isListeningOnly"
+                attr = "is_listening_only"
                 value = True
             elif(update["event_name"] == "user-audio-listen-only-disabled"):
-                attr = "isListeningOnly"
+                attr = "is_listening_only"
                 value = False
             elif(update["event_name"] == "user-cam-broadcast-start"):
-                attr = "hasVideo"
+                attr = "has_video"
                 value = True
             elif(update["event_name"] == "user-cam-broadcast-end"):
-                attr = "hasVideo"
+                attr = "has_video"
                 value = False
             for attendee in base:
                 if(attendee["int_user_id"] == user_id):
@@ -405,6 +409,8 @@ class DataProcessor:
         meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
         meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
         flag_modified(meeting_table,"attendees")
+
+        self.session.add(meeting_table)
 
     def rap_events(self):
         int_id = self.mapped_msg["internal_meeting_id"]
@@ -448,6 +454,7 @@ class DataProcessor:
                 record_table.status= "published"
                 record_table.published= True
             # treat "unpublished" and "deleted" when webhooks are emitting those events
+            self.session.add(record_table)
 
     def db_event_selector(self):
         id = self.webhook_msg["data"]["id"]
