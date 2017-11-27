@@ -36,7 +36,7 @@ clean: clean-pyc clean-build
 clean-pyc:
 	find . -name '*.pyc' -exec rm --force {} +
 	find . -name '*.pyo' -exec rm --force {} +
-	name '*~' -exec rm --force  {}
+	find . -name '*~' -exec rm --force  {} +
 
 .PHONY: clean-build
 clean-build:
