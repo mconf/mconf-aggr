@@ -8,18 +8,18 @@ def map_message_to_db(message):
         msg = map_end_message(message)
     elif(id == "user-joined" or id == "user-left"):
         msg = map_user_join_left(message, id)
-    elif(id in ["user-audio-voice-enabled","user-audio-voice-disabled",
-                "user-audio-listen-only-enabled","user-audio-listen-only-disabled",
-                "user-cam-broadcast-start","user-cam-broadcast-end",
+    elif(id in ["user-audio-voice-enabled", "user-audio-voice-disabled",
+                "user-audio-listen-only-enabled", "user-audio-listen-only-disabled",
+                "user-cam-broadcast-start", "user-cam-broadcast-end",
                 "user-presenter-assigned", "user-presenter-unassigned"]):
         msg = map_user_events(message, id)
-    elif(id in ["rap-archive-started","rap-archive-ended",
-                "rap-sanity-started","rap-sanity-ended",
-                "rap-post-archive-started","rap-post-archive-ended",
-                "rap-process-started","rap-process-ended",
-                "rap-post-process-started","rap-post-process-ended",
-                "rap-publish-started","rap-publish-ended",
-                "rap-post-publish-started","rap-post-publish-ended"]):
+    elif(id in ["rap-archive-started", "rap-archive-ended",
+                "rap-sanity-started", "rap-sanity-ended",
+                "rap-post-archive-started", "rap-post-archive-ended",
+                "rap-process-started", "rap-process-ended",
+                "rap-post-process-started", "rap-post-process-ended",
+                "rap-publish-started", "rap-publish-ended",
+                "rap-post-publish-started", "rap-post-publish-ended"]):
         msg = map_rap_events(message, id)
     return msg
 

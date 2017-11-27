@@ -397,7 +397,7 @@ class DataProcessor:
                 attr="is_presenter"
                 value = True
             elif(update["event_name"] == "user-presenter-unassigned"):
-                attr="is_presenter"
+                attr = "is_presenter"
                 value = False
             for attendee in base:
                 if(attendee["int_user_id"] == user_id):
