@@ -268,6 +268,8 @@ shown below:
 
 * To run the application: `$ make run CONFIG_PATH=path/to/config.json`
 * To run the tests: `$ make test`
+* To install dependecies: `$ make dep`
+* To build the HTML documentation: `$ make html`
 * To build a Docker image: `$ make docker-build TAG=any_tag`
 * To build a Docker image for development: `$ make docker-build-dev`
 * To run a Docker image: `$ make docker-run CONFIG_PATH=path/to/config.json TAG=any_tag`
