@@ -8,6 +8,9 @@ run:
 test:
 	@python tests.py
 
+dep:
+	@pip install -r requirements.txt
+
 docker-build:
 	docker build -t mconf-aggr:$(TAG) .
 
