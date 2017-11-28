@@ -66,7 +66,13 @@ def main():
                     sys.exit(1)
 
             time.sleep(period)
-        except:
+        except KeyboardInterrupt:
+            logger.info("Keyboard interrupt signal received. "
+                        "Finishing application.")
+            break
+        except Exception as err:
+            logger.error("Unexpected exception received: {}. "
+                         "Finishing application".format(err))
             break
 
     aggregator.stop()
