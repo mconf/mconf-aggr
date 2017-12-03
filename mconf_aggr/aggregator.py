@@ -410,18 +410,14 @@ class Aggregator:
     def setup(self):
         """Set up the aggregator and its components.
 
-        It calls `setup` method for each of its subscribers' callback and
-        starts a thread for each of them.
+        It calls `setup` method for each of its subscribers' callback.
 
-        If something goes wrong while starting a thread for a callback, it
-        stops every already running thread and raises a `SetupError`.
-        In other words, the aggregator only starts with success if _all_
-        threads are started properly.
+        If something goes wrong while setting callbacks up, it removes the
+        callback from its list.
 
-        Raises
-        ------
-        SetupError
-            If any thread fails to start.
+        It also creates an error-waiting thread that awaits from errors
+        coming from callback threads and an threading.Event to communicate
+        errors between them.
         """
         self.logger.info("Setting up aggregator.")
 
@@ -461,6 +457,20 @@ class Aggregator:
                                               daemon=True)
 
     def start(self):
+        """Start the aggregator and its components.
+
+        It calls `start` method for each of its subscribers' threads.
+
+        If something goes wrong while starting a thread for a callback, it
+        stops every already running thread and raises a `SetupError`.
+        In other words, the aggregator only starts with success if _all_
+        threads are started properly.
+
+        Raises
+        ------
+        SetupError
+            If any thread fails to start.
+        """
         self.logger.info("Starting threads for callbacks.")
 
         self._error_thread.start()
