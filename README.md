@@ -261,6 +261,44 @@ $ python -m http.server
 It will create a server on _localhost:8000_. You can check it out in
 your browser.
 
+## Docker
+
+We also provide a Dockerfile to build an image of the application. It is built
+upon the [python:3 image](https://hub.docker.com/_/python/).
+
+To build an image called `mconf-aggr` with tag `newtag`, run:
+
+```
+$ docker build -t mconf-aggr:newtag .
+```
+
+> Note: notice the dot **.** at the end of the command.
+
+To run the image just created passing a `config.json` configuration file at
+`/path/to/config`, run:
+
+```
+$ docker run \
+--rm \
+-v /path/to/config/config.json:/usr/src/mconf-aggr/config/config.json \
+-ti mconf-aggr:newtag
+```
+
+> Note: the `--rm` flag tells Docker to remove the container when it is stopped.
+
+### Developing with Docker
+
+You can also use Docker in development. To share the code base in the host with
+the Docker container, just pass another `-v` flag to `docker run`:
+
+```
+$ docker run \
+--rm \
+-v /path/to/this/source:/usr/src/mconf-aggr/
+-v /path/to/config/config.json:/usr/src/mconf-aggr/config/config.json \
+-ti mconf-aggr:newtag
+```
+
 ## Makefile
 
 Some tasks can be done using the `make` utility. The most important ones are

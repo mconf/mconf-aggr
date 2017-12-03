@@ -75,7 +75,7 @@ import cachetools
 import zabbix_api as api
 
 from mconf_aggr import cfg
-from mconf_aggr.aggregator import AggregatorCallback
+from mconf_aggr.aggregator import AggregatorCallback, CallbackError
 
 
 class ZabbixLoginError(Exception):
@@ -148,7 +148,7 @@ class ServersPool:
             try:
                 server.connect()
             except ZabbixLoginError:
-                self.logger.exception(
+                self.logger.warn(
                     "Login to server {} has failed. Removing it from server pool."
                     .format(server)
                 )
@@ -166,6 +166,9 @@ class ServersPool:
 
     def __iter__(self):
         return iter(self.servers)
+
+    def __bool__(self):
+        return bool(self.servers)
 
     def __repr__(self):
         return "{!s}(servers={})".format(self.__class__.__name__,
@@ -218,15 +221,16 @@ class ZabbixServer:
         try:
             self.logger.debug("Login to server {}.".format(self))
             self.connection.login(self.login, self.password)
-        except api.ZabbixAPIException:
-            self.logger.exception(
-                "Something went wrong while trying to login to server {}."
-                .format(self)
+        except api.ZabbixAPIException as err:
+            self.logger.error(
+                "Something went wrong while trying to login to server {}: {}."
+                .format(self, err)
             )
             self.connection = None
             self._ok = False
 
-            raise ZabbixLoginError("Can not login to server".format(self))
+            raise ZabbixLoginError("Cannot login to server {}.".format(self)) \
+                from err
         else:
             self._ok = True
 
@@ -531,8 +535,13 @@ class PostgresConnector:
         data : dict
             The data to be updated in the database.
         """
-        with session_scope() as session:
-            ServerMetricDAO(session).update(data)
+        try:
+            with session_scope() as session:
+                ServerMetricDAO(session).update(data)
+        except sa.exc.OperationalError as err:
+            self.logger.error(err)
+
+            raise
 
     def _build_uri(self):
         return "postgresql+psycopg2://{}:{}@{}/{}".format(self.config['user'],
@@ -593,7 +602,12 @@ class ZabbixDataWriter(AggregatorCallback):
             The data may be compound of many metrics of different server hosts.
         """
         for metric in data:
-            self.connector.update(metric)
+            try:
+                self.connector.update(metric)
+            except sa.exc.OperationalError as err:
+                self.logger.error("Operational error on database.")
+
+                raise CallbackError() from err
 
     def __repr__(self):
         return "{!s}(connector={!r})".format(self.__class__.__name__,
@@ -670,7 +684,7 @@ class ZabbixDataReader():
                 )
                 self.pool.remove_server(server)
             except Exception:
-                self.logger.exception(
+                self.logger.error(
                     "Something went wrong when getting hosts for server {}."
                     .format(server)
                 )
@@ -686,6 +700,7 @@ class ZabbixDataReader():
         """
         self.logger.info("Stopping ZabbixDataReader.")
         self.pool.close()
+        self.logger.info("ZabbixDataReader stopped.")
 
     def connect(self):
         """Connect to the Zabbix servers in its pool.
@@ -729,6 +744,10 @@ class ZabbixDataReader():
         # Here comes the logic to read data from Zabbix API.
         # It iterates over all Zabbix servers reading a subset of the
         # monitored items.
+        if not self.pool:
+            self.logger.warn("No servers in pool. Nothing to fetch.")
+            return None
+
         self.logger.debug("Fetching data from server pool.")
         application = cfg.config.zabbix['application']
         parameters = {"output": ["hostid", "name", "lastvalue"],

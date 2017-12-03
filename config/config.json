@@ -30,6 +30,9 @@
             "host": "localhost",
             "database": "testdb3"
         },
-        "route": "/"
+        "route": "/",
+        "auth": {
+            "token": "shared_secret"
+        }
     }
 }
