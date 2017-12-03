@@ -397,6 +397,12 @@ class DataProcessor:
             elif(update["event_name"] == "user-cam-broadcast-end"):
                 attr = "has_video"
                 value = False
+            elif(update["event_name"] == "user-presenter-assigned"):
+                attr="is_presenter"
+                value = True
+            elif(update["event_name"] == "user-presenter-unassigned"):
+                attr = "is_presenter"
+                value = False
             for attendee in base:
                 if(attendee["int_user_id"] == user_id):
                     attendee[attr] = value
@@ -468,7 +474,8 @@ class DataProcessor:
             self.meeting_ended()
         elif(id in ["user-audio-listen-only-enabled","user-audio-listen-only-disabled",
                     "user-audio-voice-enabled","user-audio-voice-disabled",
-                    "user-cam-broadcast-start","user-cam-broadcast-end"]):
+                    "user-cam-broadcast-start","user-cam-broadcast-end",
+                    "user-presenter-assigned", "user-presenter-unassigned"]):
             self.user_info_update()
         elif(id in ["rap-archive-started","rap-archive-ended",
                     "rap-sanity-started","rap-sanity-ended",
