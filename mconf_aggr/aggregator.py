@@ -21,6 +21,8 @@ class AggregatorNotRunning(Exception):
     """Raised if the aggregator has stopped for some reason.
 
     It is raised to notify users of aggregator that it is no longer running.
+    At this time, the aggregator is already stopped and there is no need to
+    call its stop method.
     """
     pass
 
@@ -38,8 +40,7 @@ class CallbackError(Exception):
 class SetupError(Exception):
     """Raised if something goes wrong while setting aggregator up.
     """
-    def __init__(self, msg=''):
-        super().__init__(msg)
+    pass
 
 
 class ChannelClosed(Exception):
@@ -47,15 +48,13 @@ class ChannelClosed(Exception):
 
     It is not an error, just a signaling exception.
     """
-    def __init__(self, msg=''):
-        super().__init__(msg)
+    pass
 
 
 class PublishError(Exception):
     """Raised if something goes wrong while publishing data.
     """
-    def __init__(self, msg=''):
-        super().__init__(msg)
+    pass
 
 
 """Represent a subscriber of the aggregator.
@@ -340,6 +339,10 @@ class Publisher:
         ------
         PublishError
             If no channel was found.
+        AggregatorNotRunning
+            If the aggregator is not currently running.
+            It may have stopped due to some failure occurred in
+            callbacks or by the stop method of aggregator being called.
         """
         if self._running:
             self.logger.debug("Publishing data to subscribers.")
@@ -415,7 +418,7 @@ class Aggregator:
         If something goes wrong while setting callbacks up, it removes the
         callback from its list.
 
-        It also creates an error-waiting thread that awaits from errors
+        It also creates an error-waiting thread that awaits for errors
         coming from callback threads and an threading.Event to communicate
         errors between them.
         """
@@ -463,7 +466,7 @@ class Aggregator:
 
         If something goes wrong while starting a thread for a callback, it
         stops every already running thread and raises a `SetupError`.
-        In other words, the aggregator only starts with success if _all_
+        In other words, the aggregator only starts with success if all
         threads are started properly.
 
         Raises

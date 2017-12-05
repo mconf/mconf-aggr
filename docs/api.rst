@@ -81,7 +81,7 @@ controller performs are:
 The API of the :class:`Aggregator` is as follows:
 
 .. autoclass:: aggregator.Aggregator
-    :members: setup, register_callback
+    :members: setup, start, stop, register_callback
     :noindex:
 
 Publisher
@@ -100,6 +100,23 @@ needs to call the `Publisher`'s `publish` method. The API is as follows:
 
 There is no need to instantiate its own publisher: The aggregator provides one
 for you to use.
+
+Exceptions
+==========
+
+The following exceptions are raised as part of the API:
+
+.. autoclass:: aggregator.AggregatorNotRunning
+    :noindex:
+
+.. autoclass:: aggregator.CallbackError
+    :noindex:
+
+.. autoclass:: aggregator.SetupError
+    :noindex:
+
+.. autoclass:: aggregator.PublishError
+    :noindex:
 
 Example
 =======
@@ -123,6 +140,9 @@ It simply reads from a file and returns one line at a time::
 
 A simple *data writer* (also called a *callback*) that writes data to a file is shown below::
 
+    from mconf_aggr.aggregator import AggregatorCallback, CallbackError
+
+
     class FileWriter(AggregatorCallback):
         def __init__(self, filename="file_writer.txt"):
             self.filename = filename
@@ -135,13 +155,16 @@ A simple *data writer* (also called a *callback*) that writes data to a file is 
 
         def run(self, data):
             with open(self.filename, 'a') as f:
-                f.write(str(data) + "\n")
+                try:
+                    f.write(str(data) + "\n")
+                except IOError as err:
+                    raise CallbackError from err
 
 Note that it inherits (effectively, implements) the :class:`AggregatorCallback`
 class. A simple *pass* statement is enough to consider `setup` and `teardown`
-as implemented.
-
-Both classes are actually implemented in the :mod:`dummy` module.
+as implemented. It also raises a CallbackError signaling to aggregator that
+something went wrong while processing the data so the aggregator can handle
+the situation.
 
 Consider the following file `data_input.txt`::
 
@@ -156,9 +179,11 @@ It all can be put together in the working example below::
     #!/usr/bin/env python3.6
 
 
+    import sys
+
     from mconf_aggr.dummy import FileReader, FileWriter
     from mconf_aggr.aggregator import Aggregator, SetupError, \
-                                      PublishError
+                                      PublishError, AggregatorNotRunning
 
 
     def main():
@@ -177,13 +202,17 @@ It all can be put together in the working example below::
             # Set callbacks up, prepare and start threads for callbacks.
             aggregator.setup()
         except SetupError:
-            exit(1)
+            print("An error occurred while setting the aggregator up.")
+            sys.exit(1)
 
         # Set data reader up.
         reader.setup()
 
         # Get the publisher.
         publisher = aggregator.publisher
+
+        # Start the aggregator.
+        aggregator.start()
 
         while True:
             try:
@@ -196,8 +225,17 @@ It all can be put together in the working example below::
                     try:
                         # Publish data to the channel 'example'.
                         publisher.publish(data, channel='example')
-                    except PublishError as err:
+                    except PublishError:
+                        print("An error occurred while publishing data.")
+
                         continue
+                    except AggregatorNotRunning:
+                        print("The aggregator stopped.")
+                        reader.stop()
+
+                        sys.exit(1)
+
+                time.sleep(10)
             except:
                 break
 
