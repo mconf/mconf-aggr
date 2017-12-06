@@ -18,12 +18,25 @@ from mconf_aggr.aggregator import Aggregator, SetupError, PublishError
 # other things) that you think in terms of resources and state
 # transitions, which map to HTTP verbs.
 class HookListener(object):
+    """Listener for webhooks.
+
+    This class is passed to falcon_API to handle requests made to it, this class might have
+    more methods if needed, on the format on_*. It could treat POST,GET,PUT and DELETE requests.
+    """
     def __init__(self, data_handler):
+        """Constructor of the HookListener
+
+        Parameters
+        ----------
+        data_handler : Instance of the DataHandler Class.
+        """
         self.data_handler = data_handler
 
     def on_post(self, req, resp):
-        # TODO: Treat when receiving multiple events on POST
-        """Handles POST requests"""
+        """Handles POST requests
+
+        After receiving a POST call the data_handler to treat the received message.
+        """
         # Parse received message
         post_data = req.stream.read().decode('utf-8')
 
@@ -76,8 +89,22 @@ class AuthMiddleware(object):
 
 
 class DataHandler():
+    """Handler of data from webhooks.
 
+    This class is responsible for publishing the data to Aggregator to create a new thread
+    and instantiate the proper DataWritter.
+
+    It's called by the HookListener everytime it gets a new message.
+    """
     def __init__(self, publisher, channel):
+        """Constructor of DataHandler.
+
+        Parameters
+        ----------
+        publisher : Instance of aggregator.publisher .
+        channel : str
+            Channel where data will be published.
+        """
         self.publisher = publisher
         self.channel = channel
 
@@ -86,6 +113,13 @@ class DataHandler():
         pass
 
     def process_data(self, data):
+        """Parse and publish data to aggregator.
+
+        Parameters
+        ----------
+        data : str
+            data to be parsed and published.
+        """
         decoded_data = unquote(data)
         posted_obj = json.loads(decoded_data)
 
