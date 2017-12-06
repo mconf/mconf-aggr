@@ -18,15 +18,17 @@ from mconf_aggr.aggregator import Aggregator, SetupError, PublishError
 # other things) that you think in terms of resources and state
 # transitions, which map to HTTP verbs.
 class HookListener(object):
-    def __init__(self, data_handler):
+    def __init__(self, data_handler, logger=None):
         self.data_handler = data_handler
+        self.logger = logger or logging.getLogger(__name__)
 
     def on_post(self, req, resp):
-        # TODO: Treat when receiving multiple events on POST
-        """Handles POST requests"""
+        """Handles POST requests
+        """
         # Parse received message
         post_data = req.stream.read().decode('utf-8')
 
+        self.logger.info("Message from Webhooks received.")
         self.data_handler.process_data(post_data)
 
         resp.status = falcon.HTTP_200  # This is the default status
@@ -77,9 +79,10 @@ class AuthMiddleware(object):
 
 class DataHandler():
 
-    def __init__(self, publisher, channel):
+    def __init__(self, publisher, channel, logger=None):
         self.publisher = publisher
         self.channel = channel
+        self.logger = logger or logging.getLogger(__name__)
 
     def stop(self):
         # stop falcon?
@@ -98,4 +101,5 @@ class DataHandler():
                     data = [webhook_msg, mapped_msg]
                     self.publisher.publish(data, channel=self.channel)
                 except PublishError as err:
+                    self.logger.error("Something went wrong while publishing.")
                     continue
