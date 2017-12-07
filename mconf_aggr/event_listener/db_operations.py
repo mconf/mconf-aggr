@@ -21,6 +21,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from mconf_aggr import cfg
 from mconf_aggr.aggregator import AggregatorCallback
+from mconf_aggr.utils import time_logger
 
 Base = declarative_base()
 Session = sessionmaker()
@@ -518,8 +519,10 @@ class PostgresConnector:
 
     def update(self, data):
         try:
-            with session_scope() as session:
-                DataProcessor(session, data).update()
+            with time_logger(self.logger.debug,
+                             "Processing information to database took {elapsed}s."):
+                with session_scope() as session:
+                    DataProcessor(session, data).update()
         except sqlalchemy.exc.OperationalError as err:
             self.logger.error(err)
 
