@@ -1,3 +1,9 @@
+"""This module is responsible for treating HTTP POSTs
+
+It will receive, validate, parse and send the parsed data to an Aggregator thread,
+which will properly manipulate the data.
+
+"""
 #!/usr/bin/env python3.6
 
 import json

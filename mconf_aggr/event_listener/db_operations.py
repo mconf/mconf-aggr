@@ -1,3 +1,10 @@
+"""This module provides all classes that manipulate the database for received events
+
+It provides methods to insert/delete/update columns on the database depending on
+which event was received by the `update` method on `DataWritter` and passed to
+`update` on `DataProcessor`.
+
+"""
 import datetime
 import json
 
@@ -58,7 +65,8 @@ class Meetings(Base):
     moderator_count : Column of the type Integer
         Number of moderators on the meeting.
     attendees : Column of the type JSON
-        Each attendee on the meeting, especified on the format:
+        Each attendee on the meeting, especified on the format::
+
         [
             {
                 "is_presenter": boolean,
@@ -71,42 +79,42 @@ class Meetings(Base):
                 "role": string,
             },
             {
-                "..."
+                ...
             }
         ]
     """
-     __tablename__ = "Meetings"
+    __tablename__ = "Meetings"
 
-     id = Column(Integer, primary_key=True)
-     meeting_event_id = Column(Integer, ForeignKey("MeetingsEvents.id"))
-     meeting_event = relationship("MeetingsEvents", backref=backref("Meetings", uselist=False))
+    id = Column(Integer, primary_key=True)
+    meeting_event_id = Column(Integer, ForeignKey("MeetingsEvents.id"))
+    meeting_event = relationship("MeetingsEvents", backref=backref("Meetings", uselist=False))
 
-     created_at = Column(DateTime, default=datetime.datetime.now)
-     updated_at = Column(DateTime, onupdate=datetime.datetime.now)
+    created_at = Column(DateTime, default=datetime.datetime.now)
+    updated_at = Column(DateTime, onupdate=datetime.datetime.now)
 
-     running = Column(Boolean)
-     has_user_joined = Column(Boolean)
-     participant_count = Column(Integer)
-     listener_count = Column(Integer)
-     voice_participant_count = Column(Integer)
-     video_count = Column(Integer)
-     moderator_count = Column(Integer)
-     attendees = Column(JSON)
+    running = Column(Boolean)
+    has_user_joined = Column(Boolean)
+    participant_count = Column(Integer)
+    listener_count = Column(Integer)
+    voice_participant_count = Column(Integer)
+    video_count = Column(Integer)
+    moderator_count = Column(Integer)
+    attendees = Column(JSON)
 
-     def __repr__(self):
-         return ("<Meetings("
-                + "id=" + str(self.id)
-                + ", created_at=" + str(self.created_at)
-                + ", updated_at=" + str(self.updated_at)
-                + ", running=" + str(self.running)
-                + ", has_user_joined=" + str(self.has_user_joined)
-                + ", participant_count=" + str(self.participant_count)
-                + ", listener_count=" + str(self.listener_count)
-                + ", voice_participant_count=" + str(self.voice_participant_count)
-                + ", video_count=" + str(self.video_count)
-                + ", moderator_count=" + str(self.moderator_count)
-                + ", attendees=" + str(self. attendees)
-                + ")>")
+    def __repr__(self):
+     return ("<Meetings("
+            + "id=" + str(self.id)
+            + ", created_at=" + str(self.created_at)
+            + ", updated_at=" + str(self.updated_at)
+            + ", running=" + str(self.running)
+            + ", has_user_joined=" + str(self.has_user_joined)
+            + ", participant_count=" + str(self.participant_count)
+            + ", listener_count=" + str(self.listener_count)
+            + ", voice_participant_count=" + str(self.voice_participant_count)
+            + ", video_count=" + str(self.video_count)
+            + ", moderator_count=" + str(self.moderator_count)
+            + ", attendees=" + str(self. attendees)
+            + ")>")
 
 
 class MeetingsEvents(Base):
@@ -167,13 +175,22 @@ class MeetingsEvents(Base):
     unique_users : Column of type Integer
         Number of unique users on the meeting.
     meta_data : Column of type JSON
-        Metadata of the meeting, especified in the format:
+        Metadata of the meeting, especified in the format::
+
         [
             {
-                FILL INFO HERE--------------------
+                "mconf-shared-secret-guid": value,
+                "mconf-shared-secret-name": value,
+                "mconf-institution-guid": value,
+                "mconf-institution-name": value,
+                "mconf-server-guid": value,
+                "mconf-server-url": value,
+                "mconf-request-query": value,
+                "mconf-user-ip": value,
+                "mconf-user-agent": value
             },
             {
-                "..."
+                ...
             }
         ]
     """
