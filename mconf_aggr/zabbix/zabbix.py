@@ -76,6 +76,7 @@ import zabbix_api as api
 
 from mconf_aggr import cfg
 from mconf_aggr.aggregator import AggregatorCallback, CallbackError
+from mconf_aggr.utils import time_logger
 
 
 class ZabbixLoginError(Exception):
@@ -220,7 +221,10 @@ class ZabbixServer:
 
         try:
             self.logger.debug("Login to server {}.".format(self))
-            self.connection.login(self.login, self.password)
+            with time_logger(self.logger.debug,
+                             "Connecting to {server} took {elapsed}s.",
+                             server=self):
+                self.connection.login(self.login, self.password)
         except api.ZabbixAPIException as err:
             self.logger.error(
                 "Something went wrong while trying to login to server {}: {}."
@@ -258,7 +262,10 @@ class ZabbixServer:
             raise ZabbixNoConnectionError()
 
         try:
-            results = self.connection.host.get(parameters)
+            with time_logger(self.logger.debug,
+                             "Getting hosts from {server} took {elapsed}s.",
+                             server=self):
+                results = self.connection.host.get(parameters)
         except:
             self._ok = False
 
@@ -294,7 +301,11 @@ class ZabbixServer:
         for hostid, host in self.hosts.items():
             parameters['hostids'] = hostid
             try:
-                results[host] = self.connection.item.get(parameters)
+                with time_logger(self.logger.debug,
+                                 "Getting items from {host} took {elapsed}s.",
+                                 host=host):
+                    results[host] = self.connection.item.get(parameters)
+
             except:
                 # Suppress stack trace from this exception as it logs
                 # many not so useful information.
@@ -537,7 +548,9 @@ class PostgresConnector:
         """
         try:
             with session_scope() as session:
-                ServerMetricDAO(session).update(data)
+                with time_logger(self.logger.debug,
+                                 "Saving data to database took {elapsed}s."):
+                    ServerMetricDAO(session).update(data)
         except sa.exc.OperationalError as err:
             self.logger.error(err)
 
