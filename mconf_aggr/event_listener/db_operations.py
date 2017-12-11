@@ -1,3 +1,10 @@
+"""This module provides all classes that manipulate the database for received events
+
+It provides methods to insert/delete/update columns on the database depending on
+which event was received by the `update` method on `DataWritter` and passed to
+`update` on `DataProcessor`.
+
+"""
 import datetime
 import logging
 import json
@@ -29,41 +36,166 @@ Session = sessionmaker()
 
 # DB Tables
 class Meetings(Base):
-     __tablename__ = "Meetings"
+    """Table Meetings in the database.
 
-     id = Column(Integer, primary_key=True)
-     meeting_event_id = Column(Integer, ForeignKey("MeetingsEvents.id"))
-     meeting_event = relationship("MeetingsEvents", backref=backref("Meetings", uselist=False))
+    Each row in this table represents an information about the attendees of a meeting,
+    retrieved from the webhooks.
+    It inherits from Base - a base class to represent tables by SQLAlchemy.
 
-     created_at = Column(DateTime, default=datetime.datetime.now)
-     updated_at = Column(DateTime, onupdate=datetime.datetime.now)
+    Attributes
+    ----------
+    id : Column of the type Integer
+        Primary key. Identifier of the table.
+    meeting_event_id : Column of the type Integer
+        Foreign Key. Identifier of the associated MeetingsEvents table (instatiated by id).
+    created_at : Column of the type DateTime
+        Datetime of the meeting creation.
+    updated_at : Column of the type DateTime
+        Last datetime the meeting was updated.
+    running : Column of the type Boolean
+        Indicates if the meeting is running.
+    has_user_joined : Column of the type Boolean
+        Indicates if a user has already joined.
+    participant_count : Column of the type Integer
+        Number of participants on the meeting.
+    listener_count : Column of the type Integer
+        Number of listeners on the meeting.
+    voice_participant_count : Column of the type Integer
+        Number of participants on the meeting with active voice chat.
+    video_count : Column of the type Integer
+        Number of participants on the meeting with video share.
+    moderator_count : Column of the type Integer
+        Number of moderators on the meeting.
+    attendees : Column of the type JSON
+        Each attendee on the meeting, especified on the format::
 
-     running = Column(Boolean)
-     has_user_joined = Column(Boolean)
-     participant_count = Column(Integer)
-     listener_count = Column(Integer)
-     voice_participant_count = Column(Integer)
-     video_count = Column(Integer)
-     moderator_count = Column(Integer)
-     attendees = Column(JSON)
+        [
+            {
+                "is_presenter": boolean,
+                "is_listening_only": boolean,
+                "has_joined_voice": boolean,
+                "has_video": boolean,
+                "ext_user_id": string,
+                "int_user_id": string,
+                "full_name": string,
+                "role": string,
+            },
+            {
+                ...
+            }
+        ]
+    """
+    __tablename__ = "Meetings"
 
-     def __repr__(self):
-         return ("<Meetings("
-                + "id=" + str(self.id)
-                + ", created_at=" + str(self.created_at)
-                + ", updated_at=" + str(self.updated_at)
-                + ", running=" + str(self.running)
-                + ", has_user_joined=" + str(self.has_user_joined)
-                + ", participant_count=" + str(self.participant_count)
-                + ", listener_count=" + str(self.listener_count)
-                + ", voice_participant_count=" + str(self.voice_participant_count)
-                + ", video_count=" + str(self.video_count)
-                + ", moderator_count=" + str(self.moderator_count)
-                + ", attendees=" + str(self. attendees)
-                + ")>")
+    id = Column(Integer, primary_key=True)
+    meeting_event_id = Column(Integer, ForeignKey("MeetingsEvents.id"))
+    meeting_event = relationship("MeetingsEvents", backref=backref("Meetings", uselist=False))
+
+    created_at = Column(DateTime, default=datetime.datetime.now)
+    updated_at = Column(DateTime, onupdate=datetime.datetime.now)
+
+    running = Column(Boolean)
+    has_user_joined = Column(Boolean)
+    participant_count = Column(Integer)
+    listener_count = Column(Integer)
+    voice_participant_count = Column(Integer)
+    video_count = Column(Integer)
+    moderator_count = Column(Integer)
+    attendees = Column(JSON)
+
+    def __repr__(self):
+     return ("<Meetings("
+            + "id=" + str(self.id)
+            + ", created_at=" + str(self.created_at)
+            + ", updated_at=" + str(self.updated_at)
+            + ", running=" + str(self.running)
+            + ", has_user_joined=" + str(self.has_user_joined)
+            + ", participant_count=" + str(self.participant_count)
+            + ", listener_count=" + str(self.listener_count)
+            + ", voice_participant_count=" + str(self.voice_participant_count)
+            + ", video_count=" + str(self.video_count)
+            + ", moderator_count=" + str(self.moderator_count)
+            + ", attendees=" + str(self. attendees)
+            + ")>")
 
 
 class MeetingsEvents(Base):
+    """Table MeetingsEvents in the database.
+
+    Each row in the table represents an information about a meeting, retrieve
+    from the webhooks.
+    It inherits from Base - a base class to represent tables by SQLAlchemy.
+
+    Attributes
+    ----------
+    id : Column of type Integer
+        Primary key. Identifier of the table.
+    shared_secret_guid : Column of type String
+        Shared Secret Guid.
+    shared_secret_name : Column of type String
+        Shared Secret Name.
+    server_guid : Column of type String
+        Server Guid.
+    server_url : Column of type String
+        Url of the server the meeting is hosted.
+    created_at : Column of type DateTime
+        Datetime of the meeting creation.
+    updated_at : Column of type DateTime
+        Last datetime the meeting was updated.
+    external_meeting_id : Column of type String
+        External meeting id of the meeting.
+    internal_meeting_id : Column of type String
+        Internal meeting id of the meeting.
+    name : Column of type String
+        Name of the meeting.
+    create_time : Column of type BigInteger
+        Timestamp of the time when the meeting was created.
+    create_date : Column of type String
+        Date when the meeting was created.
+    voice_bridge : Column of type Integer
+        Voice bridge of the meeting.
+    dial_number : Column of type string
+        Dial number of the meeting.
+    attendee_pw : Column of type String
+        Password for attendees on this meeting.
+    moderator_pw : Column of type String
+        Password for moderators on this meeting.
+    duration : Column of type Integer
+        Duration of the meeting.
+    recording : Column of type Boolean
+        Indicates if the meeting is being recorded.
+    has_been_forcibly_ended : Column of type Boolean
+        Indicates if the meeting was ended through an API call.
+    start_time : Column of type BigInteger
+        Timestamp of the moment when the meeting started.
+    end_time : Column of type BigInteger
+        Timestamp of the moment when the meeting ended.
+    max_users : Column of type Integer
+        Maximum number of users on the meeting.
+    is_breakout : Column of type Boolean
+        Indicates if the meeting is a breakout room.
+    unique_users : Column of type Integer
+        Number of unique users on the meeting.
+    meta_data : Column of type JSON
+        Metadata of the meeting, especified in the format::
+
+        [
+            {
+                "mconf-shared-secret-guid": value,
+                "mconf-shared-secret-name": value,
+                "mconf-institution-guid": value,
+                "mconf-institution-name": value,
+                "mconf-server-guid": value,
+                "mconf-server-url": value,
+                "mconf-request-query": value,
+                "mconf-user-ip": value,
+                "mconf-user-agent": value
+            },
+            {
+                ...
+            }
+        ]
+    """
     __tablename__ = "MeetingsEvents"
 
     id = Column(Integer, primary_key=True)
@@ -126,6 +258,51 @@ class MeetingsEvents(Base):
 
 
 class Recordings(Base):
+    """Table Recordings in the database.
+
+    Each row in this table represents information about a recording, retrieved
+    from the webhooks.
+    It inherits from Base - a base class to represent tables by SQLAlchemy.
+
+    Attributes
+    ----------
+    id : Column of the type Interger
+        Primary key. Identifier of the recording.
+    created_at : Column of the type DateTime
+        Datetime of the recording creation.
+    updated_at : Column of the type DateTime
+        Last datetime the recording was updated.
+    name : Column of the type String
+        Name of the recording.
+    status : Column of the type String
+        Current status of the recording.
+    internal_meeting_id : Column of the type String
+        Internal meeting ID of the recording.
+    external_meeting_id : Column of the type String
+        External meeting ID of the recording.
+    is_breakout : Column of the type Boolean
+        Indicates if the recording if from a breakout room.
+    published : Column of the type Boolean
+        Indicates if the recording's been published.
+    start_time : Column of the type BigInteger
+        Timestamp of when the recording was created.
+    end_time : Column of the type BigInteger
+        Timestamp of when the recording ended.
+    participants : Column of the type Integer
+        Number of participants on the recorded meeting.
+    size : Column of the type BigInteger
+        Size of the recording.
+    raw_size : Column of the type BigInteger.
+        Raw size of the recording.
+    current_step : Column of the type String.
+        Current step of the recordig.
+    meta_data : Column of the type JSON
+        Information about the recording metadata.
+    playback : Column of the type JSON
+        Information about the recording playback.
+    download : Column of the type JSON
+        Information about the recording download.
+    """
     __tablename__ = "Recordings"
 
     id = Column(Integer, primary_key=True)
@@ -175,6 +352,37 @@ class Recordings(Base):
 
 
 class UsersEvents(Base):
+    """Table UsersEvents in the database.
+
+    Each row in the table represents information about a specific user, retrieved
+    from webhooks.
+    It inherits from Base - a base class to represent tables by SQLAlchemy.
+
+    Attributes
+    ----------
+    id : Column of the type Integer
+        Primary key. Identifier of the table.
+    meeting_event_Id : Column of the type Integer
+        Foreign Key. Identifier of the associated MeetingsEvents table (instatiated by id).
+    created_at : Column of the type DateTime
+        Datetime of the user creation.
+    updated_at : Column of the type DateTime
+        Last datetime the user was updated.
+    name : Column of the type String
+        Name of the user.
+    role : Column of the type String
+        Role of the user.
+    join_time : Column of the type BigInteger
+        Timestamp of when the user joined.
+    leave_time : Column of the type BigInteger
+        Timestamp of when the user left.
+    internal_user_id : Column of the type String
+        Internal user ID of the user.
+    external_user_id : Column of the type String
+        External user ID of the user.
+    meta_data : Column of the type JSON
+        Information about the user metadata.
+    """
     __tablename__ = "UsersEvents"
 
     id = Column(Integer, primary_key=True)
@@ -226,14 +434,37 @@ def session_scope(raise_exception=False):
 
 
 class DataProcessor:
+    """Data processor of the received information.
 
+    It provides methods to update rows in the following tables:
+        -Meetings;
+        -MeetingsEvents;
+        -Recordings;
+        -UsersEvents.
+    """
     def __init__(self, session, data, logger=None):
+        """Constructor of the DataProcessor.
+
+        Parameters
+        ----------
+        session : sqlalchemy.Session
+            Session used by SQLAlchemy to interact with the database.
+        data : dict list
+            Informations that the methods in this class will use to update the database.
+        """
         self.session = session
         self.webhook_msg = data[0]
         self.mapped_msg = data[1]
         self.logger = logger or logging.getLogger(__name__)
 
     def create_meeting(self):
+        """Event meetings_created.
+
+        It creates a new instance of MeetingsEvents with the received data and a
+        new Meetings table that's related to the MeetingsEvents.
+
+        Then add them to the session.
+        """
         self.logger.info("Processing meeting_created message for internal_meeting_id: {}"
                         .format(self.mapped_msg["internal_meeting_id"]))
         # Create MeetingsEvents and Meetings table
@@ -251,6 +482,14 @@ class DataProcessor:
         print("as")
 
     def user_join(self):
+        """Event user_joined.
+
+        It creates a new instance of UsersEvents with the received data, and
+        update the Meetings and MeetingsEvents tables that are related to the
+        new user.
+
+        Then add them to the session.
+        """
         int_id = self.webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
         self.logger.info("Processing user_join message for int_user_id: {}, on {}"
                     .format(self.webhook_msg["data"]["attributes"]["user"]["internal-user-id"],int_id))
@@ -318,6 +557,13 @@ class DataProcessor:
                                         count())
 
     def meeting_ended(self):
+        """Event meeting_ended.
+
+        It removes the Meetings table associated with the event and update the
+        MeetingsEvents table.
+
+        Then add them to the session.
+        """
         int_id = self.mapped_msg["internal_meeting_id"]
         self.logger.info("Processing meeting_ended message for internal_meeting_id: {}"
         .format(int_id))
@@ -337,6 +583,12 @@ class DataProcessor:
         self.session.delete(meeting_table)
 
     def user_left(self):
+        """Event user_left
+
+        It updates the UsersEvents and Meeting tables associated with the user.
+
+        Then add them to the session.
+        """
         user_id = self.mapped_msg["internal_user_id"]
         int_id = self.webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
         self.logger.info("Processing user_left message for int_user_id: {} in {}"
@@ -375,6 +627,15 @@ class DataProcessor:
         self.session.add(meeting_table)
 
     def user_info_update(self):
+        """Events user-audio-listen-only-enabled, user-audio-listen-only-disabled,
+                    user-audio-voice-enabled, user-audio-voice-disabled,
+                    user-cam-broadcast-start, user-cam-broadcast-end,
+                    user-presenter-assigned, user-presenter-unassigned
+
+        It updates the Meetings table related to the user that received those events.
+
+        Then add them to the session.
+        """
         user_id = self.mapped_msg["internal_user_id"]
         int_id = self.mapped_msg["internal_meeting_id"]
         self.logger.info("Processing {} message for int_user_id: {} on {}"
@@ -427,6 +688,18 @@ class DataProcessor:
         self.session.add(meeting_table)
 
     def rap_events(self):
+        """Events   rap-archive-started, rap-archive-ended,
+                    rap-sanity-started, rap-sanity-ended,
+                    rap-post-archive-started, rap-post-archive-ended,
+                    rap-process-started, rap-process-ended,
+                    rap-post-process-started, rap-post-process-ended,
+                    rap-publish-started, rap-publish-ended,
+                    rap-post-publish-started, rap-post-publish-ended
+
+        It updates the Recordings table related to the event.
+
+        Then add them to the session.
+        """
         int_id = self.mapped_msg["internal_meeting_id"]
         self.logger.info("Processing {} message for internal_meeting_id: {}"
                         .format(self.webhook_msg["data"]["id"],int_id))
@@ -473,6 +746,13 @@ class DataProcessor:
             self.session.add(record_table)
 
     def db_event_selector(self):
+        """Event Selector.
+
+        Choose which event will be processed (which method to call), based on
+        the received data.
+
+        The methods won't commit any update, just add them to the session.
+        """
         self.logger.info("Selecting event processor")
         id = self.webhook_msg["data"]["id"]
         if(id == "meeting-created"):
@@ -498,26 +778,62 @@ class DataProcessor:
             self.rap_events()
 
     def update(self):
+        """Update tables with new data.
+
+        Call the selector to decide which event will be processed.
+        """
         self.db_event_selector()
 
 
 class PostgresConnector:
+    """Wrapper of PostgreSQL connection.
 
+    It encapsulates the inner workings of the SQLAlchemy connection process.
+
+    Before using it, one must call once its method `connect()` to configure and
+    create a connection to the database. Then, the `update()` method can be
+    called for each metric whenever it is necessary to update the database.
+    When finished, one must call `close()` to definitely close the connection
+    to the database (currently it does nothing).
+    """
     def __init__(self, database_uri=None, logger=None):
+        """Constructor of the PostgresConnector.
+
+        Parameters
+        ----------
+        database_uri : str
+            URI of the PostgreSQL database instance either local or remote.
+        """
         self.config = cfg.config['event_listener']['database']
         self.database_uri = database_uri or self._build_uri()
         self.logger = logger or logging.getLogger(__name__)
 
     def connect(self):
+        """Configure and connect the database.
+
+        It is responsible for creating an engine for the URI provided and
+        configure the session.
+        """
         self.logger.debug("Creating new database session.")
         engine = create_engine(self.database_uri, echo=True)
         Session.configure(bind=engine)
 
     def close(self):
+        """Close the connection to the database.
+
+        It currently does nothing.
+        """
         self.logger.info("Closing connection to PostgreSQL. Nothing to do.")
         pass
 
     def update(self, data):
+        """Update the database with new data.
+
+        Parameters
+        ----------
+        data : dict
+            The data to be updated in the database.
+        """
         try:
             with time_logger(self.logger.debug,
                              "Processing information to database took {elapsed}s."):
@@ -536,20 +852,49 @@ class PostgresConnector:
 
 
 class DataWritter(AggregatorCallback):
+    """Writer of data retrieved from webhooks.
 
+    This class implements the AggregatorCallback which means its `run()` method
+    is intended to run in a separate thread, writing incoming data to the
+    database.
+
+    Before using it, one should call its `setup()` method to configure
+    any resource used to write data such as database connections etc.
+    After that, its `run()` method can be run in a separate thread continuously.
+    When finished, its `teardown` can be called to close any opened resource.
+    """
     def __init__(self, connector=None, logger=None):
+        """Constructor of the DataWritter.
+
+        Parameters
+        ----------
+        connector : Database connector (driver).
+            If not supplied, it will instantiate a new `PostgresConnector`.
+        """
         self.connector = connector or PostgresConnector()
         self.logger = logger or logging.getLogger(__name__)
 
     def setup(self):
+        """Setup any resources needed to iteract with the database.
+        """
         self.logger.info("Setting up DataWritter")
         self.connector.connect()
 
     def teardown(self):
+        """Release any resources used to iteract with the database.
+        """
         self.logger.info("Tearing down DataWritter")
         self.connector.close()
 
     def run(self, data):
+        """Run main logic of the writer.
+
+        This method is intended to run in a separate thread by the aggregator
+        whenever new data must be persisted.
+
+        data : dict
+            The data may be compound of many metrics of different server hosts.
+        """
         try:
             self.connector.update(data)
         except sqlalchemy.exc.OperationalError as err:
