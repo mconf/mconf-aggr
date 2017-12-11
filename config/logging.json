@@ -83,6 +83,46 @@
             "maxBytes": 10485760,
             "backupCount": 20,
             "encoding": "utf8"
+        },
+
+        "event_listener_op_info_file_handler": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "INFO",
+            "formatter": "simple",
+            "filename": "log/evt_list_op_info.log",
+            "maxBytes": 10485760,
+            "backupCount": 20,
+            "encoding": "utf8"
+        },
+
+        "event_listener_op_debug_file_handler": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "DEBUG",
+            "formatter": "simple",
+            "filename": "log/evt_list_op_debug.log",
+            "maxBytes": 10485760,
+            "backupCount": 20,
+            "encoding": "utf8"
+        },
+
+        "event_listener_info_file_handler": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "INFO",
+            "formatter": "simple",
+            "filename": "log/evt_list_info.log",
+            "maxBytes": 10485760,
+            "backupCount": 20,
+            "encoding": "utf8"
+        },
+
+        "event_listener_debug_file_handler": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "level": "DEBUG",
+            "formatter": "simple",
+            "filename": "log/evt_list_debug.log",
+            "maxBytes": 10485760,
+            "backupCount": 20,
+            "encoding": "utf8"
         }
     },
 
@@ -106,7 +146,31 @@
             "propagate": false
         },
 
+        "mconf_aggr.event_listener.db_operations": {
+            "level": "DEBUG",
+            "handlers": [
+                "console",
+                "event_listener_op_debug_file_handler",
+                "event_listener_op_info_file_handler"
+            ],
+            "propagate": false
+        },
+
+        "mconf_aggr.event_listener.event_listener": {
+            "level": "DEBUG",
+            "handlers": [
+                "console",
+                "event_listener_debug_file_handler",
+                "event_listener_info_file_handler"
+            ],
+            "propagate": false
+        },
+
         "zabbix_api": {
+            "propagate": false
+        },
+
+        "sqlalchemy": {
             "propagate": false
         }
     },

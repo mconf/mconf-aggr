@@ -6,6 +6,7 @@ which event was received by the `update` method on `DataWritter` and passed to
 
 """
 import datetime
+import logging
 import json
 
 import sqlalchemy
@@ -27,9 +28,10 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from mconf_aggr import cfg
 from mconf_aggr.aggregator import AggregatorCallback
+from mconf_aggr.utils import time_logger
 
-# This block is likely to be removed after dev stage
 Base = declarative_base()
+Session = sessionmaker()
 
 
 # DB Tables
@@ -414,12 +416,6 @@ class UsersEvents(Base):
                 + ", external_user_id=" + str(self.external_user_id)
                 + ")>")
 
-# This block is likely to be removed after dev stage
-#Base.metadata.drop_all(engine)
-#Base.metadata.create_all(engine)
-Session = sessionmaker()
-
-# TODO: Lock tables when performing SELECTs/UPDATEs
 
 @contextmanager
 def session_scope(raise_exception=False):
@@ -446,7 +442,7 @@ class DataProcessor:
         -Recordings;
         -UsersEvents.
     """
-    def __init__(self, session, data):
+    def __init__(self, session, data, logger=None):
         """Constructor of the DataProcessor.
 
         Parameters
@@ -459,6 +455,7 @@ class DataProcessor:
         self.session = session
         self.webhook_msg = data[0]
         self.mapped_msg = data[1]
+        self.logger = logger or logging.getLogger(__name__)
 
     def create_meeting(self):
         """Event meetings_created.
@@ -468,6 +465,8 @@ class DataProcessor:
 
         Then add them to the session.
         """
+        self.logger.info("Processing meeting_created message for internal_meeting_id: {}"
+                        .format(self.mapped_msg["internal_meeting_id"]))
         # Create MeetingsEvents and Meetings table
         new_meeting_evt = MeetingsEvents(**self.mapped_msg)
         new_meeting = Meetings(running=False,
@@ -480,6 +479,7 @@ class DataProcessor:
                                attendees=[])
         new_meeting.meeting_event = new_meeting_evt
         self.session.add(new_meeting)
+        print("as")
 
     def user_join(self):
         """Event user_joined.
@@ -491,6 +491,8 @@ class DataProcessor:
         Then add them to the session.
         """
         int_id = self.webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
+        self.logger.info("Processing user_join message for int_user_id: {}, on {}"
+                    .format(self.webhook_msg["data"]["attributes"]["user"]["internal-user-id"],int_id))
 
         # Create user table
         new_user = UsersEvents(**self.mapped_msg)
@@ -563,6 +565,8 @@ class DataProcessor:
         Then add them to the session.
         """
         int_id = self.mapped_msg["internal_meeting_id"]
+        self.logger.info("Processing meeting_ended message for internal_meeting_id: {}"
+        .format(int_id))
 
         # MeetingsEvents table to be updated
         meeting_evt_table = self.session.query(MeetingsEvents).\
@@ -587,6 +591,8 @@ class DataProcessor:
         """
         user_id = self.mapped_msg["internal_user_id"]
         int_id = self.webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
+        self.logger.info("Processing user_left message for int_user_id: {} in {}"
+                        .format(user_id,int_id))
 
         # Meeting table to be updated
         meeting_table = self.session.query(Meetings).\
@@ -632,6 +638,8 @@ class DataProcessor:
         """
         user_id = self.mapped_msg["internal_user_id"]
         int_id = self.mapped_msg["internal_meeting_id"]
+        self.logger.info("Processing {} message for int_user_id: {} on {}"
+                        .format(self.webhook_msg["data"]["id"],user_id,int_id))
 
         # Meeting table to be updated
         meeting_table = self.session.query(Meetings).\
@@ -693,6 +701,8 @@ class DataProcessor:
         Then add them to the session.
         """
         int_id = self.mapped_msg["internal_meeting_id"]
+        self.logger.info("Processing {} message for internal_meeting_id: {}"
+                        .format(self.webhook_msg["data"]["id"],int_id))
         # Check if table already exists
         try:
             record_table = self.session.query(Recordings.id).\
@@ -743,6 +753,7 @@ class DataProcessor:
 
         The methods won't commit any update, just add them to the session.
         """
+        self.logger.info("Selecting event processor")
         id = self.webhook_msg["data"]["id"]
         if(id == "meeting-created"):
             self.create_meeting()
@@ -752,18 +763,18 @@ class DataProcessor:
             self.user_left()
         elif(id == "meeting-ended"):
             self.meeting_ended()
-        elif(id in ["user-audio-listen-only-enabled","user-audio-listen-only-disabled",
-                    "user-audio-voice-enabled","user-audio-voice-disabled",
-                    "user-cam-broadcast-start","user-cam-broadcast-end",
+        elif(id in ["user-audio-listen-only-enabled", "user-audio-listen-only-disabled",
+                    "user-audio-voice-enabled", "user-audio-voice-disabled",
+                    "user-cam-broadcast-start", "user-cam-broadcast-end",
                     "user-presenter-assigned", "user-presenter-unassigned"]):
             self.user_info_update()
-        elif(id in ["rap-archive-started","rap-archive-ended",
-                    "rap-sanity-started","rap-sanity-ended",
-                    "rap-post-archive-started","rap-post-archive-ended",
-                    "rap-process-started","rap-process-ended",
-                    "rap-post-process-started","rap-post-process-ended",
-                    "rap-publish-started","rap-publish-ended",
-                    "rap-post-publish-started","rap-post-publish-ended"]):
+        elif(id in ["rap-archive-started", "rap-archive-ended",
+                    "rap-sanity-started", "rap-sanity-ended",
+                    "rap-post-archive-started", "rap-post-archive-ended",
+                    "rap-process-started", "rap-process-ended",
+                    "rap-post-process-started", "rap-post-process-ended",
+                    "rap-publish-started", "rap-publish-ended",
+                    "rap-post-publish-started", "rap-post-publish-ended"]):
             self.rap_events()
 
     def update(self):
@@ -785,7 +796,7 @@ class PostgresConnector:
     When finished, one must call `close()` to definitely close the connection
     to the database (currently it does nothing).
     """
-    def __init__(self, database_uri=None):
+    def __init__(self, database_uri=None, logger=None):
         """Constructor of the PostgresConnector.
 
         Parameters
@@ -795,6 +806,7 @@ class PostgresConnector:
         """
         self.config = cfg.config['event_listener']['database']
         self.database_uri = database_uri or self._build_uri()
+        self.logger = logger or logging.getLogger(__name__)
 
     def connect(self):
         """Configure and connect the database.
@@ -802,6 +814,7 @@ class PostgresConnector:
         It is responsible for creating an engine for the URI provided and
         configure the session.
         """
+        self.logger.debug("Creating new database session.")
         engine = create_engine(self.database_uri, echo=True)
         Session.configure(bind=engine)
 
@@ -810,6 +823,7 @@ class PostgresConnector:
 
         It currently does nothing.
         """
+        self.logger.info("Closing connection to PostgreSQL. Nothing to do.")
         pass
 
     def update(self, data):
@@ -820,8 +834,15 @@ class PostgresConnector:
         data : dict
             The data to be updated in the database.
         """
-        with session_scope() as session:
-            DataProcessor(session, data).update()
+        try:
+            with time_logger(self.logger.debug,
+                             "Processing information to database took {elapsed}s."):
+                with session_scope() as session:
+                    DataProcessor(session, data).update()
+        except sqlalchemy.exc.OperationalError as err:
+            self.logger.error(err)
+
+            raise
 
     def _build_uri(self):
         return "postgresql://{}:{}@{}/{}".format(self.config['user'],
@@ -842,7 +863,7 @@ class DataWritter(AggregatorCallback):
     After that, its `run()` method can be run in a separate thread continuously.
     When finished, its `teardown` can be called to close any opened resource.
     """
-    def __init__(self, connector=None):
+    def __init__(self, connector=None, logger=None):
         """Constructor of the DataWritter.
 
         Parameters
@@ -851,15 +872,18 @@ class DataWritter(AggregatorCallback):
             If not supplied, it will instantiate a new `PostgresConnector`.
         """
         self.connector = connector or PostgresConnector()
+        self.logger = logger or logging.getLogger(__name__)
 
     def setup(self):
         """Setup any resources needed to iteract with the database.
         """
+        self.logger.info("Setting up DataWritter")
         self.connector.connect()
 
     def teardown(self):
         """Release any resources used to iteract with the database.
         """
+        self.logger.info("Tearing down DataWritter")
         self.connector.close()
 
     def run(self, data):
@@ -871,4 +895,9 @@ class DataWritter(AggregatorCallback):
         data : dict
             The data may be compound of many metrics of different server hosts.
         """
-        self.connector.update(data)
+        try:
+            self.connector.update(data)
+        except sqlalchemy.exc.OperationalError as err:
+            self.logger.error("Operational error on database.")
+
+            raise CallbackError() from err

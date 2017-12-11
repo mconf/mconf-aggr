@@ -14,10 +14,10 @@ from urllib.parse import unquote
 import falcon
 
 import mconf_aggr.cfg as cfg
+from mconf_aggr.aggregator import Aggregator, SetupError, PublishError
 from mconf_aggr.event_listener import db_mapping
 from mconf_aggr.event_listener.db_operations import DataWritter
-from mconf_aggr.aggregator import Aggregator, SetupError, PublishError
-
+from mconf_aggr.utils import time_logger
 
 
 # Falcon follows the REST architectural style, meaning (among
@@ -29,7 +29,7 @@ class HookListener(object):
     This class is passed to falcon_API to handle requests made to it, this class might have
     more methods if needed, on the format on_*. It could treat POST,GET,PUT and DELETE requests.
     """
-    def __init__(self, data_handler):
+    def __init__(self, data_handler, logger=None):
         """Constructor of the HookListener
 
         Parameters
@@ -37,18 +37,24 @@ class HookListener(object):
         data_handler : Instance of the DataHandler Class.
         """
         self.data_handler = data_handler
+        self.logger = logger or logging.getLogger(__name__)
 
     def on_post(self, req, resp):
         """Handles POST requests
-
+        
         After receiving a POST call the data_handler to treat the received message.
         """
         # Parse received message
         post_data = req.stream.read().decode('utf-8')
+        self.logger.info("Message from Webhooks received.")
+        with time_logger(self.logger.debug,
+                         "Processing webhook took {elapsed}s."):
+            # Parse received message
+            post_data = req.stream.read().decode('utf-8')
 
-        self.data_handler.process_data(post_data)
+            self.data_handler.process_data(post_data)
 
-        resp.status = falcon.HTTP_200  # This is the default status
+            resp.status = falcon.HTTP_200  # This is the default status
 
 
 class AuthMiddleware(object):
@@ -102,7 +108,7 @@ class DataHandler():
 
     It's called by the HookListener everytime it gets a new message.
     """
-    def __init__(self, publisher, channel):
+    def __init__(self, publisher, channel, logger=None):
         """Constructor of DataHandler.
 
         Parameters
@@ -113,6 +119,7 @@ class DataHandler():
         """
         self.publisher = publisher
         self.channel = channel
+        self.logger = logger or logging.getLogger(__name__)
 
     def stop(self):
         # stop falcon?
@@ -138,4 +145,5 @@ class DataHandler():
                     data = [webhook_msg, mapped_msg]
                     self.publisher.publish(data, channel=self.channel)
                 except PublishError as err:
+                    self.logger.error("Something went wrong while publishing.")
                     continue

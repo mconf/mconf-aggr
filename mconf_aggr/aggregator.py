@@ -231,6 +231,8 @@ class Channel:
         """
         self.logger.debug("Putting data into the channel.")
         self.queue.put(data)
+        self.logger.debug("Channel {} has {} element(s)."
+                          .format(self.name, self.qsize()))
 
     def pop(self):
         """Pop data from the channel.
