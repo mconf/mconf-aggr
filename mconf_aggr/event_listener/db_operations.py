@@ -479,7 +479,6 @@ class DataProcessor:
                                attendees=[])
         new_meeting.meeting_event = new_meeting_evt
         self.session.add(new_meeting)
-        print("as")
 
     def user_join(self):
         """Event user_joined.

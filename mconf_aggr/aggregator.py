@@ -126,8 +126,7 @@ class AggregatorCallback:
 class SubscriberThread(threading.Thread):
     """This class represents the thread to be run for a subscriber.
     """
-    def __init__(self, subscriber, errorevent, group=None, target=None,
-                 name=None, args=(), kwargs=None, daemon=None, logger=None):
+    def __init__(self, subscriber, errorevent, logger=None, **kwargs):
         """Constructor of the `SubscriberThread`.
 
         Parameters
@@ -137,8 +136,7 @@ class SubscriberThread(threading.Thread):
         logger : logging.Logger
             If not supplied, it will instantiate a new logger from __name__.
         """
-        threading.Thread.__init__(self, group=group, target=target,
-                                  name=name, daemon=daemon)
+        threading.Thread.__init__(self, **kwargs)
         self.subscriber = subscriber
         self._errorevent = errorevent
         self._stopevent = threading.Event()
@@ -407,6 +405,7 @@ class Aggregator:
         self.channels = {}
         self.publisher = Publisher()
         self.threads = []
+        self._error_thread = None
         self._running = False  # It is considered running only after its setup.
         self.logger = logger or logging.getLogger(__name__)
 
@@ -433,13 +432,13 @@ class Aggregator:
                     .format(subscriber.callback)
                 )
                 subscriber.callback.setup()
-            except NotImplementedError as err:
+            except NotImplementedError:
                 self.logger.warn(
                     "setup() not implemented for callback {}."
                     .format(subscriber.callback)
                 )
                 continue
-            except Exception as err:
+            except Exception:
                 self.logger.exception(
                     "Something went wrong while setting up callback {}."
                     .format(subscriber.callback)
@@ -483,7 +482,7 @@ class Aggregator:
         try:
             for thread in self.threads:
                 thread.start()
-        except RuntimeError as err:
+        except RuntimeError:
             self.logger.exception("Error while starting thread. Cleaning up.")
             for thread in self.threads:
                 if thread.is_alive():
@@ -520,13 +519,13 @@ class Aggregator:
                     .format(subscriber.callback)
                 )
                 subscriber.callback.teardown()
-            except NotImplementedError as err:
+            except NotImplementedError:
                 self.logger.warn(
                     "teardown() not implemented for callback {}."
                     .format(subscriber.callback)
                 )
                 continue
-            except Exception as err:
+            except Exception:
                 self.logger.exception(
                     "Something went wrong while tearing down callback {}."
                     .format(subscriber.callback)
@@ -588,10 +587,9 @@ class Aggregator:
             .format(callback)
         )
         for channel, subscribers in self.channels.items():
-            filtered_subscribers = filter(lambda subscriber:
-                                          subscriber.callback != callback,
-                                          subscribers)
-            filtered_subscribers = list(filtered_subscribers)
+            filtered_subscribers = list(filter(lambda subscriber:
+                                               subscriber.callback != callback,
+                                               subscribers))
 
             self.channels[channel] = filtered_subscribers
 
