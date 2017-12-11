@@ -299,7 +299,7 @@ class Channel:
 
     def __repr__(self):
         return "{!s}(name={!r}, maxsize={!r})".format(
-            self.__class__.__name__, self.name, self.maxsize)
+            self.__class__.__name__, self.name, self.queue.maxsize)
 
 
 class Publisher:

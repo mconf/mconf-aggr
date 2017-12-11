@@ -298,3 +298,26 @@ $ docker run \
 -v /path/to/config/config.json:/usr/src/mconf-aggr/config/config.json \
 -ti mconf-aggr:newtag
 ```
+
+## Makefile
+
+Some tasks can be done using the `make` utility. The most important ones are
+shown below:
+
+* To run the application: `$ make run CONFIG_PATH=path/to/config.json`
+* To run the tests: `$ make test`
+* To install dependecies: `$ make dep`
+* To build the HTML documentation: `$ make html`
+* To build a Docker image: `$ make docker-build TAG=any_tag`
+* To build a Docker image for development: `$ make docker-build-dev`
+* To run a Docker image: `$ make docker-run CONFIG_PATH=path/to/config.json TAG=any_tag`
+* To run the Docker development image: `$ make docker-run-dev AGGR_PATH=path/to/here CONFIG_PATH=path/to/config`
+* To clean the project: `$ make clean`
+
+The `Makefile` also provides sensitive defaults:
+
+```
+AGGR_PATH=~/mconf-aggr
+CONFIG_PATH=~/config.json
+AGGR_PATH=`realpath .` # Full path to the directory containing the Makefile.
+```
