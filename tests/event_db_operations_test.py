@@ -253,7 +253,11 @@ class TestOperationsUsers(unittest.TestCase):
         args.attendees.append(self.user_mock)
 
     def test_info_update_event(self):
-        data = ["",
+        data = [{
+                    "data": {
+                        "id": "mock_id"
+                    }
+                },
                 {
                     "internal_user_id" : "mock",
                     "external_user_id" : "mock",
