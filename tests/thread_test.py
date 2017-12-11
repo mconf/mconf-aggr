@@ -10,7 +10,7 @@ class TestPublisher(unittest.TestCase):
         callback_mock = mock.Mock()
         channel = Channel('channel_1')
         subscriber = Subscriber(channel, callback_mock)
-        self.thread = SubscriberThread(subscriber=subscriber)
+        self.thread = SubscriberThread(subscriber=subscriber, errorevent=None)
 
     def test_stop_is_false(self):
         self.assertFalse(self.thread._stopevent.is_set())
