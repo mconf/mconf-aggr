@@ -7,7 +7,7 @@ ENV AGGR_TYPE      ${AGGR_TYPE}
 
 ADD . /usr/src/mconf-aggr/
 
-RUN chmod 744 /usr/src/mconf-aggr/start.sh
+RUN chmod 0544 /usr/src/mconf-aggr/start.sh
 
 RUN pip install -r /usr/src/mconf-aggr/requirements.txt
 
