@@ -4,10 +4,8 @@ if [ -z ${AGGR_TYPE} ]; then
     exit 1
 fi
 
-if [ ${AGGR_TYPE} = conf ];
-  then
+if [ ${AGGR_TYPE} = conf ]; then
     gunicorn main_event_listener:app
-  else
+else
     python main.py $@
-	fi
-##
+fi
