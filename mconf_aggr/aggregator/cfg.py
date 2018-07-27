@@ -16,7 +16,7 @@ import os
 
 def get_config_path(config_file):
     module_path = os.path.dirname(__file__)
-    config_dir = os.path.join(module_path, os.pardir, "config")
+    config_dir = os.path.join(module_path, os.pardir, os.pardir, "config")
 
     return os.path.join(config_dir, config_file)
 

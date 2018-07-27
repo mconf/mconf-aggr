@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock as mock
 
-from mconf_aggr.aggregator import Publisher, Subscriber, \
+from mconf_aggr.aggregator.aggregator import Publisher, Subscriber, \
                                   Channel, PublishError
 
 
@@ -41,7 +41,7 @@ class TestPublisher(unittest.TestCase):
         with self.assertRaises(PublishError):
             self.publisher.publish(None)
 
-    @mock.patch('mconf_aggr.aggregator.Subscriber')
+    @mock.patch('mconf_aggr.aggregator.aggregator.Subscriber')
     def test_publish(self, MockChannel):
         mock_channel = MockChannel('channel')
         subscriber = Subscriber(mock_channel, 'callback')

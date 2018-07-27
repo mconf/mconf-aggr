@@ -74,9 +74,9 @@ from urllib.parse import urlsplit
 import cachetools
 import zabbix_api as api
 
-from mconf_aggr import cfg
-from mconf_aggr.aggregator import AggregatorCallback, CallbackError
-from mconf_aggr.utils import time_logger
+from mconf_aggr.aggregator import cfg
+from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
+from mconf_aggr.aggregator.utils import time_logger
 
 
 class ZabbixLoginError(Exception):

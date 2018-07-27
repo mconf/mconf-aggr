@@ -6,9 +6,9 @@ import logging
 import time
 import sys
 
-import mconf_aggr.cfg as cfg
+import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.zabbix.zabbix import ZabbixDataWriter, ZabbixDataReader
-from mconf_aggr.aggregator import (Aggregator,
+from mconf_aggr.aggregator.aggregator import (Aggregator,
                                    SetupError,
                                    PublishError,
                                    AggregatorNotRunning)

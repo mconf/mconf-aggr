@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock as mock
 
-from mconf_aggr.aggregator import Aggregator
+from mconf_aggr.aggregator.aggregator import Aggregator
 
 
 class TestAggregator(unittest.TestCase):

@@ -1,6 +1,6 @@
 import unittest
 
-from mconf_aggr.aggregator import AggregatorCallback
+from mconf_aggr.aggregator.aggregator import AggregatorCallback
 
 
 class TestCallback(unittest.TestCase):

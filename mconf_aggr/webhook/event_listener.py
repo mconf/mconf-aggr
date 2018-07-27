@@ -13,11 +13,11 @@ from urllib.parse import unquote
 
 import falcon
 
-import mconf_aggr.cfg as cfg
-from mconf_aggr.aggregator import Aggregator, SetupError, PublishError
+import mconf_aggr.aggregator.cfg as cfg
+from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
 from mconf_aggr.webhook import db_mapping
 from mconf_aggr.webhook.db_operations import DataWritter
-from mconf_aggr.utils import time_logger
+from mconf_aggr.aggregator.utils import time_logger
 
 
 # Falcon follows the REST architectural style, meaning (among

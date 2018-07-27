@@ -1,7 +1,7 @@
 import logging
 import unittest
 
-from mconf_aggr.aggregator import Channel
+from mconf_aggr.aggregator.aggregator import Channel
 
 
 class TestChannel(unittest.TestCase):

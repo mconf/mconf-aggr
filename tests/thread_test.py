@@ -2,7 +2,7 @@ import threading
 import unittest
 import unittest.mock as mock
 
-from mconf_aggr.aggregator import SubscriberThread, Subscriber, Channel
+from mconf_aggr.aggregator.aggregator import SubscriberThread, Subscriber, Channel
 
 
 class TestPublisher(unittest.TestCase):
