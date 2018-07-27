@@ -16,14 +16,14 @@ aggregator module
 event_listener module
 ---------------------
 
-.. automodule:: event_listener.event_listener
+.. automodule:: webhook.event_listener
     :members:
 
 
 db_operations module
 --------------------------------
 
-.. automodule:: event_listener.db_operations
+.. automodule:: webhook.db_operations
     :members:
 
 zabbix module

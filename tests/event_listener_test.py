@@ -2,7 +2,7 @@ import json
 import unittest
 import unittest.mock as mock
 
-from mconf_aggr.event_listener.event_listener import DataHandler
+from mconf_aggr.webhook.event_listener import DataHandler
 
 class TestReader(unittest.TestCase):
     @classmethod

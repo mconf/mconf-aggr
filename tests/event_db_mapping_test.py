@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock as mock
 
-from mconf_aggr.event_listener.db_mapping import map_message_to_db
+from mconf_aggr.webhook.db_mapping import map_message_to_db
 
 
 class TestMapping(unittest.TestCase):

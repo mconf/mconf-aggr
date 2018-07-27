@@ -17,7 +17,7 @@
             "write_delay": 1
         }
     },
-    "event_listener": {
+    "webhook": {
         "database": {
             "user": "postgres",
             "password": "postgres",

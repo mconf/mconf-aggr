@@ -85,7 +85,7 @@
             "encoding": "utf8"
         },
 
-        "event_listener_op_info_file_handler": {
+        "webhook_op_info_file_handler": {
             "class": "logging.handlers.RotatingFileHandler",
             "level": "INFO",
             "formatter": "simple",
@@ -95,7 +95,7 @@
             "encoding": "utf8"
         },
 
-        "event_listener_op_debug_file_handler": {
+        "webhook_op_debug_file_handler": {
             "class": "logging.handlers.RotatingFileHandler",
             "level": "DEBUG",
             "formatter": "simple",
@@ -105,7 +105,7 @@
             "encoding": "utf8"
         },
 
-        "event_listener_info_file_handler": {
+        "webhook_info_file_handler": {
             "class": "logging.handlers.RotatingFileHandler",
             "level": "INFO",
             "formatter": "simple",
@@ -115,7 +115,7 @@
             "encoding": "utf8"
         },
 
-        "event_listener_debug_file_handler": {
+        "webhook_debug_file_handler": {
             "class": "logging.handlers.RotatingFileHandler",
             "level": "DEBUG",
             "formatter": "simple",
@@ -146,17 +146,17 @@
             "propagate": false
         },
 
-        "mconf_aggr.event_listener.db_operations": {
+        "mconf_aggr.webhook.db_operations": {
             "level": "DEBUG",
             "handlers": [
                 "console",
-                "event_listener_op_debug_file_handler",
-                "event_listener_op_info_file_handler"
+                "webhook_op_debug_file_handler",
+                "webhook_op_info_file_handler"
             ],
             "propagate": false
         },
 
-        "mconf_aggr.event_listener.event_listener": {
+        "mconf_aggr.webhook.event_listener": {
             "level": "DEBUG",
             "handlers": [
                 "console",

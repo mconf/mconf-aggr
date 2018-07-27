@@ -9,7 +9,7 @@
                        "thread_test"],
         "zabbix": ["zabbix_server_test",
                    "zabbix_servers_pool_test"],
-        "event_listener": [
+        "webhook": [
             "event_db_mapping_test",
             "event_db_operations_test"
         ]

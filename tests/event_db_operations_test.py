@@ -1,7 +1,7 @@
 import unittest
 import unittest.mock as mock
 
-from mconf_aggr.event_listener.db_operations import DataProcessor, Meetings, MeetingsEvents, Recordings, Session ,UsersEvents
+from mconf_aggr.webhook.db_operations import DataProcessor, Meetings, MeetingsEvents, Recordings, Session ,UsersEvents
 
 
 class TestOperationsMeetings(unittest.TestCase):

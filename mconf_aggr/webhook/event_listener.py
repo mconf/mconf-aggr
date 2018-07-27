@@ -15,8 +15,8 @@ import falcon
 
 import mconf_aggr.cfg as cfg
 from mconf_aggr.aggregator import Aggregator, SetupError, PublishError
-from mconf_aggr.event_listener import db_mapping
-from mconf_aggr.event_listener.db_operations import DataWritter
+from mconf_aggr.webhook import db_mapping
+from mconf_aggr.webhook.db_operations import DataWritter
 from mconf_aggr.utils import time_logger
 
 
@@ -41,7 +41,7 @@ class HookListener(object):
 
     def on_post(self, req, resp):
         """Handles POST requests
-        
+
         After receiving a POST call the data_handler to treat the received message.
         """
         # Parse received message
@@ -92,7 +92,7 @@ class AuthMiddleware(object):
                                           href='http://docs.example.com/auth')
 
     def _token_is_valid(self, token):
-        expected = 'Bearer ' + cfg.config['event_listener']['auth']['token']
+        expected = 'Bearer ' + cfg.config['webhook']['auth']['token']
 
         if(expected == token):
             return True

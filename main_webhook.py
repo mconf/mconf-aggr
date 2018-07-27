@@ -9,14 +9,14 @@ from urllib.parse import unquote
 import falcon
 
 import mconf_aggr.cfg as cfg
-from mconf_aggr.event_listener import db_mapping
-from mconf_aggr.event_listener.db_operations import DataWritter
-from mconf_aggr.event_listener.event_listener import DataHandler, HookListener, AuthMiddleware
+from mconf_aggr.webhook import db_mapping
+from mconf_aggr.webhook.db_operations import DataWritter
+from mconf_aggr.webhook.event_listener import DataHandler, HookListener, AuthMiddleware
 from mconf_aggr.aggregator import Aggregator, SetupError, PublishError
 
 cfg.config.setup_config("config/config.json")
 cfg.config.setup_logging()
-route = cfg.config['event_listener']['route']
+route = cfg.config['webhook']['route']
 logger = logging.getLogger(__name__)
 
 # falcon.API instances are callable WSGI apps

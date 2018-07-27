@@ -803,7 +803,7 @@ class PostgresConnector:
         database_uri : str
             URI of the PostgreSQL database instance either local or remote.
         """
-        self.config = cfg.config['event_listener']['database']
+        self.config = cfg.config['webhook']['database']
         self.database_uri = database_uri or self._build_uri()
         self.logger = logger or logging.getLogger(__name__)
 
