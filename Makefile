@@ -1,9 +1,30 @@
-AGGR_PATH=~/mconf-aggr
 CONFIG_PATH=~/config.json
-AGGR_PATH=$(shell realpath .)
+AGGR_PATH=$(shell pwd)
+TAG=latest
 
-run:
-	@python main.py -c $(CONFIG_PATH)
+run-webhook:
+	@python main_webhook.py -c $(CONFIG_PATH)
+
+run-zabbix:
+	@python main_zabbix.py -c $(CONFIG_PATH)
+
+docker-build-webhook:
+	docker build -f Dockerfile.webhook -t mconf-aggr-webhook:$(TAG) .
+
+docker-build-zabbix:
+	docker build -f Dockerfile.zabbix -t mconf-aggr-zabbix:$(TAG) .
+
+docker-run-webhook:
+	docker run --rm -v $(CONFIG_PATH):/usr/src/mconf-aggr/config/config.json -ti mconf-aggr-webhook:$(TAG)
+
+docker-run-zabbix:
+	docker run --rm -v $(CONFIG_PATH):/usr/src/mconf-aggr/config/config.json -ti mconf-aggr-zabbix:$(TAG)
+
+docker-build-dev:
+	docker build -t mconf-aggr:dev .
+
+docker-run-dev:
+	docker run --rm -v $(AGGR_PATH):/usr/src/mconf-aggr/ -v $(CONFIG_PATH):/usr/src/mconf-aggr/config/config.json -ti mconf-aggr:dev
 
 test:
 	@python tests.py
@@ -13,18 +34,6 @@ dep:
 
 html:
 	@make -C docs/ html
-
-docker-build:
-	docker build -t mconf-aggr:$(TAG) .
-
-docker-build-dev:
-	docker build -t mconf-aggr:dev .
-
-docker-run:
-	docker run --rm -v $(CONFIG_PATH):/usr/src/mconf-aggr/config/config.json -ti mconf-aggr:$(TAG)
-
-docker-run-dev:
-	docker run --rm -v $(AGGR_PATH):/usr/src/mconf-aggr/ -v $(CONFIG_PATH):/usr/src/mconf-aggr/config/config.json -ti mconf-aggr:dev
 
 lint:
 	flake8 --exclude=.tox

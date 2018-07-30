@@ -1,0 +1,34 @@
+FROM python:3.6-alpine AS base
+
+FROM base AS builder
+
+RUN mkdir /install
+
+WORKDIR /install
+
+COPY ./requirements_webhook.txt /requirements.txt
+
+RUN apk update && \
+    apk add postgresql-libs && \
+    apk add --virtual .build-deps gcc musl-dev postgresql-dev
+
+RUN pip install --install-option="--prefix=/install" -r /requirements.txt
+
+RUN apk --purge del .build-deps
+
+FROM base
+
+RUN apk update && apk add postgresql-libs libpq
+
+COPY --from=builder /install /usr/local
+
+COPY ./config/default.json /usr/src/mconf-aggr/config/default.json
+COPY ./config/config.json /usr/src/mconf-aggr/config/config.json
+COPY ./mconf_aggr/__init__.py /usr/src/mconf-aggr/mconf_aggr/__init__.py
+COPY ./mconf_aggr/aggregator/ /usr/src/mconf-aggr/mconf_aggr/aggregator/
+COPY ./mconf_aggr/webhook/ /usr/src/mconf-aggr/mconf_aggr/webhook/
+COPY ./main_webhook.py /usr/src/mconf-aggr/main_webhook.py
+
+WORKDIR /usr/src/mconf-aggr/
+
+CMD ["gunicorn", "main_webhook:app"]
