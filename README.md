@@ -18,6 +18,7 @@ project's root directory):
 ```
 $ pyenv install 3.6.0
 $ pyenv local 3.6.0
+$ pyenv rehash
 ```
 
 There should be now a file called `.python-version` with the content '_3.6.0_'.
@@ -46,6 +47,9 @@ When running a script in the project, call Python explicitly as in `python main.
 this is that calling it explicitly will use the Python version as defined by `pyenv` as expected.
 If you run the script as an executable, it will check for system's Python
 (possibly with the wrong version).
+
+> Troubleshooting: If you are having problems with pyenv, make sure you have the
+following line towards the end of your `.bashrc` or `bash_profile` file: `eval "$(pyenv init -)"`
 
 ## Virtual environment
 
@@ -263,13 +267,13 @@ your browser.
 
 ## Docker
 
-We also provide a Dockerfile to build an image of the application. It is built
-upon the [python:3 image](https://hub.docker.com/_/python/).
+We also provide two Dockerfiles to build images of the applications. They are built
+upon the [python:3.6-alpine image](https://hub.docker.com/_/python/).
 
-To build an image called `mconf-aggr` with tag `newtag`, run:
+To build an image called `mconf-aggr-webhook` with tag `newtag`, run:
 
 ```
-$ docker build -t mconf-aggr:newtag .
+$ docker build -t mconf-aggr-webhook:newtag .
 ```
 
 > Note: notice the dot **.** at the end of the command.
@@ -281,10 +285,14 @@ To run the image just created passing a `config.json` configuration file at
 $ docker run \
 --rm \
 -v /path/to/config/config.json:/usr/src/mconf-aggr/config/config.json \
--ti mconf-aggr:newtag
+-ti mconf-aggr-webhook:newtag
 ```
 
 > Note: the `--rm` flag tells Docker to remove the container when it is stopped.
+
+> We convention to call the Docker image of the webhook application `mconf-aggr-webhook` and
+the Docker image of the zabbix application `mconf-aggr-zabbix`. We use the tag to distinguish
+between versions or any other specificity.
 
 ### Developing with Docker
 
@@ -299,25 +307,33 @@ $ docker run \
 -ti mconf-aggr:newtag
 ```
 
+> We convention to call the Docker image aimed at development `mconf-aggr` with no
+further distinction between webhook or zabbix applications since the project code
+can be completely shared. The tag is `dev`.
+
 ## Makefile
 
 Some tasks can be done using the `make` utility. The most important ones are
 shown below:
 
-* To run the application: `$ make run CONFIG_PATH=path/to/config.json`
+* To run the webhook application (without Docker): `$ make run-webhook CONFIG_PATH=path/to/webhook-config.json`
+* To run the zabbix application (without Docker): `$ make run-zabbix CONFIG_PATH=path/to/zabbix-config.json`
+* To build the Docker image of the webhook application: `$ make docker-build-webhook TAG=any_tag`
+* To build the Docker image of the zabbix application: `$ make docker-build-zabbix TAG=any_tag`
+* To run the Docker image of the webhook application: `$ make docker-run-webhook CONFIG_PATH=path/to/webhook-config.json TAG=any_tag`
+* To run the Docker image of the zabbix application: `$ make docker-run-zabbix CONFIG_PATH=path/to/zabbix-config.json TAG=any_tag`
+* To build a Docker image for development: `$ make docker-build-dev`
+* To run the Docker image of development: `$ make docker-run-dev AGGR_PATH=path/to/here CONFIG_PATH=path/to/config`
 * To run the tests: `$ make test`
 * To install dependecies: `$ make dep`
 * To build the HTML documentation: `$ make html`
-* To build a Docker image: `$ make docker-build TAG=any_tag`
-* To build a Docker image for development: `$ make docker-build-dev`
-* To run a Docker image: `$ make docker-run CONFIG_PATH=path/to/config.json TAG=any_tag`
-* To run the Docker development image: `$ make docker-run-dev AGGR_PATH=path/to/here CONFIG_PATH=path/to/config`
+* To run the linther: `$ make lint`
 * To clean the project: `$ make clean`
 
 The `Makefile` also provides sensitive defaults:
 
 ```
-AGGR_PATH=~/mconf-aggr
 CONFIG_PATH=~/config.json
-AGGR_PATH=`realpath .` # Full path to the directory containing the Makefile.
+AGGR_PATH=<current_directory>
+TAG=latest
 ```
