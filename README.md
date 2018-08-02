@@ -270,10 +270,10 @@ your browser.
 We also provide two Dockerfiles to build images of the applications. They are built
 upon the [python:3.6-alpine image](https://hub.docker.com/_/python/).
 
-To build an image called `mconf-aggr-webhook` with tag `newtag`, run:
+To build an image called `mconf-aggr-webhook` in the repository `mconftec` with tag `newtag`, run:
 
 ```
-$ docker build -t mconf-aggr-webhook:newtag .
+$ docker build -t mconftec/mconf-aggr-webhook:newtag .
 ```
 
 > Note: notice the dot **.** at the end of the command.
@@ -285,13 +285,13 @@ To run the image just created passing a `config.json` configuration file at
 $ docker run \
 --rm \
 -v /path/to/config/config.json:/usr/src/mconf-aggr/config/config.json \
--ti mconf-aggr-webhook:newtag
+-ti mconftec/mconf-aggr-webhook:newtag
 ```
 
 > Note: the `--rm` flag tells Docker to remove the container when it is stopped.
 
-> We convention to call the Docker image of the webhook application `mconf-aggr-webhook` and
-the Docker image of the zabbix application `mconf-aggr-zabbix`. We use the tag to distinguish
+> We convention to call the Docker image of the webhook application `mconftec/mconf-aggr-webhook` and
+the Docker image of the zabbix application `mconftec/mconf-aggr-zabbix`. We use the tag to distinguish
 between versions or any other specificity.
 
 ### Developing with Docker
@@ -304,10 +304,10 @@ $ docker run \
 --rm \
 -v /path/to/this/source:/usr/src/mconf-aggr/
 -v /path/to/config/config.json:/usr/src/mconf-aggr/config/config.json \
--ti mconf-aggr:newtag
+-ti mconftec/mconf-aggr:newtag
 ```
 
-> We convention to call the Docker image aimed at development `mconf-aggr` with no
+> We convention to call the Docker image aimed at development `mconftec/mconf-aggr` with no
 further distinction between webhook or zabbix applications since the project code
 can be completely shared. The tag is `dev`.
 

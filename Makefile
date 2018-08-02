@@ -9,22 +9,22 @@ run-zabbix:
 	@python main_zabbix.py -c $(CONFIG_PATH)
 
 docker-build-webhook:
-	docker build -f Dockerfile.webhook -t mconf-aggr-webhook:$(TAG) .
+	docker build -f Dockerfile.webhook -t mconftec/mconf-aggr-webhook:$(TAG) .
 
 docker-build-zabbix:
-	docker build -f Dockerfile.zabbix -t mconf-aggr-zabbix:$(TAG) .
+	docker build -f Dockerfile.zabbix -t mconftec/mconf-aggr-zabbix:$(TAG) .
 
 docker-run-webhook:
-	docker run --rm -v $(CONFIG_PATH):/usr/src/mconf-aggr/config/config.json -ti mconf-aggr-webhook:$(TAG)
+	docker run --rm -v $(CONFIG_PATH):/usr/src/mconf-aggr/config/config.json -ti mconftec/mconf-aggr-webhook:$(TAG)
 
 docker-run-zabbix:
-	docker run --rm -v $(CONFIG_PATH):/usr/src/mconf-aggr/config/config.json -ti mconf-aggr-zabbix:$(TAG)
+	docker run --rm -v $(CONFIG_PATH):/usr/src/mconf-aggr/config/config.json -ti mconftec/mconf-aggr-zabbix:$(TAG)
 
 docker-build-dev:
 	docker build -t mconf-aggr:dev .
 
 docker-run-dev:
-	docker run --rm -v $(AGGR_PATH):/usr/src/mconf-aggr/ -v $(CONFIG_PATH):/usr/src/mconf-aggr/config/config.json -ti mconf-aggr:dev
+	docker run --rm -v $(AGGR_PATH):/usr/src/mconf-aggr/ -v $(CONFIG_PATH):/usr/src/mconf-aggr/config/config.json -ti mconftec/mconf-aggr:dev
 
 test:
 	@python tests.py
