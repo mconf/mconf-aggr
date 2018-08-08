@@ -2,8 +2,8 @@ CONFIG_PATH=~/config.json
 AGGR_PATH=$(shell pwd)
 DOCKER_USERNAME?=mconftec
 REPOSITORY?=mconf-aggr
-FULL_VERSION?=$(shell cat version)
-MAJOR_VERSION?=$(shell cat version | cut -d '.' -f 1)
+FULL_VERSION?=$(shell cat .next_version)
+MAJOR_VERSION?=$(shell cat .next_version | cut -d '.' -f 1)
 REVISION?=$(shell git rev-parse --short HEAD)
 
 ifndef APP
