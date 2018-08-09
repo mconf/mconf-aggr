@@ -1,6 +1,6 @@
 # Mconf-Aggregator
 
-* *Current version*: `0.0.2`
+* **Current version**: `0.0.2`
 
 ## Python version
 
@@ -270,7 +270,7 @@ your browser.
 ### Docker
 
 We also provide two Dockerfiles to build images of the applications. They are built
-upon the [python:3.6-alpine image](https://hub.docker.com/_/python/).
+upon the [python:3.6-alpine](https://hub.docker.com/_/python/) image.
 
 Refer to the Makefile section below to further details on the recommended way to run Docker.
 
