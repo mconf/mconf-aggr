@@ -333,6 +333,11 @@ shown below:
 * To run the linther: `$ make lint APP=<anything>`
 * To clean the project: `$ make clean APP=<anything>`
 
+You can also overwrite some parameters used in Makefile. For instance, if you
+want to run a different revision of the zabbix app, you can run:
+
+`$ make docker-run APP=zabbix REVISION=<revision>`
+
 The `Makefile` also provides sensitive defaults:
 
 ```
