@@ -297,7 +297,7 @@ Unstable releases receive tags:
 For instance, if the zabbix app is at version 0.0.2-pre-alpha and current commit hash is 36fba5,
 local tags we be built as:
 
-`zabbix-0.0.2-pre-alpha-36fba5`
+* `zabbix-0.0.2-pre-alpha-36fba5`
 
 The stable release will have tags:
 
@@ -309,7 +309,7 @@ The stable release will have tags:
 And the unstable release will have tags:
 
 * `zabbix-0.0.2-pre-alpha`
-* `zabbix-0.0.2-pre-alpha-36fba5`.
+* `zabbix-36fba5`
 
 > The version is obtained from the `.version` file.
 
