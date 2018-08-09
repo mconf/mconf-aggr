@@ -1,5 +1,7 @@
 # Mconf-Aggregator
 
+* *Current version*: `0.0.2`
+
 ## Python version
 
 > Note: You only have to do this once.
@@ -265,75 +267,79 @@ $ python -m http.server
 It will create a server on _localhost:8000_. You can check it out in
 your browser.
 
-## Docker
+### Docker
 
 We also provide two Dockerfiles to build images of the applications. They are built
 upon the [python:3.6-alpine image](https://hub.docker.com/_/python/).
 
-To build an image called `mconf-aggr-webhook` in the repository `mconftec` with tag `newtag`, run:
+Refer to the Makefile section below to further details on the recommended way to run Docker.
 
-```
-$ docker build -t mconftec/mconf-aggr-webhook:newtag .
-```
+### Docker tags
 
-> Note: notice the dot **.** at the end of the command.
+An important subject is how to tag Docker images. Here we use the following patterns:
 
-To run the image just created passing a `config.json` configuration file at
-`/path/to/config`, run:
+Local development images receive tag:
 
-```
-$ docker run \
---rm \
--v /path/to/config/config.json:/usr/src/mconf-aggr/config/config.json \
--ti mconftec/mconf-aggr-webhook:newtag
-```
+* `<app>-<full_version>-<revision>`
 
-> Note: the `--rm` flag tells Docker to remove the container when it is stopped.
+Stable releases receive tags:
 
-> We convention to call the Docker image of the webhook application `mconftec/mconf-aggr-webhook` and
-the Docker image of the zabbix application `mconftec/mconf-aggr-zabbix`. We use the tag to distinguish
-between versions or any other specificity.
+* `<app>-<number_version>`
+* `<app>-<major_version>`
+* `<app>-<revision>`
+* `<app>-latest`
 
-### Developing with Docker
+Unstable releases receive tags:
 
-You can also use Docker in development. To share the code base in the host with
-the Docker container, just pass another `-v` flag to `docker run`:
+* `<app>-<full_version>`
+* `<app>-<revision>`
 
-```
-$ docker run \
---rm \
--v /path/to/this/source:/usr/src/mconf-aggr/
--v /path/to/config/config.json:/usr/src/mconf-aggr/config/config.json \
--ti mconftec/mconf-aggr:newtag
-```
+For instance, if the zabbix app is at version 0.0.2-pre-alpha and current commit hash is 36fba5,
+local tags we be built as:
 
-> We convention to call the Docker image aimed at development `mconftec/mconf-aggr` with no
-further distinction between webhook or zabbix applications since the project code
-can be completely shared. The tag is `dev`.
+`zabbix-0.0.2-pre-alpha-36fba5`
+
+The stable release will have tags:
+
+* `zabbix-0.0.2`
+* `zabbix-0`
+* `zabbix-36fba5`
+* `zabbix-latest`
+
+And the unstable release will have tags:
+
+* `zabbix-0.0.2-pre-alpha`
+* `zabbix-0.0.2-pre-alpha-36fba5`.
+
+> The version is obtained from the `.version` file.
 
 ## Makefile
 
 Some tasks can be done using the `make` utility. The most important ones are
 shown below:
 
-* To run the webhook application (without Docker): `$ make run-webhook CONFIG_PATH=path/to/webhook-config.json`
-* To run the zabbix application (without Docker): `$ make run-zabbix CONFIG_PATH=path/to/zabbix-config.json`
-* To build the Docker image of the webhook application: `$ make docker-build-webhook TAG=any_tag`
-* To build the Docker image of the zabbix application: `$ make docker-build-zabbix TAG=any_tag`
-* To run the Docker image of the webhook application: `$ make docker-run-webhook CONFIG_PATH=path/to/webhook-config.json TAG=any_tag`
-* To run the Docker image of the zabbix application: `$ make docker-run-zabbix CONFIG_PATH=path/to/zabbix-config.json TAG=any_tag`
-* To build a Docker image for development: `$ make docker-build-dev`
-* To run the Docker image of development: `$ make docker-run-dev AGGR_PATH=path/to/here CONFIG_PATH=path/to/config`
-* To run the tests: `$ make test`
-* To install dependecies: `$ make dep`
-* To build the HTML documentation: `$ make html`
-* To run the linther: `$ make lint`
-* To clean the project: `$ make clean`
+* To run an application (without Docker): `$ make run APP=[zabbix|webhook] CONFIG_PATH=path/to/webhook-config.json`
+* To build the Docker image: `$ make docker-build APP=[zabbix|webhook]`
+* To run the Docker image: `$ make docker-run APP=[zabbix|webhook] CONFIG_PATH=path/to/webhook-config.json`
+* To tag stable Docker images: `$ make docker-tag APP=[zabbix|webhook]`
+* To tag unstable Docker images: `$ make docker-tag-unstable APP=[zabbix|webhook]`
+* To push stable Docker images to registry: `$ make docker-push APP=[zabbix|webhook]`
+* To push unstable Docker images to registry: `$ make docker-push-unstable APP=[zabbix|webhook]`
+* To show the stable tags that will be generated: `$ make tags APP=[zabbix|webhook]`
+* To show the unstable tags that will be generated: `$ make tags-unstable APP=[zabbix|webhook]`
+* To run the tests: `$ make test APP=<anything>`
+* To install dependecies: `$ make dep APP=<anything>`
+* To build the HTML documentation: `$ make html APP=<anything>`
+* To run the linther: `$ make lint APP=<anything>`
+* To clean the project: `$ make clean APP=<anything>`
 
 The `Makefile` also provides sensitive defaults:
 
 ```
 CONFIG_PATH=~/config.json
 AGGR_PATH=<current_directory>
-TAG=latest
+DOCKER_USERNAME=mconftec
+REPOSITORY=mconf-aggr
 ```
+
+> The `APP` parameter is mandatory even if the command does not require it. Failing to supply it will cause the command to fail.
