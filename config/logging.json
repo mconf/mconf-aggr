@@ -160,8 +160,8 @@
             "level": "DEBUG",
             "handlers": [
                 "console",
-                "event_listener_debug_file_handler",
-                "event_listener_info_file_handler"
+                "webhook_debug_file_handler",
+                "webhook_info_file_handler"
             ],
             "propagate": false
         },
