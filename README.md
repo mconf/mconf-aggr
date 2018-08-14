@@ -267,7 +267,7 @@ $ python -m http.server
 It will create a server on _localhost:8000_. You can check it out in
 your browser.
 
-### Docker
+## Docker
 
 We also provide two Dockerfiles to build images of the applications. They are built
 upon the [python:3.6-alpine](https://hub.docker.com/_/python/) image.
@@ -313,14 +313,27 @@ And the unstable release will have tags:
 
 > The version is obtained from the `.version` file.
 
+### Developing with Docker
+
+You can also develop using a single Docker image for both webhook and zabbix applications.
+The easiest way is to use the Makefile provided. In this case, both `APP` and `AGGR_APP`
+must be provided. The actual code run is replaced by the code residing in the current directory
+of the project. If you need to pass some other options to `docker run` use the `EXTRA_OPTS`
+(for instance, for publishing ports).
+
+```
+$ make docker-run-dev APP=dev AGGR_APP=webhook EXTRA_OPTS="-p 8000:8000"
+```
+
 ## Makefile
 
 Some tasks can be done using the `make` utility. The most important ones are
 shown below:
 
 * To run an application (without Docker): `$ make run APP=[zabbix|webhook] CONFIG_PATH=path/to/webhook-config.json`
-* To build the Docker image: `$ make docker-build APP=[zabbix|webhook]`
-* To run the Docker image: `$ make docker-run APP=[zabbix|webhook] CONFIG_PATH=path/to/webhook-config.json`
+* To build the Docker image: `$ make docker-build APP=[zabbix|webhook|dev]`
+* To run the Docker image: `$ make docker-run APP=[zabbix|webhook] [CONFIG_PATH=path/to/webhook-config.json]`
+* To run the Docker image of development: `$ make docker-run APP=dev AGGR_APP=[zabbix|webhook] [CONFIG_PATH=path/to/webhook-config.json] [EXTRA_OPTS=""]`
 * To tag stable Docker images: `$ make docker-tag APP=[zabbix|webhook]`
 * To tag unstable Docker images: `$ make docker-tag-unstable APP=[zabbix|webhook]`
 * To push stable Docker images to registry: `$ make docker-push APP=[zabbix|webhook]`
@@ -341,8 +354,8 @@ want to run a different revision of the zabbix app, you can run:
 The `Makefile` also provides sensitive defaults:
 
 ```
-CONFIG_PATH=~/config.json
 AGGR_PATH=<current_directory>
+CONFIG_PATH=<current_directory>/config/config.json
 DOCKER_USERNAME=mconftec
 REPOSITORY=mconf-aggr
 ```

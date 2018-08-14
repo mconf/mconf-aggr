@@ -1,5 +1,6 @@
-CONFIG_PATH=~/config.json
 AGGR_PATH=$(shell pwd)
+CONFIG_PATH=$(AGGR_PATH)/config/config.json
+IMAGE_WORKDIR=/usr/src/mconf-aggr
 DOCKER_USERNAME?=mconftec
 REPOSITORY?=mconf-aggr
 FULL_VERSION?=$(shell cat .version)
@@ -21,7 +22,10 @@ docker-build:
 	docker build -f Dockerfile.$(APP) -t $(IMAGE_NAME):$(LOCAL_TAG) .
 
 docker-run:
-	docker run --rm -v $(CONFIG_PATH):/usr/src/mconf-aggr/config/config.json -ti $(IMAGE_NAME):$(LOCAL_TAG)
+	docker run --rm -v $(CONFIG_PATH):$(IMAGE_WORKDIR)/config/config.json -ti $(IMAGE_NAME):$(LOCAL_TAG)
+
+docker-run-dev:
+	docker run --rm -v $(CONFIG_PATH):$(IMAGE_WORKDIR)/config/config.json -v $(AGGR_PATH):$(IMAGE_WORKDIR)/ --env AGGR_APP=$(AGGR_APP) $(EXTRA_OPTS) -ti $(IMAGE_NAME):$(LOCAL_TAG)
 
 docker-tag: docker-build
 	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-$(NUMBER_VERSION)

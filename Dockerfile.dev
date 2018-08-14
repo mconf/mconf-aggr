@@ -1,0 +1,15 @@
+FROM python:3.6
+
+ADD . /usr/src/mconf-aggr/
+
+RUN chmod 0544 /usr/src/mconf-aggr/start.sh
+
+RUN pip install -r /usr/src/mconf-aggr/requirements_webhook.txt --default-timeout=100
+
+RUN pip install -r /usr/src/mconf-aggr/requirements_zabbix.txt --default-timeout=100
+
+WORKDIR /usr/src/mconf-aggr/
+
+EXPOSE 8000
+
+CMD ["./start.sh", "-c", "/usr/src/mconf-aggr/config/config.json"]
