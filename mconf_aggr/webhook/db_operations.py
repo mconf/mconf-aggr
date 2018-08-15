@@ -1,7 +1,7 @@
 """This module provides all classes that manipulate the database for received events
 
 It provides methods to insert/delete/update columns on the database depending on
-which event was received by the `update` method on `DataWritter` and passed to
+which event was received by the `update` method on `WebhookDataWriter` and passed to
 `update` on `DataProcessor`.
 
 """
@@ -850,7 +850,7 @@ class PostgresConnector:
                                                  self.config['database'])
 
 
-class DataWritter(AggregatorCallback):
+class WebhookDataWriter(AggregatorCallback):
     """Writer of data retrieved from webhooks.
 
     This class implements the AggregatorCallback which means its `run()` method
@@ -863,7 +863,7 @@ class DataWritter(AggregatorCallback):
     When finished, its `teardown` can be called to close any opened resource.
     """
     def __init__(self, connector=None, logger=None):
-        """Constructor of the DataWritter.
+        """Constructor of the WebhookDataWriter.
 
         Parameters
         ----------
@@ -876,13 +876,13 @@ class DataWritter(AggregatorCallback):
     def setup(self):
         """Setup any resources needed to iteract with the database.
         """
-        self.logger.info("Setting up DataWritter")
+        self.logger.info("Setting up WebhookDataWriter")
         self.connector.connect()
 
     def teardown(self):
         """Release any resources used to iteract with the database.
         """
-        self.logger.info("Tearing down DataWritter")
+        self.logger.info("Tearing down WebhookDataWriter")
         self.connector.close()
 
     def run(self, data):

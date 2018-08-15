@@ -16,7 +16,7 @@ import falcon
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
 from mconf_aggr.webhook import db_mapping
-from mconf_aggr.webhook.db_operations import DataWritter
+from mconf_aggr.webhook.db_operations import WebhookDataWriter
 from mconf_aggr.aggregator.utils import time_logger
 
 
@@ -104,7 +104,7 @@ class DataHandler():
     """Handler of data from webhooks.
 
     This class is responsible for publishing the data to Aggregator to create a new thread
-    and instantiate the proper DataWritter.
+    and instantiate the proper WebhookDataWriter.
 
     It's called by the HookListener everytime it gets a new message.
     """
