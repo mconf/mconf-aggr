@@ -85,11 +85,11 @@ class Meetings(Base):
             }
         ]
     """
-    __tablename__ = "Meetings"
+    __tablename__ = "meetings"
 
     id = Column(Integer, primary_key=True)
-    meeting_event_id = Column(Integer, ForeignKey("MeetingsEvents.id"))
-    meeting_event = relationship("MeetingsEvents", backref=backref("Meetings", uselist=False))
+    meeting_event_id = Column(Integer, ForeignKey("meetings_events.id"))
+    #meeting_event = relationship("MeetingsEvents", backref=backref("Meetings", uselist=False))
 
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, onupdate=datetime.datetime.now)
@@ -196,7 +196,7 @@ class MeetingsEvents(Base):
             }
         ]
     """
-    __tablename__ = "MeetingsEvents"
+    __tablename__ = "meetings_events"
 
     id = Column(Integer, primary_key=True)
 
@@ -386,9 +386,9 @@ class UsersEvents(Base):
     __tablename__ = "UsersEvents"
 
     id = Column(Integer, primary_key=True)
-    meeting_event_Id = Column(Integer, ForeignKey("MeetingsEvents.id"))
+    meeting_event_Id = Column(Integer, ForeignKey("meetings_events.id"))
 
-    meeting_event = relationship("MeetingsEvents")
+    #meeting_event = relationship("MeetingsEvents")
 
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, onupdate=datetime.datetime.now)
@@ -418,7 +418,7 @@ class UsersEvents(Base):
 
 
 @contextmanager
-def session_scope(raise_exception=False):
+def session_scope(raise_exception=True):
     """Provide a transactional scope around a series of operations.
     """
     session = Session()

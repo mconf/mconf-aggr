@@ -45,7 +45,6 @@ class HookListener(object):
         After receiving a POST call the data_handler to treat the received message.
         """
         # Parse received message
-        post_data = req.stream.read().decode('utf-8')
         self.logger.info("Message from Webhooks received.")
         with time_logger(self.logger.debug,
                          "Processing webhook took {elapsed}s."):
