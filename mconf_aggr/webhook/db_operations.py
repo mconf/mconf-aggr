@@ -90,6 +90,7 @@ class Meetings(Base):
     id = Column(Integer, primary_key=True)
     meeting_event_id = Column(Integer, ForeignKey("meetings_events.id"))
     #meeting_event = relationship("MeetingsEvents", backref=backref("Meetings", uselist=False))
+    meeting_event = relationship("MeetingsEvents")
 
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, onupdate=datetime.datetime.now)
@@ -164,7 +165,7 @@ class MeetingsEvents(Base):
         Duration of the meeting.
     recording : Column of type Boolean
         Indicates if the meeting is being recorded.
-    has_been_forcibly_ended : Column of type Boolean
+    has_forcibly_ended : Column of type Boolean
         Indicates if the meeting was ended through an API call.
     start_time : Column of type BigInteger
         Timestamp of the moment when the meeting started.
@@ -219,13 +220,13 @@ class MeetingsEvents(Base):
     moderator_pw = Column(String)
     duration = Column(Integer)
     recording = Column(Boolean)
-    has_been_forcibly_ended = Column(Boolean)
+    has_forcibly_ended = Column(Boolean)
     start_time = Column(BigInteger)
     end_time = Column(BigInteger)
     max_users = Column(Integer)
     is_breakout = Column(Boolean)
     unique_users = Column(Integer)
-    meta_data = Column(JSON)
+    meta_data = Column("metadata", JSON)
 
     def __repr__(self):
         return ("<MeetingsEvents("
@@ -247,7 +248,7 @@ class MeetingsEvents(Base):
                 + ", moderator_pw=" + str(self.moderator_pw)
                 + ", duration=" + str(self.duration)
                 + ", recording=" + str(self.recording)
-                + ", has_been_forcibly_ended=" + str(self.has_been_forcibly_ended)
+                + ", has_forcibly_ended=" + str(self.has_forcibly_ended)
                 + ", start_time=" + str(self.start_time)
                 + ", end_time=" + str(self.end_time)
                 + ", max_users=" + str(self.max_users)
@@ -380,7 +381,7 @@ class UsersEvents(Base):
         Internal user ID of the user.
     external_user_id : Column of the type String
         External user ID of the user.
-    meta_data : Column of the type JSON
+    metadata : Column of the type JSON
         Information about the user metadata.
     """
     __tablename__ = "UsersEvents"
@@ -388,7 +389,7 @@ class UsersEvents(Base):
     id = Column(Integer, primary_key=True)
     meeting_event_Id = Column(Integer, ForeignKey("meetings_events.id"))
 
-    #meeting_event = relationship("MeetingsEvents")
+    meeting_event = relationship("MeetingsEvents")
 
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, onupdate=datetime.datetime.now)
@@ -400,7 +401,7 @@ class UsersEvents(Base):
     internal_user_id = Column(String, unique=True)
     external_user_id = Column(String)
 
-    meta_data = Column(JSON)
+    meta_data = Column("metadata", JSON)
 
 
     def __repr__(self):
