@@ -31,4 +31,4 @@ COPY ./main_webhook.py /usr/src/mconf-aggr/main_webhook.py
 
 WORKDIR /usr/src/mconf-aggr/
 
-CMD ["gunicorn", "main_webhook:app"]
+CMD ["PYTHONPATH=./", "gunicorn", "main_webhook:app", "--bind=0.0.0.0:8000", "--config=gunicorn_config.py"]

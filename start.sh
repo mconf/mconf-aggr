@@ -6,7 +6,7 @@ fi
 
 case "${AGGR_APP}" in
     webhook)
-        gunicorn main_webhook:app --bind=0.0.0.0:8000;;
+        PYTHONPATH=. gunicorn main_webhook:app --bind=0.0.0.0:8000 --config=gunicorn_config.py;;
     zabbix)
         python main_zabbix.py $@;;
     *)
