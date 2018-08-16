@@ -46,9 +46,9 @@ class HookListener(object):
         """
         # Parse received message
         post_data = req.stream.read().decode('utf-8')
-        self.logger.info("Message from Webhooks received.")
+        self.logger.info("Webhook event received from '{}'.".format(req.host))
         with time_logger(self.logger.debug,
-                         "Processing webhook took {elapsed}s."):
+                         "Processing webhook event took {elapsed}s."):
             # Parse received message
             post_data = req.stream.read().decode('utf-8')
 
@@ -57,7 +57,7 @@ class HookListener(object):
             resp.status = falcon.HTTP_200  # This is the default status
 
 
-class AuthMiddleware(object):
+class AuthMiddleware():
     def process_request(self, req, resp):
         """Process the request before routing it.
 
@@ -78,29 +78,34 @@ class AuthMiddleware(object):
         """
         self.logger = logging.getLogger(__name__)
 
-        requester = req.host # It may not be the original requester.
-        token = req.get_header('Authorization')
-        www_authentication = ["Bearer realm=\"mconf-aggregator\""]
+        auth_required = cfg.config['webhook']['auth']['required']
 
-        if token is None:
-            self.logger.warn(
-                "Authentication token missing from '{}'.".format(requester)
-            )
-            raise falcon.HTTPUnauthorized(
-                "Authentication required",
-                "Provide an authentication token as part of the request",
-                www_authentication
-            )
+        if auth_required:
+            requester = req.host # It may not be the original requester.
+            token = req.get_header('Authorization')
+            www_authentication = ["Bearer realm=\"mconf-aggregator\""]
 
-        if not self._token_is_valid(token):
-            self.logger.warn(
-                "Invalid token '{}' from '{}'.".format(token, requester)
-            )
-            raise falcon.HTTPUnauthorized(
-                "Invalid authentication token",
-                "The provided authentication token is not valid",
-                www_authentication
-            )
+
+            if token is None:
+                self.logger.warn(
+                    "Authentication token missing from '{}'.".format(requester)
+                )
+                raise falcon.HTTPUnauthorized(
+                    "Authentication required",
+                    "Provide an authentication token as part of the request",
+                    www_authentication
+                )
+
+            if not self._token_is_valid(token):
+                self.logger.warn(
+                    "Invalid token '{}' from '{}'.".format(token, requester)
+                )
+                raise falcon.HTTPUnauthorized(
+                    "Invalid authentication token",
+                    "The provided authentication token is not valid",
+                    www_authentication
+                )
+
 
     def _token_is_valid(self, token):
         expected = 'Bearer ' + cfg.config['webhook']['auth']['token']
