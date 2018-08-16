@@ -133,16 +133,20 @@ class DataHandler():
             data to be parsed and published.
         """
         decoded_data = unquote(data)
-        posted_obj = json.loads(decoded_data)
 
-        for webhook_msg in posted_obj:
-            # Map message
-            mapped_msg = db_mapping.map_message_to_db(webhook_msg)
+        try:
+            posted_obj = json.loads(decoded_data)
+        except JSONDecodeError as err:
+            self.logger.error(err)
+        else:
+            for webhook_msg in posted_obj:
+                # Map message
+                mapped_msg = db_mapping.map_message_to_db(webhook_msg)
 
-            if(mapped_msg):
-                try:
-                    data = [webhook_msg, mapped_msg]
-                    self.publisher.publish(data, channel=self.channel)
-                except PublishError as err:
-                    self.logger.error("Something went wrong while publishing.")
-                    continue
+                if(mapped_msg):
+                    try:
+                        data = [webhook_msg, mapped_msg]
+                        self.publisher.publish(data, channel=self.channel)
+                    except PublishError as err:
+                        self.logger.error("Something went wrong while publishing.")
+                        continue
