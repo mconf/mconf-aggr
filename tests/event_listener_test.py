@@ -2,14 +2,14 @@ import json
 import unittest
 import unittest.mock as mock
 
-from mconf_aggr.webhook.event_listener import DataHandler
+from mconf_aggr.webhook.event_listener import WebhookDataHandler
 
 class TestReader(unittest.TestCase):
     @classmethod
     def setUpClass(self):
         publisher_mock = mock.Mock()
         self.channel = 'webhooks'
-        self.data_reader = DataHandler(publisher_mock,self.channel)
+        self.data_reader = WebhookDataHandler(publisher_mock,self.channel)
 
     def test_reader_read(self):
         data = [{

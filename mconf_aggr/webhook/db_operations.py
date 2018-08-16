@@ -27,7 +27,7 @@ from sqlalchemy.orm import (backref,
 from sqlalchemy.orm.attributes import flag_modified
 
 from mconf_aggr.aggregator import cfg
-from mconf_aggr.aggregator.aggregator import AggregatorCallback
+from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger
 
 Base = declarative_base()

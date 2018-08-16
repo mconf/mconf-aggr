@@ -163,7 +163,7 @@ class SubscriberThread(threading.Thread):
             except CallbackError:
                 self.logger.info("An error occurred while running a subscriber. "
                                  "Notifying aggregator to stop.")
-                self._errorevent.set()
+                #self._errorevent.set()
 
         return
 

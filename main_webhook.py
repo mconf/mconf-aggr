@@ -11,12 +11,15 @@ import falcon
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.webhook import db_mapping
 from mconf_aggr.webhook.db_operations import WebhookDataWriter
-from mconf_aggr.webhook.event_listener import DataHandler, HookListener, AuthMiddleware
+from mconf_aggr.webhook.event_listener import WebhookDataHandler, HookListener, AuthMiddleware
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
 
 
 # falcon.API instances are callable WSGI apps.
 app = falcon.API(middleware=AuthMiddleware())
+
+req_opt = app.req_options
+req_opt.auto_parse_form_urlencoded = True
 
 cfg.config.setup_config("config/config.json")
 cfg.config.setup_logging()
@@ -24,7 +27,7 @@ cfg.config.setup_logging()
 route = cfg.config['webhook']['route']
 logger = logging.getLogger(__name__)
 
-channel = "webhook"
+channel = "webhooks"
 webhook_writer = WebhookDataWriter()
 aggregator = Aggregator()
 
@@ -37,7 +40,7 @@ except SetupError:
 
 publisher = aggregator.publisher
 
-data_handler = DataHandler(publisher, channel)
+data_handler = WebhookDataHandler(publisher, channel)
 hook = HookListener(data_handler)
 
 app.add_route(route, hook)

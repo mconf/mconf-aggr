@@ -18,9 +18,15 @@ from mconf_aggr.webhook.db_operations import WebhookDataWriter
 from mconf_aggr.aggregator.utils import time_logger
 
 
-# Falcon follows the REST architectural style, meaning (among
-# other things) that you think in terms of resources and state
-# transitions, which map to HTTP verbs.
+class RequestProcessingError(Exception):
+    pass
+
+
+"""Falcon follows the REST architectural style, meaning (among
+other things) that you think in terms of resources and state
+transitions, which map to HTTP verbs.
+"""
+
 class HookListener:
     """Listener for webhooks.
 
@@ -32,27 +38,32 @@ class HookListener:
 
         Parameters
         ----------
-        data_handler : Instance of the DataHandler Class.
+        data_handler : WebhookDataHandler.
+        logger : logging.Logger
+            If not supplied, it will instantiate a new logger from __name__.
         """
         self.data_handler = data_handler
         self.logger = logger or logging.getLogger(__name__)
 
     def on_post(self, req, resp):
-        """Handles POST requests
+        """Handles POST requests.
 
         After receiving a POST call the data_handler to treat the received message.
         """
         # Parse received message
-        post_data = req.stream.read().decode('utf-8')
         self.logger.info("Webhook event received from '{}'.".format(req.host))
         with time_logger(self.logger.debug,
                          "Processing webhook event took {elapsed}s."):
-            # Parse received message
-            post_data = req.stream.read().decode('utf-8')
+            event = req.get_param("event")
 
-            self.data_handler.process_data(post_data)
-
-            resp.status = falcon.HTTP_200  # This is the default status
+            try:
+                self.data_handler.process_data(event)
+            except RequestProcessingError as err:
+                resp.body = json.dumps({"message": str(err)})
+                resp.status = falcon.HTTP_400
+            else:
+                resp.body = json.dumps({"message": "event processed successfully"})
+                resp.status = falcon.HTTP_200  # This is the default status
 
 
 class AuthMiddleware:
@@ -117,7 +128,7 @@ class AuthMiddleware:
             return False
 
 
-class DataHandler:
+class WebhookDataHandler:
     """Handler of data from webhooks.
 
     This class is responsible for publishing the data to Aggregator to create a new thread
@@ -126,13 +137,15 @@ class DataHandler:
     It's called by the HookListener everytime it gets a new message.
     """
     def __init__(self, publisher, channel, logger=None):
-        """Constructor of DataHandler.
+        """Constructor of WebhookDataHandler.
 
         Parameters
         ----------
-        publisher : Instance of aggregator.publisher .
+        publisher : aggregator.Publisher
         channel : str
             Channel where data will be published.
+        logger : logging.Logger
+            If not supplied, it will instantiate a new logger from __name__.
         """
         self.publisher = publisher
         self.channel = channel
@@ -154,17 +167,20 @@ class DataHandler:
 
         try:
             posted_obj = json.loads(decoded_data)
-        except JSONDecodeError as err:
-            self.logger.error(err)
-        else:
-            for webhook_msg in posted_obj:
-                # Map message
-                mapped_msg = db_mapping.map_message_to_db(webhook_msg)
+        except json.JSONDecodeError as err:
+            self.logger.error("Error during data decoding: invalid JSON.")
+            raise RequestProcessingError("data provided is not a valid JSON")
 
-                if(mapped_msg):
-                    try:
-                        data = [webhook_msg, mapped_msg]
-                        self.publisher.publish(data, channel=self.channel)
-                    except PublishError as err:
-                        self.logger.error("Something went wrong while publishing.")
-                        continue
+        for webhook_msg in posted_obj:
+            try:
+                mapped_msg = db_mapping.map_message_to_db(webhook_msg)
+            except Exception as err:
+                print(err)
+
+            if(mapped_msg):
+                try:
+                    data = [webhook_msg, mapped_msg]
+                    self.publisher.publish(data, channel=self.channel)
+                except PublishError as err:
+                    self.logger.error("Something went wrong while publishing.")
+                    continue
