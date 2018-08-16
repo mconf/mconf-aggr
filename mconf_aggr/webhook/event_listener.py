@@ -58,8 +58,14 @@ class HookListener(object):
 
 
 class AuthMiddleware(object):
-    def process_request(self,req,resp):
+    def process_request(self, req, resp):
         """Process the request before routing it.
+
+        It follows the RFC 7235 (https://tools.ietf.org/html/rfc7235)
+        and general guidelines provided by
+        http://self-issued.info/docs/draft-ietf-oauth-v2-bearer.html
+        and
+        https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/WWW-Authenticate
 
         Parameters
         ----------
@@ -70,26 +76,31 @@ class AuthMiddleware(object):
             Response object that will be routed to
             the on_* responder.
         """
+        self.logger = logging.getLogger(__name__)
+
+        requester = req.host # It may not be the original requester.
         token = req.get_header('Authorization')
-        challenges = ['Token type="Bearer"']
+        www_authentication = ["Bearer realm=\"mconf-aggregator\""]
 
         if token is None:
-            description = ('Please provide an auth token '
-                           'as part of the request.')
-
-            raise falcon.HTTPUnauthorized('Auth token required',
-                                          description,
-                                          challenges,
-                                          href='http://docs.example.com/auth')
+            self.logger.warn(
+                "Authentication token missing from '{}'.".format(requester)
+            )
+            raise falcon.HTTPUnauthorized(
+                "Authentication required",
+                "Provide an authentication token as part of the request",
+                www_authentication
+            )
 
         if not self._token_is_valid(token):
-            description = ('The provided auth token is not valid. '
-                           'Please request a new token and try again.')
-
-            raise falcon.HTTPUnauthorized('Authentication required',
-                                          description,
-                                          challenges,
-                                          href='http://docs.example.com/auth')
+            self.logger.warn(
+                "Invalid token '{}' from '{}'.".format(token, requester)
+            )
+            raise falcon.HTTPUnauthorized(
+                "Invalid authentication token",
+                "The provided authentication token is not valid",
+                www_authentication
+            )
 
     def _token_is_valid(self, token):
         expected = 'Bearer ' + cfg.config['webhook']['auth']['token']
