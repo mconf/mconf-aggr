@@ -4,8 +4,6 @@ It will receive, validate, parse and send the parsed data to an Aggregator threa
 which will properly manipulate the data.
 
 """
-#!/usr/bin/env python3.6
-
 import json
 import logging
 import time
@@ -23,7 +21,7 @@ from mconf_aggr.aggregator.utils import time_logger
 # Falcon follows the REST architectural style, meaning (among
 # other things) that you think in terms of resources and state
 # transitions, which map to HTTP verbs.
-class HookListener(object):
+class HookListener:
     """Listener for webhooks.
 
     This class is passed to falcon_API to handle requests made to it, this class might have
@@ -57,7 +55,11 @@ class HookListener(object):
             resp.status = falcon.HTTP_200  # This is the default status
 
 
-class AuthMiddleware():
+class AuthMiddleware:
+    """Middleware used for authentication.
+
+    This class is used directly by falcon to authenticate incoming events.
+    """
     def process_request(self, req, resp):
         """Process the request before routing it.
 
@@ -106,7 +108,6 @@ class AuthMiddleware():
                     www_authentication
                 )
 
-
     def _token_is_valid(self, token):
         expected = 'Bearer ' + cfg.config['webhook']['auth']['token']
 
@@ -116,7 +117,7 @@ class AuthMiddleware():
             return False
 
 
-class DataHandler():
+class DataHandler:
     """Handler of data from webhooks.
 
     This class is responsible for publishing the data to Aggregator to create a new thread
