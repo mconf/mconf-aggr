@@ -28,7 +28,7 @@ def map_end_message(message):
     return {
         "external_meeting_id" : message["data"]["attributes"]["meeting"]["external-meeting-id"],
         "internal_meeting_id" : message["data"]["attributes"]["meeting"]["internal-meeting-id"],
-        "end_time": message["data"]["attributes"]["event"]["ts"]
+        "end_time": message["data"]["event"]["ts"]
     }
 
 def map_create_message(message):
@@ -61,14 +61,14 @@ def map_user_join_left(message, id):
             "role" : message["data"]["attributes"]["user"]["role"],
             "internal_user_id" : message["data"]["attributes"]["user"]["internal-user-id"],
             "external_user_id" : message["data"]["attributes"]["user"]["external-user-id"],
-            "join_time" : message["data"]["attributes"]["event"]["ts"]
+            "join_time" : message["data"]["event"]["ts"]
             # "meta_data" : message["data"]["attributes"]["user"]["metadata"]
         }
     elif(id == "user-left"):
         return {
             "internal_user_id" : message["data"]["attributes"]["user"]["internal-user-id"],
             "external_user_id" : message["data"]["attributes"]["user"]["external-user-id"],
-            "leave_time" : message["data"]["attributes"]["event"]["ts"]
+            "leave_time" : message["data"]["event"]["ts"]
             # "meta_data" : message["data"]["attributes"]["user"]["metadata"]
         }
 

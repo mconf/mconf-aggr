@@ -21,6 +21,7 @@ logger = logging.getLogger(__name__)
 
 # falcon.API instances are callable WSGI apps
 app = falcon.API(middleware=AuthMiddleware())
+app.req_options.auto_parse_form_urlencoded = True
 
 channel = "webhooks"
 db_writter = DataWritter()

@@ -384,10 +384,10 @@ class UsersEvents(Base):
     metadata : Column of the type JSON
         Information about the user metadata.
     """
-    __tablename__ = "UsersEvents"
+    __tablename__ = "users_events"
 
     id = Column(Integer, primary_key=True)
-    meeting_event_Id = Column(Integer, ForeignKey("meetings_events.id"))
+    meeting_event_id = Column(Integer, ForeignKey("meetings_events.id"))
 
     meeting_event = relationship("MeetingsEvents")
 
@@ -499,10 +499,15 @@ class DataProcessor:
 
         # Create attendee json for meeting table
         attendee = {
-            "is_presenter" : self.webhook_msg["data"]["attributes"]["user"]["presenter"],
-            "is_listening_only" : self.webhook_msg["data"]["attributes"]["user"]["listening-only"],
-            "has_joined_voice" : self.webhook_msg["data"]["attributes"]["user"]["sharing-mic"],
-            "has_video" : self.webhook_msg["data"]["attributes"]["user"]["stream"],
+            # @TODO
+            #"is_presenter" : self.webhook_msg["data"]["attributes"]["user"]["presenter"],
+            #"is_listening_only" : self.webhook_msg["data"]["attributes"]["user"]["listening-only"],
+            #"has_joined_voice" : self.webhook_msg["data"]["attributes"]["user"]["sharing-mic"],
+            #"has_video" : self.webhook_msg["data"]["attributes"]["user"]["stream"],
+            "is_presenter" : True,
+            "is_listening_only" : False,
+            "has_joined_voice" : True,
+            "has_video" : False,
             "ext_user_id" : self.webhook_msg["data"]["attributes"]["user"]["external-user-id"],
             "int_user_id" : self.webhook_msg["data"]["attributes"]["user"]["internal-user-id"],
             "full_name" : self.webhook_msg["data"]["attributes"]["user"]["name"],

@@ -49,7 +49,10 @@ class HookListener(object):
         with time_logger(self.logger.debug,
                          "Processing webhook took {elapsed}s."):
             # Parse received message
-            post_data = req.stream.read().decode('utf-8')
+            #post_data = req.stream.read().decode('utf-8')
+            #post_data = req.stream.read()
+            # @TODO
+            post_data = req.get_param('event')
 
             self.data_handler.process_data(post_data)
 
