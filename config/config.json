@@ -25,15 +25,15 @@
     },
     "webhook": {
         "database": {
-            "user": "postgres",
+            "user": "mconf",
             "password": "postgres",
-            "host": "localhost",
-            "database": "testdb3"
+            "host": "192.168.122.1",
+            "database": "mconf"
         },
         "route": "/",
         "auth": {
             "required": true,
-            "token": "shared_secret"
+            "token": "123456"
         }
     }
 }
