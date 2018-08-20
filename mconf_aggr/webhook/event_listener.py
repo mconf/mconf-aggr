@@ -16,10 +16,7 @@ from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishErro
 from mconf_aggr.webhook import db_mapping
 from mconf_aggr.webhook.db_operations import WebhookDataWriter
 from mconf_aggr.aggregator.utils import time_logger
-
-
-class RequestProcessingError(Exception):
-    pass
+from mconf_aggr.webhook.exceptions import WebhookError, RequestProcessingError
 
 
 """Falcon follows the REST architectural style, meaning (among
@@ -58,7 +55,7 @@ class HookListener:
 
             try:
                 self.data_handler.process_data(event)
-            except RequestProcessingError as err:
+            except WebhookError as err:
                 resp.body = json.dumps({"message": str(err)})
                 resp.status = falcon.HTTP_400
             else:
@@ -175,7 +172,8 @@ class WebhookDataHandler:
             try:
                 mapped_msg = db_mapping.map_message_to_db(webhook_msg)
             except Exception as err:
-                print(err)
+                mapped_msg = None
+                raise err
 
             if(mapped_msg):
                 try:

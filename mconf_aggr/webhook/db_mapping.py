@@ -1,7 +1,25 @@
-# Receive parsed message from webhooks as dict
+import collections
+import logging
+
+from mconf_aggr.webhook.exceptions import InvalidWebhookMessage
+
+
+def get_nested(d, keys, default):
+    for k in keys:
+        if k not in d:
+            return default
+        d = d[k]
+
+    return d
+
 def map_message_to_db(message):
-    #print(message)
-    id = message["data"]["id"]
+    logger = logging.getLogger(__name__)
+    try:
+        id = message["data"]["id"]
+    except (KeyError, TypeError) as err:
+        logger.warn("Webhook message dos not contain a valid id: {}".format(err))
+        raise InvalidWebhookMessage("webhook message dos not contain a valid id")
+
     if(id == "meeting-created"):
         msg = map_create_message(message)
     elif(id == "meeting-ended"):
@@ -21,6 +39,7 @@ def map_message_to_db(message):
                 "rap-publish-started", "rap-publish-ended",
                 "rap-post-publish-started", "rap-post-publish-ended"]):
         msg = map_rap_events(message, id)
+
     return msg
 
 def map_end_message(message):
@@ -31,27 +50,63 @@ def map_end_message(message):
         "end_time": message["data"]["event"]["ts"]
     }
 
+CreateMeetingEvent = collections.namedtuple('CreateMeetingEvent',
+                                            [
+                                                'external_meeting_id',
+                                                'internal_meeting_id',
+                                                'name',
+                                                'create_time',
+                                                'create_date',
+                                                'voice_bridge',
+                                                'dial_number',
+                                                'attendee_pw',
+                                                'moderator_pw',
+                                                'duration',
+                                                'recording',
+                                                'max_users',
+                                                'is_breakout',
+                                                'meta_data'
+                                            ])
+
 def map_create_message(message):
     # Transform meeting-created  message to MeetingEventsObj
-    return {
-        "external_meeting_id" : message["data"]["attributes"]["meeting"]["external-meeting-id"],
-        "internal_meeting_id" : message["data"]["attributes"]["meeting"]["internal-meeting-id"],
-        "name" :  message["data"]["attributes"]["meeting"]["name"],
-        "create_time" :  message["data"]["attributes"]["meeting"]["create-time"],
-        "create_date" : message["data"]["attributes"]["meeting"]["create-date"],
-        "voice_bridge" : message["data"]["attributes"]["meeting"]["voice-conf"],
-        "dial_number" : message["data"]["attributes"]["meeting"]["dial-number"],
-        "attendee_pw" : message["data"]["attributes"]["meeting"]["viewer-pass"],
-        "moderator_pw" : message["data"]["attributes"]["meeting"]["moderator-pass"],
-        "duration" : message["data"]["attributes"]["meeting"]["duration"],
-        "recording" : message["data"]["attributes"]["meeting"]["record"],
-        # different event from webhooks? "hasBeenForciblyEnded" :
-        # "startTime" :
-        # "endTime" : need to define when to update start/end time and which timestamp
-        "max_users" : message["data"]["attributes"]["meeting"]["max-users"],
-        "is_breakout" : message["data"]["attributes"]["meeting"]["is-breakout"],
-        "meta_data" : message["data"]["attributes"]["meeting"]["metadata"]
-    }
+    # return {
+    #     "external_meeting_id" : message["data"]["attributes"]["meeting"]["external-meeting-id"],
+    #     "internal_meeting_id" : message["data"]["attributes"]["meeting"]["internal-meeting-id"],
+    #     "name" :  message["data"]["attributes"]["meeting"]["name"],
+    #     "create_time" :  message["data"]["attributes"]["meeting"]["create-time"],
+    #     "create_date" : message["data"]["attributes"]["meeting"]["create-date"],
+    #     "voice_bridge" : message["data"]["attributes"]["meeting"]["voice-conf"],
+    #     "dial_number" : message["data"]["attributes"]["meeting"]["dial-number"],
+    #     "attendee_pw" : message["data"]["attributes"]["meeting"]["viewer-pass"],
+    #     "moderator_pw" : message["data"]["attributes"]["meeting"]["moderator-pass"],
+    #     "duration" : message["data"]["attributes"]["meeting"]["duration"],
+    #     "recording" : message["data"]["attributes"]["meeting"]["record"],
+    #     # different event from webhooks? "hasBeenForciblyEnded" :
+    #     # "startTime" :
+    #     # "endTime" : need to define when to update start/end time and which timestamp
+    #     "max_users" : message["data"]["attributes"]["meeting"]["max-users"],
+    #     "is_breakout" : message["data"]["attributes"]["meeting"]["is-breakout"],
+    #     "meta_data" : message["data"]["attributes"]["meeting"]["metadata"]
+    # }
+    create_event = CreateMeetingEvent(
+                        external_meeting_id=get_nested(message, ["data", "attributes", "meeting", "external-meeting-id"], ""),
+                        internal_meeting_id=get_nested(message, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
+                        name=get_nested(message, ["data", "attributes", "meeting", "name"], ""),
+                        create_time=get_nested(message, ["data", "attributes", "meeting", "create-time"], ""),
+                        create_date=get_nested(message, ["data", "attributes", "meeting", "create-date"], ""),
+                        voice_bridge=get_nested(message, ["data", "attributes", "meeting", "voice-bridge"], ""),
+                        dial_number=get_nested(message, ["data", "attributes", "meeting", "dial-number"], ""),
+                        attendee_pw=get_nested(message, ["data", "attributes", "meeting", "attendee-pw"], ""),
+                        moderator_pw=get_nested(message, ["data", "attributes", "meeting", "moderator-pass"], ""),
+                        duration=get_nested(message, ["data", "attributes", "meeting", "duration"], ""),
+                        recording=get_nested(message, ["data", "attributes", "meeting", "recording"], ""),
+                        max_users=get_nested(message, ["data", "attributes", "meeting", "max-users"], ""),
+                        is_breakout=get_nested(message, ["data", "attributes", "meeting", "is-breakout"], ""),
+                        meta_data=get_nested(message, ["data", "attributes", "meeting", "metadata"], ""),
+                    )
+
+    return create_event
 
 def map_user_join_left(message, id):
     # Transform user-joined message to UsersEventsObj

@@ -467,9 +467,11 @@ class DataProcessor:
         Then add them to the session.
         """
         self.logger.info("Processing meeting_created message for internal_meeting_id: {}"
-                        .format(self.mapped_msg["internal_meeting_id"]))
+                        #.format(self.mapped_msg["internal_meeting_id"]))
+                        .format(self.mapped_msg.internal_meeting_id))
         # Create MeetingsEvents and Meetings table
-        new_meeting_evt = MeetingsEvents(**self.mapped_msg)
+        new_meeting_evt = MeetingsEvents(**self.mapped_msg._asdict())
+        self.logger.info(repr(new_meeting_evt))
         new_meeting = Meetings(running=False,
                                has_user_joined=False,
                                participant_count=0,
@@ -760,6 +762,7 @@ class DataProcessor:
         """
         self.logger.info("Selecting event processor")
         id = self.webhook_msg["data"]["id"]
+        self.logger.info(id)
         if(id == "meeting-created"):
             self.create_meeting()
         elif(id == "user-joined"):
