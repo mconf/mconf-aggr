@@ -10,7 +10,7 @@ import falcon
 
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.webhook.db_operations import WebhookDataWriter
-from mconf_aggr.webhook.event_listener import WebhookDataHandler, HookListener, AuthMiddleware
+from mconf_aggr.webhook.event_listener import WebhookEventHandler, WebhookEventListener, AuthMiddleware
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
 
 
@@ -39,8 +39,8 @@ except SetupError:
 
 publisher = aggregator.publisher
 
-data_handler = WebhookDataHandler(publisher, channel)
-hook = HookListener(data_handler)
+event_handler = WebhookEventHandler(publisher, channel)
+hook = WebhookEventListener(event_handler)
 
 app.add_route(route, hook)
 

@@ -24,28 +24,28 @@ other things) that you think in terms of resources and state
 transitions, which map to HTTP verbs.
 """
 
-class HookListener:
+class WebhookEventListener:
     """Listener for webhooks.
 
     This class is passed to falcon_API to handle requests made to it, this class might have
     more methods if needed, on the format on_*. It could treat POST,GET,PUT and DELETE requests.
     """
-    def __init__(self, data_handler, logger=None):
+    def __init__(self, event_handler, logger=None):
         """Constructor of the HookListener
 
         Parameters
         ----------
-        data_handler : WebhookDataHandler.
+        event_handler : WebhookEventHandler.
         logger : logging.Logger
             If not supplied, it will instantiate a new logger from __name__.
         """
-        self.data_handler = data_handler
+        self.event_handler = event_handler
         self.logger = logger or logging.getLogger(__name__)
 
     def on_post(self, req, resp):
         """Handles POST requests.
 
-        After receiving a POST call the data_handler to treat the received message.
+        After receiving a POST call the event_handler to treat the received message.
         """
         # Parse received message
         self.logger.info("Webhook event received from '{}'.".format(req.host))
@@ -55,7 +55,7 @@ class HookListener:
             event = req.get_param("event")
 
             try:
-                self.data_handler.process_data(server_url, event)
+                self.event_handler.process_event(server_url, event)
             except WebhookError as err:
                 resp.body = json.dumps({"message": str(err)})
                 resp.status = falcon.HTTP_400
@@ -126,8 +126,8 @@ class AuthMiddleware:
             return False
 
 
-class WebhookDataHandler:
-    """Handler of data from webhooks.
+class WebhookEventHandler:
+    """Handler of events from webhooks.
 
     This class is responsible for publishing the data to Aggregator to create a new thread
     and instantiate the proper WebhookDataWriter.
@@ -135,13 +135,13 @@ class WebhookDataHandler:
     It's called by the HookListener everytime it gets a new message.
     """
     def __init__(self, publisher, channel, logger=None):
-        """Constructor of WebhookDataHandler.
+        """Constructor of WebhookEventHandler.
 
         Parameters
         ----------
         publisher : aggregator.Publisher
         channel : str
-            Channel where data will be published.
+            Channel where event will be published.
         logger : logging.Logger
             If not supplied, it will instantiate a new logger from __name__.
         """
@@ -153,7 +153,7 @@ class WebhookDataHandler:
         # stop falcon?
         pass
 
-    def process_data(self, server_url, event):
+    def process_event(self, server_url, event):
         """Parse and publish data to aggregator.
 
         Parameters
