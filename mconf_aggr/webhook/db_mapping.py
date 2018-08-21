@@ -1,7 +1,7 @@
 import collections
 import logging
 
-from mconf_aggr.webhook.exceptions import InvalidWebhookMessage
+from mconf_aggr.webhook.exceptions import InvalidWebhookMessage, InvalidWebhookEvent
 
 
 def get_nested(d, keys, default):
@@ -63,7 +63,7 @@ UserEvent = collections.namedtuple('UserEvent',
                                                 'external_user_id',
                                                 'external_meeting_id',
                                                 'internal_meeting_id'
-                                                'event_name',
+                                                'event_name'
                                    ])
 
 
@@ -71,7 +71,6 @@ RapPublishEndedEvent = collections.namedtuple('RapPublishEndedEvent',
                                               [
                                                 'name',
                                                 'is_breakout',
-                                                'external_meeting_id',
                                                 'start_time'
                                                 'end_time',
                                                 'size',
@@ -96,7 +95,7 @@ RapEvent = collections.namedtuple('RapEvent',
 def map_event_to_database(event):
     logger = logging.getLogger(__name__)
     try:
-        id = message["data"]["id"]
+        id = event["data"]["id"]
     except (KeyError, TypeError) as err:
         logger.warn("Webhook message dos not contain a valid id: {}".format(err))
         raise InvalidWebhookMessage("webhook message dos not contain a valid id")

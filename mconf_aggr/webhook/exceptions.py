@@ -8,3 +8,7 @@ class RequestProcessingError(WebhookError):
 
 class InvalidWebhookMessage(WebhookError):
     pass
+
+
+class InvalidWebhookEvent(WebhookError):
+    pass

@@ -170,7 +170,7 @@ class WebhookDataHandler:
 
         for webhook_msg in posted_obj:
             try:
-                mapped_msg = db_mapping.map_message_to_db(webhook_msg)
+                mapped_msg = db_mapping.map_event_to_database(webhook_msg)
             except Exception as err:
                 mapped_msg = None
                 raise err
