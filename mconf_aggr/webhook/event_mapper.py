@@ -173,7 +173,7 @@ def _map_user_join_left_event(event, id):
                          join_time=_get_nested(event, ["data", "event", "ts"], ""),
                          is_presenter=_get_nested(event, ["data", "attributes", "user", "presenter"], True),
                          is_listening_only=_get_nested(event, ["data", "attributes", "user", "listening-only"], False),
-                         has_joined_voice=_get_nested(event, ["data", "attributes", "user", "sharing_mic"], True),
+                         has_joined_voice=_get_nested(event, ["data", "attributes", "user", "sharing-mic"], True),
                          has_video=_get_nested(event, ["data", "attributes", "user", "stream"], False),
                          meta_data=_get_nested(event, ["data", "attributes", "user", "metadata"], {}))
     elif(id == "user-left"):
