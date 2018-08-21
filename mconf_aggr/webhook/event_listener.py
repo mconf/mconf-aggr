@@ -13,9 +13,9 @@ import falcon
 
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
-from mconf_aggr.webhook import db_mapping
-from mconf_aggr.webhook.db_operations import WebhookDataWriter
 from mconf_aggr.aggregator.utils import time_logger
+from mconf_aggr.webhook.db_operations import WebhookDataWriter
+from mconf_aggr.webhook.event_mapper import map_webhook_event
 from mconf_aggr.webhook.exceptions import WebhookError, RequestProcessingError
 
 
@@ -51,10 +51,11 @@ class HookListener:
         self.logger.info("Webhook event received from '{}'.".format(req.host))
         with time_logger(self.logger.debug,
                          "Processing webhook event took {elapsed}s."):
+            server_url = req.get_param("domain")
             event = req.get_param("event")
 
             try:
-                self.data_handler.process_data(event)
+                self.data_handler.process_data(server_url, event)
             except WebhookError as err:
                 resp.body = json.dumps({"message": str(err)})
                 resp.status = falcon.HTTP_400
@@ -152,11 +153,13 @@ class WebhookDataHandler:
         # stop falcon?
         pass
 
-    def process_data(self, data):
+    def process_data(self, server_url, data):
         """Parse and publish data to aggregator.
 
         Parameters
         ----------
+        server_url : str
+            event origin's URL.
         data : str
             data to be parsed and published.
         """
@@ -168,16 +171,18 @@ class WebhookDataHandler:
             self.logger.error("Error during data decoding: invalid JSON.")
             raise RequestProcessingError("data provided is not a valid JSON")
 
-        for webhook_msg in posted_obj:
+
+        for webhook_event in posted_obj:
+            webhook_event["server_url"] = server_url
             try:
-                mapped_msg = db_mapping.map_event_to_database(webhook_msg)
+                mapped_event = map_webhook_event(webhook_event)
             except Exception as err:
-                mapped_msg = None
+                mapped_event = None
                 raise err
 
-            if(mapped_msg):
+            if(mapped_event):
                 try:
-                    data = [webhook_msg, mapped_msg]
+                    data = [webhook_event, mapped_event]
                     self.publisher.publish(data, channel=self.channel)
                 except PublishError as err:
                     self.logger.error("Something went wrong while publishing.")
