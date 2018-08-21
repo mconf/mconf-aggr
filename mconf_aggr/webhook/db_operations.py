@@ -363,7 +363,7 @@ class UsersEvents(Base):
     ----------
     id : Column of the type Integer
         Primary key. Identifier of the table.
-    meeting_event_Id : Column of the type Integer
+    meeting_event_id : Column of the type Integer
         Foreign Key. Identifier of the associated MeetingsEvents table (instatiated by id).
     created_at : Column of the type DateTime
         Datetime of the user creation.
@@ -381,6 +381,14 @@ class UsersEvents(Base):
         Internal user ID of the user.
     external_user_id : Column of the type String
         External user ID of the user.
+    is_presenter : Column of the type Boolean
+        Is the user a presenter?
+    is_listening_only : Column of the type Boolean
+        Is the user listening-only?
+    has_joined_voice : Column of the type Boolean
+        Is the user transmitting voice?
+    has_video : Column of the type Boolean
+        Is the user with video enabled?
     metadata : Column of the type JSON
         Information about the user metadata.
     """
@@ -401,6 +409,11 @@ class UsersEvents(Base):
     internal_user_id = Column(String, unique=True)
     external_user_id = Column(String)
 
+    is_presenter = Column(Boolean)
+    is_listening_only = Column(Boolean)
+    has_joined_voice = Column(Boolean)
+    has_video = Column(Boolean)
+
     meta_data = Column("metadata", JSON)
 
 
@@ -415,6 +428,10 @@ class UsersEvents(Base):
                 + ", leave_time=" + str(self.leave_time)
                 + ", internal_user_id=" + str(self.internal_user_id)
                 + ", external_user_id=" + str(self.external_user_id)
+                + ", is_presenter=" + str(self.is_presenter)
+                + ", is_listening_only=" + str(self.is_listening_only)
+                + ", has_joined_voice=" + str(self.has_joined_voice)
+                + ", has_video=" + str(self.has_video)
                 + ")>")
 
 
@@ -467,11 +484,9 @@ class DataProcessor:
         Then add them to the session.
         """
         self.logger.info("Processing meeting_created message for internal_meeting_id: {}"
-                        #.format(self.mapped_msg["internal_meeting_id"]))
                         .format(self.mapped_msg.internal_meeting_id))
-        # Create MeetingsEvents and Meetings table
+        # Create MeetingsEvents and Meetings table.
         new_meeting_evt = MeetingsEvents(**self.mapped_msg._asdict())
-        self.logger.info(repr(new_meeting_evt))
         new_meeting = Meetings(running=False,
                                has_user_joined=False,
                                participant_count=0,
@@ -492,28 +507,23 @@ class DataProcessor:
 
         Then add them to the session.
         """
-        int_id = self.webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
-        self.logger.info("Processing user_join message for int_user_id: {}, on {}"
-                    .format(self.webhook_msg["data"]["attributes"]["user"]["internal-user-id"],int_id))
+        int_id = self.mapped_msg.internal_user_id
+        self.logger.info("Processing user joined event for internal_user_id: '{}', on '{}'"
+                    .format(self.mapped_msg.internal_user_id, int_id))
 
-        # Create user table
-        new_user = UsersEvents(**self.mapped_msg)
+        # Create UserEvents table.
+        new_user = UsersEvents(**self.mapped_msg._asdict())
 
         # Create attendee json for meeting table
         attendee = {
-            # @TODO
-            #"is_presenter" : self.webhook_msg["data"]["attributes"]["user"]["presenter"],
-            #"is_listening_only" : self.webhook_msg["data"]["attributes"]["user"]["listening-only"],
-            #"has_joined_voice" : self.webhook_msg["data"]["attributes"]["user"]["sharing-mic"],
-            #"has_video" : self.webhook_msg["data"]["attributes"]["user"]["stream"],
-            "is_presenter" : True,
-            "is_listening_only" : False,
-            "has_joined_voice" : True,
-            "has_video" : False,
-            "ext_user_id" : self.webhook_msg["data"]["attributes"]["user"]["external-user-id"],
-            "int_user_id" : self.webhook_msg["data"]["attributes"]["user"]["internal-user-id"],
-            "full_name" : self.webhook_msg["data"]["attributes"]["user"]["name"],
-            "role" : self.webhook_msg["data"]["attributes"]["user"]["role"]
+            "is_presenter" : self.mapped_msg.is_presenter,
+            "is_listening_only" : self.mapped_msg.is_listening_only,
+            "has_joined_voice" : self.mapped_msg.has_joined_voice,
+            "has_video" : self.mapped_msg.has_video,
+            "ext_user_id" : self.mapped_msg.external_user_id,
+            "int_user_id" : self.mapped_msg.internal_user_id,
+            "full_name" : self.mapped_msg.name,
+            "role" : self.mapped_msg.role
         }
 
         # Query for MeetingsEvents to link with UsersEvents table
@@ -571,15 +581,15 @@ class DataProcessor:
 
         Then add them to the session.
         """
-        int_id = self.mapped_msg["internal_meeting_id"]
-        self.logger.info("Processing meeting_ended message for internal_meeting_id: {}"
+        int_id = self.mapped_msg.internal_meeting_id
+        self.logger.info("Processing meeting_ended message for internal_meeting_id: '{}'"
         .format(int_id))
 
         # MeetingsEvents table to be updated
         meeting_evt_table = self.session.query(MeetingsEvents).\
                             filter(MeetingsEvents.internal_meeting_id == int_id).first()
         meeting_evt_table = self.session.query(MeetingsEvents).get(meeting_evt_table.id)
-        meeting_evt_table.end_time = self.mapped_msg["end_time"]
+        meeting_evt_table.end_time = self.mapped_msg.end_time
         self.session.add(meeting_evt_table)
 
         # Meeting table to be updated
@@ -596,10 +606,10 @@ class DataProcessor:
 
         Then add them to the session.
         """
-        user_id = self.mapped_msg["internal_user_id"]
-        int_id = self.webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
+        user_id = self.mapped_msg.internal_user_id
+        int_id = self.mapped_msg.internal_meeting_id
         self.logger.info("Processing user_left message for int_user_id: {} in {}"
-                        .format(user_id,int_id))
+                        .format(user_id, int_id))
 
         # Meeting table to be updated
         meeting_table = self.session.query(Meetings).\
@@ -643,8 +653,8 @@ class DataProcessor:
 
         Then add them to the session.
         """
-        user_id = self.mapped_msg["internal_user_id"]
-        int_id = self.mapped_msg["internal_meeting_id"]
+        user_id = self.mapped_msg.internal_user_id
+        int_id = self.mapped_msg.internal_meeting_id
         self.logger.info("Processing {} message for int_user_id: {} on {}"
                         .format(self.webhook_msg["data"]["id"],user_id,int_id))
 
@@ -707,7 +717,7 @@ class DataProcessor:
 
         Then add them to the session.
         """
-        int_id = self.mapped_msg["internal_meeting_id"]
+        int_id = self.mapped_msg.internal_meeting_id
         self.logger.info("Processing {} message for internal_meeting_id: {}"
                         .format(self.webhook_msg["data"]["id"],int_id))
         # Check if table already exists
@@ -718,7 +728,7 @@ class DataProcessor:
             record_table = self.session.query(Recordings).get(record_table.id)
         except:
             # Create table
-            record_table = Recordings(**self.mapped_msg)
+            record_table = Recordings(**self.mapped_msg._asdict())
             record_table.participants = int(self.session.query(UsersEvents.id).\
                                         join(MeetingsEvents).\
                                         filter(MeetingsEvents.internal_meeting_id == int_id).\
@@ -729,27 +739,28 @@ class DataProcessor:
             record_table = self.session.query(Recordings).get(record_table.id)
         finally:
             # When publish end update most of information
-            if(self.mapped_msg["current_step"] == "rap-publish-ended"):
-                record_table.name = self.mapped_msg["name"]
-                record_table.is_breakout = self.mapped_msg["is_breakout"]
-                record_table.start_time = self.mapped_msg["start_time"]
-                record_table.end_time = self.mapped_msg["end_time"]
-                record_table.size = self.mapped_msg["size"]
-                record_table.raw_size = self.mapped_msg["raw_size"]
-                record_table.meta_data = self.mapped_msg["meta_data"]
-                record_table.playback = self.mapped_msg["playback"]
-                record_table.download = self.mapped_msg["download"]
-            record_table.current_step = self.mapped_msg["current_step"]
+            if(self.mapped_msg.current_step == "rap-publish-ended"):
+                record_table.name = self.mapped_msg.name
+                record_table.is_breakout = self.mapped_msg.is_breakout
+                record_table.start_time = self.mapped_msg.start_time
+                record_table.end_time = self.mapped_msg.end_time
+                record_table.size = self.mapped_msg.size
+                record_table.raw_size = self.mapped_msg.raw_size
+                record_table.meta_data = self.mapped_msg.meta_data
+                record_table.playback = self.mapped_msg.playback
+                record_table.download = self.mapped_msg.download
+                record_table.current_step = self.mapped_msg.current_step
 
             # Update status based on event
-            if(self.mapped_msg["current_step"] == "rap-process-started"):
-                record_table.status= "processing"
-            elif(self.mapped_msg["current_step"] == "rap-process-ended"):
-                record_table.status= "processed"
-            elif(self.mapped_msg["current_step"] == "rap-publish-ended"):
-                record_table.status= "published"
-                record_table.published= True
-            # treat "unpublished" and "deleted" when webhooks are emitting those events
+            # Treat "unpublished" and "deleted" when webhooks are emitting those events.
+            if(self.mapped_msg.current_step == "rap-process-started"):
+                record_table.status = "processing"
+            elif(self.mapped_msg.current_step == "rap-process-ended"):
+                record_table.status = "processed"
+            elif(self.mapped_msg.current_step == "rap-publish-ended"):
+                record_table.status = "published"
+                record_table.published = True
+
             self.session.add(record_table)
 
     def db_event_selector(self):

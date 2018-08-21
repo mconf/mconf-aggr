@@ -37,6 +37,10 @@ UserJoinedEvent = collections.namedtuple('UserJoinedEvent',
                                                 'internal_user_id',
                                                 'external_user_id',
                                                 'join_time',
+                                                'is_presenter',
+                                                'is_listening_only',
+                                                'has_joined_voice',
+                                                'has_video',
                                                 'meta_data'
                                          ])
 
@@ -167,6 +171,10 @@ def _map_user_join_left_event(event, id):
                          internal_user_id=_get_nested(event, ["data", "attributes", "user", "internal-user-id"], ""),
                          external_user_id=_get_nested(event, ["data", "attributes", "user", "external-user-id"], ""),
                          join_time=_get_nested(event, ["data", "event", "ts"], ""),
+                         is_presenter=_get_nested(event, ["data", "attributes", "user", "presenter"], True),
+                         is_listening_only=_get_nested(event, ["data", "attributes", "user", "listening-only"], False),
+                         has_joined_voice=_get_nested(event, ["data", "attributes", "user", "sharing_mic"], True),
+                         has_video=_get_nested(event, ["data", "attributes", "user", "stream"], False),
                          meta_data=_get_nested(event, ["data", "attributes", "user", "metadata"], {}))
     elif(id == "user-left"):
         user_event = UserLeftEvent(
