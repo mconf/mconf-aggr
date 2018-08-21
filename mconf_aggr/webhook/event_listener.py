@@ -153,26 +153,26 @@ class WebhookDataHandler:
         # stop falcon?
         pass
 
-    def process_data(self, server_url, data):
+    def process_data(self, server_url, event):
         """Parse and publish data to aggregator.
 
         Parameters
         ----------
         server_url : str
             event origin's URL.
-        data : str
-            data to be parsed and published.
+        event : str
+            event to be parsed and published.
         """
-        decoded_data = unquote(data)
+        unquoted_event = unquote(event)
 
         try:
-            posted_obj = json.loads(decoded_data)
+            decoded_events = json.loads(unquoted_event)
         except json.JSONDecodeError as err:
-            self.logger.error("Error during data decoding: invalid JSON.")
-            raise RequestProcessingError("data provided is not a valid JSON")
+            self.logger.error("Error during event decoding: invalid JSON.")
+            raise RequestProcessingError("event provided is not a valid JSON")
 
 
-        for webhook_event in posted_obj:
+        for webhook_event in decoded_events:
             webhook_event["server_url"] = server_url
             try:
                 mapped_event = map_webhook_event(webhook_event)
