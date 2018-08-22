@@ -588,16 +588,18 @@ class DataProcessor:
         # MeetingsEvents table to be updated
         meeting_evt_table = self.session.query(MeetingsEvents).\
                             filter(MeetingsEvents.internal_meeting_id == int_id).first()
-        meeting_evt_table = self.session.query(MeetingsEvents).get(meeting_evt_table.id)
-        meeting_evt_table.end_time = self.mapped_msg.end_time
-        self.session.add(meeting_evt_table)
 
-        # Meeting table to be updated
-        meeting_table = self.session.query(Meetings).\
-                        join(Meetings.meeting_event).\
-                        filter(MeetingsEvents.internal_meeting_id == int_id).first()
-        meeting_table = self.session.query(Meetings).get(meeting_table.id)
-        self.session.delete(meeting_table)
+        if meeting_evt_table:
+            meeting_evt_table = self.session.query(MeetingsEvents).get(meeting_evt_table.id)
+            meeting_evt_table.end_time = self.mapped_msg.end_time
+            self.session.add(meeting_evt_table)
+
+            # Meeting table to be updated
+            meeting_table = self.session.query(Meetings).\
+                            join(Meetings.meeting_event).\
+                            filter(MeetingsEvents.internal_meeting_id == int_id).first()
+            meeting_table = self.session.query(Meetings).get(meeting_table.id)
+            self.session.delete(meeting_table)
 
     def user_left(self):
         """Event user_left
