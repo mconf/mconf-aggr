@@ -59,7 +59,7 @@ UserEvent = collections.namedtuple('UserEvent',
                                                 'internal_user_id',
                                                 'external_user_id',
                                                 'external_meeting_id',
-                                                'internal_meeting_id'
+                                                'internal_meeting_id',
                                                 'event_name'
                                    ])
 

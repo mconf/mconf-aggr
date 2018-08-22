@@ -483,7 +483,7 @@ class DataProcessor:
 
         Then add them to the session.
         """
-        self.logger.info("Processing meeting_created message for internal_meeting_id: {}"
+        self.logger.info("Processing meeting-created event for internal-meeting-id: '{}'"
                         .format(self.mapped_msg.internal_meeting_id))
         # Create MeetingsEvents and Meetings table.
         new_meeting_evt = MeetingsEvents(**self.mapped_msg._asdict())
@@ -582,7 +582,7 @@ class DataProcessor:
         Then add them to the session.
         """
         int_id = self.mapped_msg.internal_meeting_id
-        self.logger.info("Processing meeting_ended message for internal_meeting_id: '{}'"
+        self.logger.info("Processing meeting-ended event for internal-meeting-id: '{}'"
         .format(int_id))
 
         # MeetingsEvents table to be updated
@@ -655,7 +655,7 @@ class DataProcessor:
         """
         user_id = self.mapped_msg.internal_user_id
         int_id = self.mapped_msg.internal_meeting_id
-        self.logger.info("Processing {} message for int_user_id: {} on {}"
+        self.logger.info("Processing {} event for internal-user-id '{}' on meeting '{}'"
                         .format(self.webhook_msg["data"]["id"],user_id,int_id))
 
         # Meeting table to be updated
@@ -665,28 +665,28 @@ class DataProcessor:
         meeting_table = self.session.query(Meetings).get(meeting_table.id)
 
         def update_attendees(base, update):
-            if(update["event_name"] == "user-audio-voice-enabled"):
+            if(update.event_name == "user-audio-voice-enabled"):
                 attr = "has_joined_voice"
                 value = True
-            elif(update["event_name"] == "user-audio-voice-disabled"):
+            elif(update.event_name == "user-audio-voice-disabled"):
                 attr = "has_joined_voice"
                 value = False
-            elif(update["event_name"] == "user-audio-listen-only-enabled"):
+            elif(update.event_name == "user-audio-listen-only-enabled"):
                 attr = "is_listening_only"
                 value = True
-            elif(update["event_name"] == "user-audio-listen-only-disabled"):
+            elif(update.event_name == "user-audio-listen-only-disabled"):
                 attr = "is_listening_only"
                 value = False
-            elif(update["event_name"] == "user-cam-broadcast-start"):
+            elif(update.event_name == "user-cam-broadcast-start"):
                 attr = "has_video"
                 value = True
-            elif(update["event_name"] == "user-cam-broadcast-end"):
+            elif(update.event_name == "user-cam-broadcast-end"):
                 attr = "has_video"
                 value = False
-            elif(update["event_name"] == "user-presenter-assigned"):
+            elif(update.event_name == "user-presenter-assigned"):
                 attr="is_presenter"
                 value = True
-            elif(update["event_name"] == "user-presenter-unassigned"):
+            elif(update.event_name == "user-presenter-unassigned"):
                 attr = "is_presenter"
                 value = False
             for attendee in base:
@@ -718,7 +718,7 @@ class DataProcessor:
         Then add them to the session.
         """
         int_id = self.mapped_msg.internal_meeting_id
-        self.logger.info("Processing {} message for internal_meeting_id: {}"
+        self.logger.info("Processing {} event for internal-meeting-id '{}'"
                         .format(self.webhook_msg["data"]["id"],int_id))
         # Check if table already exists
         try:
