@@ -171,6 +171,7 @@ class WebhookEventHandler:
             self.logger.error("Error during event decoding: invalid JSON.")
             raise RequestProcessingError("event provided is not a valid JSON")
 
+        normalize_server_url(server_url)
 
         for webhook_event in decoded_events:
             webhook_event["server_url"] = server_url
@@ -187,3 +188,14 @@ class WebhookEventHandler:
                 except PublishError as err:
                     self.logger.error("Something went wrong while publishing.")
                     continue
+
+
+def normalize_server_url(server_url):
+    # Naive approach to schemeless server URL.
+    server_url = server_url.strip()
+    if not server_url.startswith("http://") and not server_url.startswith("https://"):
+        scheme_server_url = "https://" + server_url
+    else:
+        scheme_server_url = server_url
+
+    return scheme_server_url

@@ -529,7 +529,9 @@ class DataProcessor:
         # Query for MeetingsEvents to link with UsersEvents table
         meeting_evt_table = self.session.query(MeetingsEvents).\
                             filter(MeetingsEvents.internal_meeting_id.match(int_id)).first()
-        new_user.meeting_event = meeting_evt_table
+
+        if meeting_evt_table:
+            new_user.meeting_event = meeting_evt_table
 
         # Meeting table to be updated
         meeting_table = self.session.query(Meetings).\
@@ -538,6 +540,8 @@ class DataProcessor:
 
         if meeting_table:
             meeting_table = self.session.query(Meetings).get(meeting_table.id)
+        else:
+            self.logger.warn("No meeting found for user '{}'".format(int_id))
 
         def attendee_json(base,new):
             if not base:
@@ -600,8 +604,10 @@ class DataProcessor:
             meeting_table = self.session.query(Meetings).\
                             join(Meetings.meeting_event).\
                             filter(MeetingsEvents.internal_meeting_id == int_id).first()
-            meeting_table = self.session.query(Meetings).get(meeting_table.id)
-            self.session.delete(meeting_table)
+
+            if meeting_table:
+                meeting_table = self.session.query(Meetings).get(meeting_table.id)
+                self.session.delete(meeting_table)
 
     def user_left(self):
         """Event user_left
@@ -624,7 +630,11 @@ class DataProcessor:
         # User table to be updated
         users_table = self.session.query(UsersEvents).\
                         filter(UsersEvents.internal_user_id == user_id).first()
-        users_table = self.session.query(UsersEvents).get(users_table.id)
+
+        if users_table:
+            users_table = self.session.query(UsersEvents).get(users_table.id)
+        else:
+            self.logger.warn("No user found with user-internal-id '{}'".format(user_id))
 
         # Update UsersEvents table
         users_table.leave_time = self.mapped_msg["leave_time"]
@@ -666,7 +676,11 @@ class DataProcessor:
         meeting_table = self.session.query(Meetings).\
                         join(Meetings.meeting_event).\
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
-        meeting_table = self.session.query(Meetings).get(meeting_table.id)
+
+        if meeting_table:
+            meeting_table = self.session.query(Meetings).get(meeting_table.id)
+        else:
+            self.logger.warn("No meeting found with internal-meeting-id '{}'".format(int_id))
 
         def update_attendees(base, update):
             if(update.event_name == "user-audio-voice-enabled"):
