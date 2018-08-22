@@ -171,7 +171,7 @@ class WebhookEventHandler:
             self.logger.error("Error during event decoding: invalid JSON.")
             raise RequestProcessingError("event provided is not a valid JSON")
 
-        normalize_server_url(server_url)
+        server_url = normalize_server_url(server_url)
 
         for webhook_event in decoded_events:
             webhook_event["server_url"] = server_url

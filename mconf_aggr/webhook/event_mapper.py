@@ -1,7 +1,7 @@
 import collections
 import logging
 
-from mconf_aggr.webhook.exceptions import InvalidWebhookMessage, InvalidWebhookEvent
+from mconf_aggr.webhook.exceptions import InvalidWebhookMessageError, InvalidWebhookEventError
 
 
 MeetingCreatedEvent = collections.namedtuple('MeetingCreatedEvent',
@@ -95,7 +95,7 @@ def map_webhook_event(event):
         id = event["data"]["id"]
     except (KeyError, TypeError) as err:
         logger.warn("Webhook message dos not contain a valid id: {}".format(err))
-        raise InvalidWebhookMessage("webhook message dos not contain a valid id")
+        raise InvalidWebhookMessageError("webhook message dos not contain a valid id")
 
     if id == "meeting-created":
         mapped_event = _map_create_event(event)
@@ -126,7 +126,7 @@ def map_webhook_event(event):
 
     else:
         logger.warn("Webhook event id is not valid: '{}'".format(id))
-        raise InvalidWebhookEvent("webhook event '{}' is not valid".format(id))
+        raise InvalidWebhookEventError("webhook event '{}' is not valid".format(id))
 
     return mapped_event
 

@@ -29,6 +29,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger
+from mconf_aggr.webhook.exceptions import WebhookDatabaseError
 
 Base = declarative_base()
 Session = sessionmaker()
@@ -542,6 +543,7 @@ class DataProcessor:
             meeting_table = self.session.query(Meetings).get(meeting_table.id)
         else:
             self.logger.warn("No meeting found for user '{}'".format(int_id))
+            raise WebhookDatabaseError("no meeting found for user '{}'".format(int_id))
 
         def attendee_json(base,new):
             if not base:
@@ -936,5 +938,9 @@ class WebhookDataWriter(AggregatorCallback):
             self.connector.update(data)
         except sqlalchemy.exc.OperationalError as err:
             self.logger.error("Operational error on database.")
+
+            raise CallbackError() from err
+        except WebhookError as err:
+            self.logger.error("An error occurred while persisting data.")
 
             raise CallbackError() from err

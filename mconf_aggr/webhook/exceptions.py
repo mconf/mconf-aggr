@@ -6,9 +6,13 @@ class RequestProcessingError(WebhookError):
     pass
 
 
-class InvalidWebhookMessage(WebhookError):
+class InvalidWebhookMessageError(WebhookError):
     pass
 
 
-class InvalidWebhookEvent(WebhookError):
+class InvalidWebhookEventError(WebhookError):
+    pass
+
+
+class WebhookDatabaseError(WebhookError):
     pass
