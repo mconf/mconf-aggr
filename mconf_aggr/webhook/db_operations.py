@@ -940,7 +940,7 @@ class WebhookDataWriter(AggregatorCallback):
             self.logger.error("Operational error on database.")
 
             raise CallbackError() from err
-        except WebhookError as err:
+        except WebhookDatabaseError as err:
             self.logger.error("An error occurred while persisting data.")
 
             raise CallbackError() from err
