@@ -144,9 +144,9 @@ def _map_create_event(event):
                        attendee_pw=_get_nested(event, ["data", "attributes", "meeting", "attendee-pw"], ""),
                        moderator_pw=_get_nested(event, ["data", "attributes", "meeting", "moderator-pass"], ""),
                        duration=_get_nested(event, ["data", "attributes", "meeting", "duration"], ""),
-                       recording=_get_nested(event, ["data", "attributes", "meeting", "recording"], ""),
+                       recording=_get_nested(event, ["data", "attributes", "meeting", "recording"], False),
                        max_users=_get_nested(event, ["data", "attributes", "meeting", "max-users"], ""),
-                       is_breakout=_get_nested(event, ["data", "attributes", "meeting", "is-breakout"], ""),
+                       is_breakout=_get_nested(event, ["data", "attributes", "meeting", "is-breakout"], False),
                        meta_data=_get_nested(event, ["data", "attributes", "meeting", "metadata"], {}))
 
     return create_event
