@@ -58,7 +58,7 @@ class WebhookEventListener:
                 self.event_handler.process_event(server_url, event)
             except WebhookError as err:
                 resp.body = json.dumps({"message": str(err)})
-                resp.status = falcon.HTTP_400
+                resp.status = falcon.HTTP_200
             else:
                 resp.body = json.dumps({"message": "event processed successfully"})
                 resp.status = falcon.HTTP_200  # This is the default status
