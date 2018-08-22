@@ -619,7 +619,7 @@ class DataProcessor:
         Then add them to the session.
         """
         user_id = self.mapped_msg.internal_user_id
-        int_id = self.mapped_msg.internal_meeting_id
+        int_id = self.webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
         self.logger.info("Processing user_left message for int_user_id: {} in {}"
                         .format(user_id, int_id))
 
