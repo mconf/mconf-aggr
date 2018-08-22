@@ -535,7 +535,9 @@ class DataProcessor:
         meeting_table = self.session.query(Meetings).\
                         join(Meetings.meeting_event).\
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
-        meeting_table = self.session.query(Meetings).get(meeting_table.id)
+
+        if meeting_table:
+            meeting_table = self.session.query(Meetings).get(meeting_table.id)
 
         def attendee_json(base,new):
             if not base:
