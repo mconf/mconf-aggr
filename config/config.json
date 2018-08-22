@@ -33,7 +33,9 @@
         "route": "/",
         "auth": {
             "required": true,
-            "token": "123456"
+            "tokens": {
+                "localhost": "my-authorization-token"
+            }
         }
     }
 }

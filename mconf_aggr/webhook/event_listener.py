@@ -48,11 +48,12 @@ class WebhookEventListener:
         After receiving a POST call the event_handler to treat the received message.
         """
         # Parse received message
-        self.logger.info("Webhook event received from '{}'.".format(req.host))
         with time_logger(self.logger.debug,
                          "Processing webhook event took {elapsed}s."):
             server_url = req.get_param("domain")
             event = req.get_param("event")
+
+            self.logger.info("Webhook event received from '{}' (last hop: '{}').".format(server_url, req.host))
 
             try:
                 self.event_handler.process_event(server_url, event)
@@ -92,14 +93,13 @@ class AuthMiddleware:
         auth_required = cfg.config['webhook']['auth']['required']
 
         if auth_required:
-            requester = req.host # It may not be the original requester.
+            server_url = req.get_param("domain")
             token = req.get_header('Authorization')
             www_authentication = ["Bearer realm=\"mconf-aggregator\""]
 
-
             if token is None:
                 self.logger.warn(
-                    "Authentication token missing from '{}'.".format(requester)
+                    "Authentication token missing from '{}'.".format(server_url)
                 )
                 raise falcon.HTTPUnauthorized(
                     "Authentication required",
@@ -107,9 +107,10 @@ class AuthMiddleware:
                     www_authentication
                 )
 
-            if not self._token_is_valid(token):
+            if not self._token_is_valid(server_url, token):
+                requester = req.host
                 self.logger.warn(
-                    "Invalid token '{}' from '{}'.".format(token, requester)
+                    "Invalid token '{}' from '{}' (last hop: '{}').".format(token, server_url, requester)
                 )
                 raise falcon.HTTPUnauthorized(
                     "Invalid authentication token",
@@ -117,13 +118,15 @@ class AuthMiddleware:
                     www_authentication
                 )
 
-    def _token_is_valid(self, token):
-        expected = 'Bearer ' + cfg.config['webhook']['auth']['token']
+    def _token_is_valid(self, host, token):
+        tokens = cfg.config['webhook']['auth']['tokens']
+        valid_token = tokens[host]
+        expected = 'Bearer ' + valid_token
 
         if(expected == token):
             return True
-        else:
-            return False
+
+        return False
 
 
 class WebhookEventHandler:
