@@ -19,3 +19,19 @@ def time_logger(logger_func, msg, **kw_format):
         kw = ", ".join(["{}: {}".format(k, v) for k, v in kw_format.items()])
         print("Error while logging elapsed time: {} ({})."
               .format(err, kw))
+
+
+@contextmanager
+def session_scope(raise_exception=True):
+    """Provide a transactional scope around a series of operations.
+    """
+    session = Session()
+    try:
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        if raise_exception:
+            raise
+    finally:
+        session.close()

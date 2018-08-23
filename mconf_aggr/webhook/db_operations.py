@@ -28,7 +28,7 @@ from sqlalchemy.orm.attributes import flag_modified
 
 from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
-from mconf_aggr.aggregator.utils import time_logger
+from mconf_aggr.aggregator.utils import time_logger, session_scope
 from mconf_aggr.webhook.exceptions import WebhookDatabaseError
 
 Base = declarative_base()
@@ -421,22 +421,6 @@ class UsersEvents(Base):
                 + ", has_joined_voice=" + str(self.has_joined_voice)
                 + ", has_video=" + str(self.has_video)
                 + ")>")
-
-
-@contextmanager
-def session_scope(raise_exception=True):
-    """Provide a transactional scope around a series of operations.
-    """
-    session = Session()
-    try:
-        yield session
-        session.commit()
-    except:
-        session.rollback()
-        if raise_exception:
-            raise
-    finally:
-        session.close()
 
 
 class DataProcessor:

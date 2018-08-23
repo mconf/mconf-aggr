@@ -76,7 +76,7 @@ import zabbix_api as api
 
 from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
-from mconf_aggr.aggregator.utils import time_logger
+from mconf_aggr.aggregator.utils import time_logger, session_scope
 
 
 class ZabbixLoginError(Exception):
@@ -338,21 +338,6 @@ class ZabbixServer:
 
 Base = declarative_base()
 Session = sessionmaker()
-
-
-@contextmanager
-def session_scope():
-    """Provide a transactional scope around a series of operations.
-    """
-    session = Session()
-    try:
-        yield session
-        session.commit()
-    except:
-        session.rollback()
-        raise
-    finally:
-        session.close()
 
 
 class ServerMetricTable(Base):
