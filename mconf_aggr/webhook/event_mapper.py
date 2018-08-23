@@ -36,11 +36,10 @@ UserJoinedEvent = collections.namedtuple('UserJoinedEvent',
                                                 'role',
                                                 'internal_user_id',
                                                 'external_user_id',
+                                                'internal_meeting_id',
+                                                'external_meeting_id',
                                                 'join_time',
                                                 'is_presenter',
-                                                'is_listening_only',
-                                                'has_joined_voice',
-                                                'has_video',
                                                 'meta_data'
                                          ])
 
@@ -49,10 +48,22 @@ UserLeftEvent = collections.namedtuple('UserLeftEvent',
                                        [
                                                 'internal_user_id',
                                                 'external_user_id',
+                                                'internal_meeting_id',
+                                                'external_meeting_id',
                                                 'leave_time',
                                                 'meta_data'
                                        ])
 
+UserVoiceEnabledEvent = collections.namedtuple('UserVoiceEnabledEvent',
+                                               [
+                                                'internal_user_id',
+                                                'external_user_id',
+                                                'external_meeting_id',
+                                                'internal_meeting_id',
+                                                'has_joined_voice',
+                                                'is_listening_only',
+                                                'event_name'
+                                               ])
 
 UserEvent = collections.namedtuple('UserEvent',
                                    [
@@ -103,8 +114,11 @@ def map_webhook_event(event):
     elif id == "meeting-ended":
         mapped_event = _map_end_event(event)
 
-    elif id == "user-joined" or id == "user-left":
-        mapped_event = _map_user_join_left_event(event, id)
+    elif id == "user-joined":
+        mapped_event = _map_user_joined_event(event, id)
+
+    elif id == "user-left":
+        mapped_event = _map_user_left_event(event, id)
 
     elif (id in ["user-audio-voice-enabled", "user-audio-voice-disabled",
                 "user-audio-listen-only-enabled", "user-audio-listen-only-disabled",
@@ -161,30 +175,42 @@ def _map_end_event(event):
     return end_event
 
 
-
-
-def _map_user_join_left_event(event, id):
-    if(id == "user-joined"):
-        user_event = UserJoinedEvent(
-                         name=_get_nested(event, ["data", "attributes", "user", "name"], ""),
-                         role=_get_nested(event, ["data", "attributes", "user", "role"], ""),
-                         internal_user_id=_get_nested(event, ["data", "attributes", "user", "internal-user-id"], ""),
-                         external_user_id=_get_nested(event, ["data", "attributes", "user", "external-user-id"], ""),
-                         join_time=_get_nested(event, ["data", "event", "ts"], ""),
-                         is_presenter=_get_nested(event, ["data", "attributes", "user", "presenter"], True),
-                         is_listening_only=_get_nested(event, ["data", "attributes", "user", "listening-only"], False),
-                         has_joined_voice=_get_nested(event, ["data", "attributes", "user", "sharing-mic"], True),
-                         has_video=_get_nested(event, ["data", "attributes", "user", "stream"], False),
-                         meta_data=_get_nested(event, ["data", "attributes", "user", "metadata"], {}))
-    elif(id == "user-left"):
-        user_event = UserLeftEvent(
-                         internal_user_id=_get_nested(event, ["data", "attributes", "user", "internal-user-id"], ""),
-                         external_user_id=_get_nested(event, ["data", "attributes", "user", "external-user-id"], ""),
-                         leave_time=_get_nested(event, ["data", "event", "ts"], ""),
-                         meta_data=_get_nested(event, ["data", "attributes", "user", "metadata"], {}))
+def _map_user_joined_event(event, id):
+    user_event = UserJoinedEvent(
+                     name=_get_nested(event, ["data", "attributes", "user", "name"], ""),
+                     role=_get_nested(event, ["data", "attributes", "user", "role"], ""),
+                     internal_user_id=_get_nested(event, ["data", "attributes", "user", "internal-user-id"], ""),
+                     external_user_id=_get_nested(event, ["data", "attributes", "user", "external-user-id"], ""),
+                     internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
+                     external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
+                     join_time=_get_nested(event, ["data", "event", "ts"], ""),
+                     is_presenter=_get_nested(event, ["data", "attributes", "user", "presenter"], True),
+                     meta_data=_get_nested(event, ["data", "attributes", "user", "metadata"], {}))
 
     return user_event
 
+def _map_user_left_event(event, id):
+    user_event = UserLeftEvent(
+                     internal_user_id=_get_nested(event, ["data", "attributes", "user", "internal-user-id"], ""),
+                     external_user_id=_get_nested(event, ["data", "attributes", "user", "external-user-id"], ""),
+                     internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
+                     external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
+                     leave_time=_get_nested(event, ["data", "event", "ts"], ""),
+                     meta_data=_get_nested(event, ["data", "attributes", "user", "metadata"], {}))
+
+    return user_event
+
+def _map_user_voice_enabled_event(event, id):
+    user_event = UserEvent(
+                     internal_user_id=_get_nested(event, ["data", "attributes", "user", "internal-user-id"], ""),
+                     external_user_id=_get_nested(event, ["data", "attributes", "user", "external-user-id"], ""),
+                     external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
+                     internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
+                     has_joined_voice=_get_nested(event, ["data", "attributes", "user", "sharing-mic"], True),
+                     is_listening_only=_get_nested(event, ["data", "attributes", "user", "listening_only"], True),
+                     event_name=id)
+
+    return user_event
 
 def _map_user_event(event, id):
     user_event = UserEvent(

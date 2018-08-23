@@ -76,8 +76,8 @@ class Meetings(Base):
                 "is_listening_only": boolean,
                 "has_joined_voice": boolean,
                 "has_video": boolean,
-                "ext_user_id": string,
-                "int_user_id": string,
+                "external_user_id": string,
+                "internal_user_id": string,
                 "full_name": string,
                 "role": string,
             },
@@ -382,14 +382,6 @@ class UsersEvents(Base):
         Internal user ID of the user.
     external_user_id : Column of the type String
         External user ID of the user.
-    is_presenter : Column of the type Boolean
-        Is the user a presenter?
-    is_listening_only : Column of the type Boolean
-        Is the user listening-only?
-    has_joined_voice : Column of the type Boolean
-        Is the user transmitting voice?
-    has_video : Column of the type Boolean
-        Is the user with video enabled?
     metadata : Column of the type JSON
         Information about the user metadata.
     """
@@ -409,11 +401,6 @@ class UsersEvents(Base):
     leave_time = Column(BigInteger)
     internal_user_id = Column(String, unique=True)
     external_user_id = Column(String)
-
-    is_presenter = Column(Boolean)
-    is_listening_only = Column(Boolean)
-    has_joined_voice = Column(Boolean)
-    has_video = Column(Boolean)
 
     meta_data = Column("metadata", JSON)
 
@@ -508,23 +495,27 @@ class DataProcessor:
 
         Then add them to the session.
         """
-        int_id = self.mapped_msg.internal_user_id
-        self.logger.info("Processing user joined event for internal_user_id: '{}', on '{}'"
-                    .format(self.mapped_msg.internal_user_id, int_id))
+        int_id = self.mapped_msg.internal_meeting_id
+        self.logger.info("Processing user-joined event for internal-user-id '{}'.'"
+                    .format(self.mapped_msg.internal_user_id))
 
         # Create UserEvents table.
-        new_user = UsersEvents(**self.mapped_msg._asdict())
+        user_event = self.mapped_msg._asdict()
+        del user_event["internal_meeting_id"]
+        del user_event["external_meeting_id"]
+        del user_event["is_presenter"]
+        new_user = UsersEvents(**user_event)
 
         # Create attendee json for meeting table
         attendee = {
-            "is_presenter" : self.mapped_msg.is_presenter,
-            "is_listening_only" : self.mapped_msg.is_listening_only,
-            "has_joined_voice" : self.mapped_msg.has_joined_voice,
-            "has_video" : self.mapped_msg.has_video,
-            "ext_user_id" : self.mapped_msg.external_user_id,
-            "int_user_id" : self.mapped_msg.internal_user_id,
+            "external_user_id" : self.mapped_msg.external_user_id,
+            "internal_user_id" : self.mapped_msg.internal_user_id,
             "full_name" : self.mapped_msg.name,
-            "role" : self.mapped_msg.role
+            "role" : self.mapped_msg.role,
+            "is_presenter" : self.mapped_msg.is_presenter,
+            "is_listening_only" : False,
+            "has_joined_voice" : False,
+            "has_video" : False
         }
 
         # Query for MeetingsEvents to link with UsersEvents table
@@ -541,38 +532,37 @@ class DataProcessor:
 
         if meeting_table:
             meeting_table = self.session.query(Meetings).get(meeting_table.id)
+
+            def attendee_json(base,new):
+                if not base:
+                    arr = []
+                    arr.append(new)
+                    return arr
+                else:
+                    arr = base
+                    for elem in arr:
+                        if(elem["internal_user_id"] == new["internal_user_id"]):
+                            return arr
+                    arr.append(new)
+                    return arr
+
+            meeting_table.running = True
+            meeting_table.has_user_joined = True
+            meeting_table.attendees = attendee_json(meeting_table.attendees, attendee)
+            meeting_table.participant_count = len(meeting_table.attendees)
+            meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"] == "MODERATOR")
+            meeting_table.listener_count = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
+            meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
+            meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
+
+            # SQLAlchemy was not considering the attendees array as modified, so it had to be forced
+            flag_modified(meeting_table, "attendees")
+
+            self.session.add(new_user)
+            self.session.add(meeting_table)
         else:
-            self.logger.warn("No meeting found for user '{}'".format(int_id))
-            raise WebhookDatabaseError("no meeting found for user '{}'".format(int_id))
-
-        def attendee_json(base,new):
-            if not base:
-                arr = []
-                arr.append(new)
-                return arr
-            else:
-                arr = base
-                for elem in arr:
-                    if(elem["int_user_id"] == new["int_user_id"]):
-                        return arr
-                arr.append(new)
-                return arr
-
-        meeting_table.running = True
-        meeting_table.has_user_joined = True
-        meeting_table.attendees = attendee_json(meeting_table.attendees,attendee)
-        meeting_table.participant_count = len(meeting_table.attendees)
-        meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"] == "MODERATOR")
-        meeting_table.listener_count = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
-        meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
-        meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
-
-
-        # SQLAlchemy was not considering the attendees array as modified, so it had to be forced
-        flag_modified(meeting_table, "attendees")
-
-        self.session.add(new_user)
-        self.session.add(meeting_table)
+            self.logger.warn("No meeting found for user '{}'".format(self.mapped_msg.internal_user_id))
+            raise WebhookDatabaseError("no meeting found for user '{}'".format(self.mapped_msg.internal_user_id))
 
         # Update unique users
         meeting_evt_table = self.session.query(MeetingsEvents).get(meeting_evt_table.id)
@@ -619,45 +609,48 @@ class DataProcessor:
         Then add them to the session.
         """
         user_id = self.mapped_msg.internal_user_id
-        int_id = self.webhook_msg["data"]["attributes"]["meeting"]["internal-meeting-id"]
-        self.logger.info("Processing user_left message for int_user_id: {} in {}"
+        int_id = self.mapped_msg.internal_meeting_id
+        self.logger.info("Processing user-left message for internal-user-id: {} in {}"
                         .format(user_id, int_id))
 
         # Meeting table to be updated
         meeting_table = self.session.query(Meetings).\
                         join(Meetings.meeting_event).\
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
-        meeting_table = self.session.query(Meetings).get(meeting_table.id)
+
+        if meeting_table:
+            meeting_table = self.session.query(Meetings).get(meeting_table.id)
+
+            def remove_attendee(base,remove):
+                for idx,attendee in enumerate(base):
+                    if(attendee["internal_user_id"] == remove):
+                        del base[idx]
+                return base
+
+            # Update Meetings table
+            meeting_table.attendees = remove_attendee(meeting_table.attendees,user_id)
+            meeting_table.participant_count = len(meeting_table.attendees)
+            meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"]=="MODERATOR")
+            meeting_table.listener_count = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
+            meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
+            meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
+
+            # Mark Meetings.attendees as modified for SQLAlchemy
+            flag_modified(meeting_table,"attendees")
+            self.session.add(meeting_table)
+        else:
+            self.logger.warn("No meeting found with internal-meeting-id '{}'".format(int_id))
 
         # User table to be updated
         users_table = self.session.query(UsersEvents).\
                         filter(UsersEvents.internal_user_id == user_id).first()
 
         if users_table:
+            # Update UsersEvents table
             users_table = self.session.query(UsersEvents).get(users_table.id)
+            users_table.leave_time = self.mapped_msg.leave_time
         else:
-            self.logger.warn("No user found with user-internal-id '{}'".format(user_id))
-
-        # Update UsersEvents table
-        users_table.leave_time = self.mapped_msg["leave_time"]
-
-        def remove_attendee(base,remove):
-            for idx,attendee in enumerate(base):
-                if(attendee["int_user_id"] == remove):
-                    del base[idx]
-            return base
-
-        # Update Meetings table
-        meeting_table.attendees = remove_attendee(meeting_table.attendees,user_id)
-        meeting_table.participant_count = len(meeting_table.attendees)
-        meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"]=="MODERATOR")
-        meeting_table.listener_count = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
-        meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
-        meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
-
-        # Mark Meetings.attendees as modified for SQLAlchemy
-        flag_modified(meeting_table,"attendees")
-        self.session.add(meeting_table)
+            self.logger.warn("No user found with internal-user-id '{}'".format(user_id))
 
     def user_info_update(self):
         """Events user-audio-listen-only-enabled, user-audio-listen-only-disabled,
@@ -672,7 +665,7 @@ class DataProcessor:
         user_id = self.mapped_msg.internal_user_id
         int_id = self.mapped_msg.internal_meeting_id
         self.logger.info("Processing {} event for internal-user-id '{}' on meeting '{}'"
-                        .format(self.webhook_msg["data"]["id"],user_id,int_id))
+                        .format(self.mapped_msg.event_name, user_id, int_id))
 
         # Meeting table to be updated
         meeting_table = self.session.query(Meetings).\
@@ -681,48 +674,40 @@ class DataProcessor:
 
         if meeting_table:
             meeting_table = self.session.query(Meetings).get(meeting_table.id)
+
+            def update_attendees(base, update):
+                for attendee in base:
+                    if(attendee["internal_user_id"] == user_id):
+                        if(update.event_name == "user-audio-voice-enabled"):
+                            attendee["has_joined_voice"] = True
+                            attendee["is_listening_only"] = True
+                        elif(update.event_name == "user-audio-voice-disabled"):
+                            attendee["has_joined_voice"] = False
+                        elif(update.event_name == "user-audio-listen-only-enabled"):
+                            attendee["is_listening_only"] = True
+                        elif(update.event_name == "user-audio-listen-only-disabled"):
+                            attendee["is_listening_only"] = False
+                        elif(update.event_name == "user-cam-broadcast-start"):
+                            attendee["has_video"] = True
+                        elif(update.event_name == "user-cam-broadcast-end"):
+                            attendee["has_video"] = False
+                        elif(update.event_name == "user-presenter-assigned"):
+                            attendee["is_presenter"] = True
+                        elif(update.event_name == "user-presenter-unassigned"):
+                            attendee["is_presenter"] = False
+                return base
+
+            meeting_table.attendees = update_attendees(meeting_table.attendees, self.mapped_msg)
+            meeting_table.participant_count = len(meeting_table.attendees)
+            meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"] == "MODERATOR")
+            meeting_table.listening_only = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
+            meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
+            meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
+            flag_modified(meeting_table,"attendees")
+
+            self.session.add(meeting_table)
         else:
             self.logger.warn("No meeting found with internal-meeting-id '{}'".format(int_id))
-
-        def update_attendees(base, update):
-            if(update.event_name == "user-audio-voice-enabled"):
-                attr = "has_joined_voice"
-                value = True
-            elif(update.event_name == "user-audio-voice-disabled"):
-                attr = "has_joined_voice"
-                value = False
-            elif(update.event_name == "user-audio-listen-only-enabled"):
-                attr = "is_listening_only"
-                value = True
-            elif(update.event_name == "user-audio-listen-only-disabled"):
-                attr = "is_listening_only"
-                value = False
-            elif(update.event_name == "user-cam-broadcast-start"):
-                attr = "has_video"
-                value = True
-            elif(update.event_name == "user-cam-broadcast-end"):
-                attr = "has_video"
-                value = False
-            elif(update.event_name == "user-presenter-assigned"):
-                attr="is_presenter"
-                value = True
-            elif(update.event_name == "user-presenter-unassigned"):
-                attr = "is_presenter"
-                value = False
-            for attendee in base:
-                if(attendee["int_user_id"] == user_id):
-                    attendee[attr] = value
-            return base
-
-        meeting_table.attendees = update_attendees(meeting_table.attendees, self.mapped_msg)
-        meeting_table.participant_count = len(meeting_table.attendees)
-        meeting_table.moderator_count = sum(1 for a in meeting_table.attendees if a["role"] == "MODERATOR")
-        meeting_table.listening_only = sum(1 for a in meeting_table.attendees if a["is_listening_only"])
-        meeting_table.voice_participant_count = sum(1 for a in meeting_table.attendees if a["has_joined_voice"])
-        meeting_table.video_count = sum(1 for a in meeting_table.attendees if a["has_video"])
-        flag_modified(meeting_table,"attendees")
-
-        self.session.add(meeting_table)
 
     def rap_events(self):
         """Events   rap-archive-started, rap-archive-ended,

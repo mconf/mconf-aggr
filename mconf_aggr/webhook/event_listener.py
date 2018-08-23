@@ -120,7 +120,13 @@ class AuthMiddleware:
 
     def _token_is_valid(self, host, token):
         tokens = cfg.config['webhook']['auth']['tokens']
-        valid_token = tokens[host]
+
+        try:
+            valid_token = tokens[host]
+        except KeyError as err:
+            self.logger.warn("Host '{}' not in the authorization list".format(host))
+            return False
+
         expected = 'Bearer ' + valid_token
 
         if(expected == token):
