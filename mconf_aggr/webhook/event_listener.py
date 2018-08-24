@@ -58,12 +58,32 @@ class WebhookEventListener:
             try:
                 self.event_handler.process_event(server_url, event)
             except WebhookError as err:
-                resp.body = json.dumps({"message": str(err)})
+                response = WebhookResponse(str(err))
+                resp.body = json.dumps(response.error)
                 resp.status = falcon.HTTP_200
             else:
-                resp.body = json.dumps({"message": "event processed successfully"})
-                resp.status = falcon.HTTP_200  # This is the default status
+                response = WebhookResponse("Event processed successfully")
+                resp.body = json.dumps(response.success)
+                resp.status = falcon.HTTP_200
 
+
+class WebhookResponse:
+    def __init__(self, message):
+        self.message = message
+
+
+    @property
+    def success(self):
+        return self._response("Success")
+
+
+    @property
+    def error(self):
+        return self._response("Error")
+
+
+    def _response(self, status):
+        return {"status": status, "message": self.message}
 
 class AuthMiddleware:
     """Middleware used for authentication.
@@ -94,7 +114,17 @@ class AuthMiddleware:
 
         if auth_required:
             server_url = req.get_param("domain")
-            token = req.get_header('Authorization')
+
+            if not server_url:
+                self.logger.warn(
+                    "Domain missing from (last hop) '{}'.".format(req.host)
+                )
+                raise falcon.HTTPUnauthorized(
+                    "Domain required for authentication",
+                    "Provide a valid domain as part of the request"
+                )
+
+            token = req.get_header("Authorization")
             www_authentication = ["Bearer realm=\"mconf-aggregator\""]
 
             if token is None:
@@ -119,7 +149,6 @@ class AuthMiddleware:
                 )
 
     def _token_is_valid(self, host, token):
-        return True
         tokens = cfg.config['webhook']['auth']['tokens']
 
         try:
@@ -175,11 +204,13 @@ class WebhookEventHandler:
         """
         unquoted_event = unquote(event)
 
+        print(unquoted_event)
+
         try:
             decoded_events = json.loads(unquoted_event)
         except json.JSONDecodeError as err:
             self.logger.error("Error during event decoding: invalid JSON.")
-            raise RequestProcessingError("event provided is not a valid JSON")
+            raise RequestProcessingError("Event provided is not a valid JSON")
 
         if server_url:
             server_url = normalize_server_url(server_url)
@@ -203,9 +234,8 @@ class WebhookEventHandler:
 def normalize_server_url(server_url):
     # Naive approach to schemeless server URL.
     server_url = server_url.strip()
-    if not server_url.startswith("http://") and not server_url.startswith("https://"):
-        scheme_server_url = "https://" + server_url
-    else:
-        scheme_server_url = server_url
 
-    return scheme_server_url
+    if not server_url.startswith(("http://", "https://")):
+        server_url = "https://" + server_url
+
+    return server_url

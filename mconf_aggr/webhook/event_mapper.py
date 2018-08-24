@@ -109,7 +109,7 @@ def map_webhook_event(event):
         event_type = event["data"]["id"]
     except (KeyError, TypeError) as err:
         logger.warn("Webhook message dos not contain a valid id: {}".format(err))
-        raise InvalidWebhookMessageError("webhook message dos not contain a valid id")
+        raise InvalidWebhookMessageError("Webhook message dos not contain a valid id")
 
     if event_type == "meeting-created":
         mapped_event = _map_create_event(event, event_type)
@@ -146,7 +146,7 @@ def map_webhook_event(event):
 
     else:
         logger.warn("Webhook event id is not valid: '{}'".format(event_type))
-        raise InvalidWebhookEventError("webhook event '{}' is not valid".format(event_type))
+        raise InvalidWebhookEventError("Webhook event '{}' is not valid".format(event_type))
 
     return mapped_event
 

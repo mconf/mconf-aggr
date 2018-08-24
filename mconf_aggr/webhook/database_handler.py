@@ -5,35 +5,20 @@ which event was received by the `update` method on `WebhookDataWriter` and passe
 `update` on `DataProcessor`.
 
 """
-import datetime
 import logging
-import json
 
 import sqlalchemy
-from contextlib import contextmanager
-from sqlalchemy import (BigInteger,
-                        Boolean,
-                        create_engine,
-                        Column,
-                        DateTime,
-                        ForeignKey,
-                        Integer,
-                        JSON,
-                        String)
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import (backref,
-                            sessionmaker,
-                            relationship)
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.attributes import flag_modified
 
 from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger, create_session_scope
-from mconf_aggr.webhook.exceptions import WebhookDatabaseError
 from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents
+from mconf_aggr.webhook.exceptions import WebhookDatabaseError
 
 
-Base = declarative_base()
 Session = sessionmaker()
 
 session_scope = create_session_scope(Session)
@@ -119,14 +104,8 @@ class UserJoinedHandler(DatabaseEventHandler):
         if meetings_table:
             meetings_table = self.session.query(Meetings).get(meetings_table.id)
 
-            meetings_table.running = True
-            meetings_table.has_user_joined = True
             meetings_table.attendees = self._attendee_json(meetings_table.attendees, attendee)
-            meetings_table.participant_count = len(meetings_table.attendees)
-            meetings_table.moderator_count = sum(1 for attendee in meetings_table.attendees if attendee["role"] == "MODERATOR")
-            meetings_table.listener_count = sum(1 for attendee in meetings_table.attendees if attendee["is_listening_only"])
-            meetings_table.voice_participant_count = sum(1 for attendee in meetings_table.attendees if attendee["has_joined_voice"])
-            meetings_table.video_count = sum(1 for a in meetings_table.attendees if a["has_video"])
+            self._update_meeting(meetings_table)
 
             # SQLAlchemy was not considering the attendees array as modified, so it had to be forced
             flag_modified(meetings_table, "attendees")
@@ -147,13 +126,11 @@ class UserJoinedHandler(DatabaseEventHandler):
     def _get_users_events(self, raw_event):
         event_dict = raw_event._asdict()
 
-        columns_names = set(column.key for column in UsersEvents.__table__.columns)
-        keys = set(event_dict.keys())
+        column_names = set(column.key for column in UsersEvents.__table__.columns)
+        keys = event_dict.keys()
 
-        keep_keys = keys.intersection(columns_names)
-
-        for key in keys:
-            if key not in keep_keys:
+        for key in list(keys):
+            if key not in column_names:
                 del event_dict[key]
 
         users_events = UsersEvents(**event_dict)
@@ -175,6 +152,19 @@ class UserJoinedHandler(DatabaseEventHandler):
             arr.append(new)
 
             return arr
+
+
+    def _update_meeting(self, meetings_table):
+        meetings_table.running = True
+        _update_meeting(meetings_table)
+        meetings_table.has_user_joined = True
+
+
+    def _update_meeting(self, meetings_table):
+        meetings_table.running = True
+        meetings_table.has_user_joined = True
+
+        _update_meeting(meetings_table)
 
 
 class MeetingEndedHandler(DatabaseEventHandler):
@@ -225,14 +215,8 @@ class UserLeftHandler(DatabaseEventHandler):
         if meetings_table:
             meetings_table = self.session.query(Meetings).get(meetings_table.id)
 
-            # Update Meetings table
-            meetings_table.attendees = self._remove_attendee(meetings_table.attendees,user_id)
-            meetings_table.participant_count = len(meetings_table.attendees)
-            meetings_table.has_user_joined = meetings_table.participant_count != 0
-            meetings_table.moderator_count = sum(1 for attendee in meetings_table.attendees if attendee["role"] == "MODERATOR")
-            meetings_table.listener_count = sum(1 for attendee in meetings_table.attendees if attendee["is_listening_only"])
-            meetings_table.voice_participant_count = sum(1 for attendee in meetings_table.attendees if attendee["has_joined_voice"])
-            meetings_table.video_count = sum(1 for attendee in meetings_table.attendees if attendee["has_video"])
+            self._remove_attendee(meetings_table, user_id)
+            self._update_meeting(meetings_table)
 
             # Mark Meetings.attendees as modified for SQLAlchemy
             flag_modified(meetings_table, "attendees")
@@ -253,17 +237,22 @@ class UserLeftHandler(DatabaseEventHandler):
             self.logger.warn("No user found with internal-user-id '{}'".format(user_id))
 
 
-    def _remove_attendee(self, base, remove):
-        for idx, attendee in enumerate(base):
-            if(attendee["internal_user_id"] == remove):
-                del base[idx]
-        return base
+    def _remove_attendee(self, meetings_table, user_id):
+        for idx, attendee in enumerate(meetings_table.attendees):
+            if(attendee["internal_user_id"] == user_id):
+                del meetings_table.attendees[idx]
+
+
+    def _update_meeting(self, meetings_table):
+        _update_meeting(meetings_table)
 
 
 class UserEventHandler(DatabaseEventHandler):
     def handle(self, event):
         event_type = event.event_type
         event = event.event
+
+        self.event_type = event_type
 
         user_id = event.internal_user_id
         int_id = event.internal_meeting_id
@@ -278,13 +267,8 @@ class UserEventHandler(DatabaseEventHandler):
         if meetings_table:
             meetings_table = self.session.query(Meetings).get(meetings_table.id)
 
-            meetings_table.attendees = self._update_attendees(meetings_table.attendees, event, user_id)
-            meetings_table.participant_count = len(meetings_table.attendees)
-            meetings_table.has_user_joined = meetings_table.participant_count != 0
-            meetings_table.listener_count = sum(1 for a in meetings_table.attendees if a["is_listening_only"])
-            meetings_table.voice_participant_count = sum(1 for a in meetings_table.attendees if a["has_joined_voice"])
-            meetings_table.video_count = sum(1 for a in meetings_table.attendees if a["has_video"])
-            meetings_table.moderator_count = sum(1 for a in meetings_table.attendees if a["role"] == "MODERATOR")
+            self._update_attendees(meetings_table.attendees, event, user_id)
+            self._update_meeting(meetings_table)
 
             flag_modified(meetings_table,"attendees")
 
@@ -292,27 +276,61 @@ class UserEventHandler(DatabaseEventHandler):
         else:
             self.logger.warn("No meeting found with internal-meeting-id '{}'".format(int_id))
 
+
+    def _update_meeting(self, meetings_table):
+        _update_meeting(meetings_table)
+
+
     def _update_attendees(self, base, update, user_id):
         for attendee in base:
             if(attendee["internal_user_id"] == user_id):
-                if(update.event_name == "user-audio-voice-enabled"):
-                    attendee["has_joined_voice"] = update.has_joined_voice
-                    attendee["is_listening_only"] = update.is_listening_only
-                elif(update.event_name == "user-audio-voice-disabled"):
-                    attendee["has_joined_voice"] = False
-                elif(update.event_name == "user-audio-listen-only-enabled"):
-                    attendee["is_listening_only"] = True
-                elif(update.event_name == "user-audio-listen-only-disabled"):
-                    attendee["is_listening_only"] = False
-                elif(update.event_name == "user-cam-broadcast-start"):
-                    attendee["has_video"] = True
-                elif(update.event_name == "user-cam-broadcast-end"):
-                    attendee["has_video"] = False
-                elif(update.event_name == "user-presenter-assigned"):
-                    attendee["is_presenter"] = True
-                elif(update.event_name == "user-presenter-unassigned"):
-                    attendee["is_presenter"] = False
-        return base
+                if(update.event_name == self.event_type):
+                    self._update_attendee(attendee, update)
+
+
+    def _update_attendee(self, attendee, update):
+        raise NotImplementedError("Give specific behavior for the user event")
+
+
+class UserVoiceEnabledHandler(UserEventHandler):
+    def _update_attendee(self, attendee, update):
+        attendee["has_joined_voice"] = update.has_joined_voice
+        attendee["is_listening_only"] = update.is_listening_only
+
+
+class UserVoiceDisabledHandler(UserEventHandler):
+    def _update_attendee(self, attendee, update):
+        attendee["has_joined_voice"] = False
+
+
+class UserListenOnlyEnabledHandler(UserEventHandler):
+    def _update_attendee(self, attendee, update):
+        attendee["is_listening_only"] = True
+
+
+class UserListenOnlyDisabledHandler(UserEventHandler):
+    def _update_attendee(self, attendee, update):
+        attendee["is_listening_only"] = False
+
+
+class UserCamBroadCastStartHandler(UserEventHandler):
+    def _update_attendee(self, attendee, update):
+        attendee["has_video"] = True
+
+
+class UserCamBroadCastEndHandler(UserEventHandler):
+    def _update_attendee(self, attendee, update):
+        attendee["has_video"] = False
+
+
+class UserPresenterAssignedHandler(UserEventHandler):
+    def _update_attendee(self, attendee, update):
+        attendee["is_presenter"] = True
+
+
+class UserPresenterUnassignedHandler(UserEventHandler):
+    def _update_attendee(self, attendee, update):
+        attendee["is_presenter"] = False
 
 
 class RapHandler(DatabaseEventHandler):
@@ -367,6 +385,15 @@ class RapHandler(DatabaseEventHandler):
             self.session.add(records_table)
 
 
+def _update_meeting(meetings_table):
+    meetings_table.has_user_joined = meetings_table.participant_count != 0
+    meetings_table.participant_count = len(meetings_table.attendees)
+    meetings_table.moderator_count = sum(1 for attendee in meetings_table.attendees if attendee["role"] == "MODERATOR")
+    meetings_table.listener_count = sum(1 for attendee in meetings_table.attendees if attendee["is_listening_only"])
+    meetings_table.voice_participant_count = sum(1 for attendee in meetings_table.attendees if attendee["has_joined_voice"])
+    meetings_table.video_count = sum(1 for a in meetings_table.attendees if a["has_video"])
+
+
 class DataProcessor:
     """Data processor of the received information.
 
@@ -412,11 +439,29 @@ class DataProcessor:
         elif(event_type == "meeting-ended"):
             event_handler = MeetingEndedHandler(self.session)
 
-        elif(event_type in ["user-audio-listen-only-enabled", "user-audio-listen-only-disabled",
-                    "user-audio-voice-enabled", "user-audio-voice-disabled",
-                    "user-cam-broadcast-start", "user-cam-broadcast-end",
-                    "user-presenter-assigned", "user-presenter-unassigned"]):
-            event_handler = UserEventHandler(self.session)
+        elif event_type == "user-audio-voice-enabled":
+            event_handler = UserVoiceEnabledHandler(self.session)
+
+        elif event_type == "user-audio-voice-disabled":
+            event_handler = UserVoiceDisabledHandler(self.session)
+
+        elif event_type == "user-audio-listen-only-enabled":
+            event_handler = UserListenOnlyEnabledHandler(self.session)
+
+        elif event_type == "user-audio-listen-only-disabled":
+            event_handler = UserListenOnlyDisabledHandler(self.session)
+
+        elif event_type == "user-cam-broadcast-start":
+            event_handler = UserCamBroadCastStartHandler(self.session)
+
+        elif event_type == "user-cam-broadcast-end":
+            event_handler = UserCamBroadCastEndHandler(self.session)
+
+        elif event_type == "user-presenter-assigned":
+            event_handler = UserPresenterAssignedHandler(self.session)
+
+        elif event_type == "user-presenter-unassigned":
+            event_handler = UserPresenterUnassignedHandler(self.session)
 
         elif(event_type in ["rap-archive-started", "rap-archive-ended",
                     "rap-sanity-started", "rap-sanity-ended",
@@ -546,10 +591,17 @@ class WebhookDataWriter(AggregatorCallback):
         try:
             self.connector.update(data)
         except sqlalchemy.exc.OperationalError as err:
-            self.logger.error("Operational error on database.")
+            self.logger.error("Operational error on database. Not persisting data.")
+            self.logger.debug(err)
 
             raise CallbackError() from err
         except WebhookDatabaseError as err:
-            self.logger.error("An error occurred while persisting data.")
+            self.logger.error("An error occurred while persisting data. Not persisting data.")
+            self.logger.debug(err)
+
+            raise CallbackError() from err
+        except Exception as err:
+            self.logger.error("Unknown error on database handler. Not persisting data.")
+            self.logger.debug(err)
 
             raise CallbackError() from err

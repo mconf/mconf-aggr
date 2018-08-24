@@ -1,9 +1,5 @@
 import datetime
-import logging
-import json
 
-import sqlalchemy
-from contextlib import contextmanager
 from sqlalchemy import (BigInteger,
                         Boolean,
                         create_engine,
@@ -14,22 +10,12 @@ from sqlalchemy import (BigInteger,
                         JSON,
                         String)
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import (backref,
-                            sessionmaker,
-                            relationship)
-from sqlalchemy.orm.attributes import flag_modified
-
-from mconf_aggr.aggregator import cfg
-from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
-from mconf_aggr.aggregator.utils import time_logger
-from mconf_aggr.webhook.exceptions import WebhookDatabaseError
+from sqlalchemy.orm import backref, relationship
 
 
 Base = declarative_base()
-Session = sessionmaker()
 
 
-# DB Tables
 class Meetings(Base):
     """Table Meetings in the database.
 
