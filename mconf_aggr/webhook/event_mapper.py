@@ -4,6 +4,8 @@ import logging
 from mconf_aggr.webhook.exceptions import InvalidWebhookMessageError, InvalidWebhookEventError
 
 
+WebhookEvent = collections.namedtuple('WebhookEvent', ['event_type', 'event'])
+
 MeetingCreatedEvent = collections.namedtuple('MeetingCreatedEvent',
                                              [
                                                 'server_url',
@@ -102,50 +104,54 @@ RapEvent = collections.namedtuple('RapEvent',
 
 def map_webhook_event(event):
     logger = logging.getLogger(__name__)
+
     try:
-        id = event["data"]["id"]
+        event_type = event["data"]["id"]
     except (KeyError, TypeError) as err:
         logger.warn("Webhook message dos not contain a valid id: {}".format(err))
         raise InvalidWebhookMessageError("webhook message dos not contain a valid id")
 
-    if id == "meeting-created":
-        mapped_event = _map_create_event(event)
+    if event_type == "meeting-created":
+        mapped_event = _map_create_event(event, event_type)
 
-    elif id == "meeting-ended":
-        mapped_event = _map_end_event(event)
+    elif event_type == "meeting-ended":
+        mapped_event = _map_end_event(event, event_type)
 
-    elif id == "user-joined":
-        mapped_event = _map_user_joined_event(event, id)
+    elif event_type == "user-joined":
+        mapped_event = _map_user_joined_event(event, event_type)
 
-    elif id == "user-left":
-        mapped_event = _map_user_left_event(event, id)
+    elif event_type == "user-left":
+        mapped_event = _map_user_left_event(event, event_type)
 
-    elif (id in ["user-audio-voice-enabled", "user-audio-voice-disabled",
+    elif event_type == "user-audio-voice-enabled":
+        mapped_event = _map_user_voice_enabled_event(event, event_type)
+
+    elif (event_type in ["user-audio-voice-enabled", "user-audio-voice-disabled",
                 "user-audio-listen-only-enabled", "user-audio-listen-only-disabled",
                 "user-cam-broadcast-start", "user-cam-broadcast-end",
                 "user-presenter-assigned", "user-presenter-unassigned"]):
-        mapped_event = _map_user_event(event, id)
+        mapped_event = _map_user_event(event, event_type)
 
-    elif id == "rap-publish-ended":
-        mapped_event = map_rap_publish_ended_event(event, id)
+    elif event_type == "rap-publish-ended":
+        mapped_event = map_rap_publish_ended_event(event, event_type)
 
-    elif(id in ["rap-archive-started", "rap-archive-ended",
+    elif(event_type in ["rap-archive-started", "rap-archive-ended",
                 "rap-sanity-started", "rap-sanity-ended",
                 "rap-post-archive-started", "rap-post-archive-ended",
                 "rap-process-started", "rap-process-ended",
                 "rap-post-process-started", "rap-post-process-ended",
                 "rap-publish-started", "rap-post-publish-started",
                 "rap-post-publish-ended"]):
-        mapped_event = _map_rap_event(event, id)
+        mapped_event = _map_rap_event(event, event_type)
 
     else:
-        logger.warn("Webhook event id is not valid: '{}'".format(id))
-        raise InvalidWebhookEventError("webhook event '{}' is not valid".format(id))
+        logger.warn("Webhook event id is not valid: '{}'".format(event_type))
+        raise InvalidWebhookEventError("webhook event '{}' is not valid".format(event_type))
 
     return mapped_event
 
 
-def _map_create_event(event):
+def _map_create_event(event, event_type):
     create_event = MeetingCreatedEvent(
                        server_url=event.get("server_url", ""),
                        external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
@@ -163,19 +169,23 @@ def _map_create_event(event):
                        is_breakout=_get_nested(event, ["data", "attributes", "meeting", "is-breakout"], False),
                        meta_data=_get_nested(event, ["data", "attributes", "meeting", "metadata"], {}))
 
-    return create_event
+    webhook_event = WebhookEvent(event_type, create_event)
+
+    return webhook_event
 
 
-def _map_end_event(event):
+def _map_end_event(event, event_type):
     end_event = MeetingEndedEvent(
                     external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                     internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
                     end_time=_get_nested(event, ["data", "event", "ts"], ""))
 
-    return end_event
+    webhook_event = WebhookEvent(event_type, end_event)
+
+    return webhook_event
 
 
-def _map_user_joined_event(event, id):
+def _map_user_joined_event(event, event_type):
     user_event = UserJoinedEvent(
                      name=_get_nested(event, ["data", "attributes", "user", "name"], ""),
                      role=_get_nested(event, ["data", "attributes", "user", "role"], ""),
@@ -187,9 +197,11 @@ def _map_user_joined_event(event, id):
                      is_presenter=_get_nested(event, ["data", "attributes", "user", "presenter"], True),
                      meta_data=_get_nested(event, ["data", "attributes", "user", "metadata"], {}))
 
-    return user_event
+    webhook_event = WebhookEvent(event_type, user_event)
 
-def _map_user_left_event(event, id):
+    return webhook_event
+
+def _map_user_left_event(event, event_type):
     user_event = UserLeftEvent(
                      internal_user_id=_get_nested(event, ["data", "attributes", "user", "internal-user-id"], ""),
                      external_user_id=_get_nested(event, ["data", "attributes", "user", "external-user-id"], ""),
@@ -198,32 +210,38 @@ def _map_user_left_event(event, id):
                      leave_time=_get_nested(event, ["data", "event", "ts"], ""),
                      meta_data=_get_nested(event, ["data", "attributes", "user", "metadata"], {}))
 
-    return user_event
+    webhook_event = WebhookEvent(event_type, user_event)
 
-def _map_user_voice_enabled_event(event, id):
-    user_event = UserEvent(
+    return webhook_event
+
+def _map_user_voice_enabled_event(event, event_type):
+    user_event = UserVoiceEnabledEvent(
                      internal_user_id=_get_nested(event, ["data", "attributes", "user", "internal-user-id"], ""),
                      external_user_id=_get_nested(event, ["data", "attributes", "user", "external-user-id"], ""),
                      external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                      internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
                      has_joined_voice=_get_nested(event, ["data", "attributes", "user", "sharing-mic"], True),
                      is_listening_only=_get_nested(event, ["data", "attributes", "user", "listening_only"], True),
-                     event_name=id)
+                     event_name=event_type)
 
-    return user_event
+    webhook_event = WebhookEvent(event_type, user_event)
 
-def _map_user_event(event, id):
+    return webhook_event
+
+def _map_user_event(event, event_type):
     user_event = UserEvent(
                      internal_user_id=_get_nested(event, ["data", "attributes", "user", "internal-user-id"], ""),
                      external_user_id=_get_nested(event, ["data", "attributes", "user", "external-user-id"], ""),
                      external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                      internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
-                     event_name=id)
+                     event_name=event_type)
 
-    return user_event
+    webhook_event = WebhookEvent(event_type, user_event)
+
+    return webhook_event
 
 
-def _map_rap_publish_ended_event(event, id):
+def _map_rap_publish_ended_event(event, event_type):
     rap_event = RapPublishEndedEvent(
                     name=_get_nested(event, ["data", "attributes", "recording", "name"], ""),
                     is_breakout=_get_nested(event, ["data", "attributes", "recording", "isBreakout"], ""),
@@ -236,18 +254,22 @@ def _map_rap_publish_ended_event(event, id):
                     download=_get_nested(event, ["data", "attributes", "recording", "download"], ""),
                     external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                     internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
-                    current_step=id)
+                    current_step=event_type)
 
-    return rap_event
+    webhook_event = WebhookEvent(event_type, rap_event)
+
+    return webhook_event
 
 
-def _map_rap_event(event, id):
+def _map_rap_event(event, event_type):
     rap_event = RapEvent(
                     external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                     internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
-                    current_step=id)
+                    current_step=event_type)
 
-    return rap_event
+    webhook_event = WebhookEvent(event_type, rap_event)
+
+    return webhook_event
 
 
 def _get_nested(d, keys, default):

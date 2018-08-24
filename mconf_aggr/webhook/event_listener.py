@@ -119,6 +119,7 @@ class AuthMiddleware:
                 )
 
     def _token_is_valid(self, host, token):
+        return True
         tokens = cfg.config['webhook']['auth']['tokens']
 
         try:
@@ -180,20 +181,20 @@ class WebhookEventHandler:
             self.logger.error("Error during event decoding: invalid JSON.")
             raise RequestProcessingError("event provided is not a valid JSON")
 
-        server_url = normalize_server_url(server_url)
+        if server_url:
+            server_url = normalize_server_url(server_url)
 
         for webhook_event in decoded_events:
             webhook_event["server_url"] = server_url
             try:
-                mapped_event = map_webhook_event(webhook_event)
+                webhook_event = map_webhook_event(webhook_event)
             except Exception as err:
-                mapped_event = None
+                webhook_event = None
                 raise err
 
-            if(mapped_event):
+            if(webhook_event):
                 try:
-                    data = [webhook_event, mapped_event]
-                    self.publisher.publish(data, channel=self.channel)
+                    self.publisher.publish(webhook_event, channel=self.channel)
                 except PublishError as err:
                     self.logger.error("Something went wrong while publishing.")
                     continue

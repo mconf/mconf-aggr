@@ -76,7 +76,7 @@ import zabbix_api as api
 
 from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
-from mconf_aggr.aggregator.utils import time_logger, session_scope
+from mconf_aggr.aggregator.utils import time_logger, create_session_scope
 
 
 class ZabbixLoginError(Exception):
@@ -339,6 +339,7 @@ class ZabbixServer:
 Base = declarative_base()
 Session = sessionmaker()
 
+session_scope = create_session_scope(Session)
 
 class ServerMetricTable(Base):
     """Table server_metrics in the database.
