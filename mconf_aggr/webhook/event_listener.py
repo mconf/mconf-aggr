@@ -14,7 +14,7 @@ import falcon
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
 from mconf_aggr.aggregator.utils import time_logger
-from mconf_aggr.webhook.db_operations import WebhookDataWriter
+from mconf_aggr.webhook.database_handler import WebhookDataWriter
 from mconf_aggr.webhook.event_mapper import map_webhook_event
 from mconf_aggr.webhook.exceptions import WebhookError, RequestProcessingError
 

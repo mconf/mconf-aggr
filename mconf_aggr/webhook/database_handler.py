@@ -30,7 +30,7 @@ from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger, create_session_scope
 from mconf_aggr.webhook.exceptions import WebhookDatabaseError
-from mconf_aggr.webhook.database import Meetings, MeetingsEvents, Recordings, UsersEvents
+from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents
 
 
 Base = declarative_base()

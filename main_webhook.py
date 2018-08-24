@@ -9,7 +9,7 @@ from urllib.parse import unquote
 import falcon
 
 import mconf_aggr.aggregator.cfg as cfg
-from mconf_aggr.webhook.db_operations import WebhookDataWriter
+from mconf_aggr.webhook.database_handler import WebhookDataWriter
 from mconf_aggr.webhook.event_listener import WebhookEventHandler, WebhookEventListener, AuthMiddleware
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
 
