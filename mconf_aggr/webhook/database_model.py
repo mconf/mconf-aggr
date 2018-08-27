@@ -33,10 +33,10 @@ class Meetings(Base):
         Datetime of the meeting creation.
     updated_at : Column of the type DateTime
         Last datetime the meeting was updated.
-    running : Column of the type Boolean
         Indicates if the meeting is running.
     has_user_joined : Column of the type Boolean
         Indicates if a user has already joined.
+        running : Column of the type Boolean
     participant_count : Column of the type Integer
         Number of participants on the meeting.
     listener_count : Column of the type Integer
@@ -285,12 +285,15 @@ class Recordings(Base):
     download : Column of the type JSON
         Information about the recording download.
     """
-    __tablename__ = "Recordings"
+    __tablename__ = "recordings"
 
     id = Column(Integer, primary_key=True)
 
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, onupdate=datetime.datetime.now)
+
+    record_id = Column(String, unique=True)
+    server_id = Column(Integer)
 
     name = Column(String)
     status = Column(String)
@@ -306,7 +309,7 @@ class Recordings(Base):
     raw_size = Column(BigInteger)
     current_step = Column(String)
 
-    meta_data = Column(JSON)
+    meta_data = Column("metadata", JSON)
     playback = Column(JSON)
     download = Column(JSON)
 
@@ -315,8 +318,12 @@ class Recordings(Base):
             + "id=" + str(self.id)
             + ", created_at=" + str(self.created_at)
             + ", updated_at=" + str(self.updated_at)
+            + ", record_id=" + str(self.record_id)
+            + ", server_id=" + str(self.server_id)
             + ", name=" + str(self.name)
             + ", status=" + str(self.status)
+            + ", internal_meeting_id=" + str(self.internal_meeting_id)
+            + ", external_meeting_id=" + str(self.external_meeting_id)
             + ", is_breakout=" + str(self.is_breakout)
             + ", published=" + str(self.published)
             + ", start_time=" + str(self.start_time)
@@ -325,8 +332,6 @@ class Recordings(Base):
             + ", size=" + str(self.size)
             + ", raw_size=" + str(self.raw_size)
             + ", current_step=" + str(self.current_step)
-            + ", internal_meeting_id=" + str(self.internal_meeting_id)
-            + ", external_meeting_id=" + str(self.external_meeting_id)
             + ", meta_data=" + str(self. meta_data)
             + ", playback=" + str(self. playback)
             + ", download=" + str(self. download)
