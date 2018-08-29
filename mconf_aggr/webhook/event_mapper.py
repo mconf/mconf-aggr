@@ -106,6 +106,7 @@ RapEvent = collections.namedtuple('RapEvent',
                                   [
                                                 'external_meeting_id',
                                                 'internal_meeting_id',
+                                                'record_id',
                                                 'current_step'
                                   ])
 
@@ -299,6 +300,7 @@ def _map_rap_event(event, event_type):
     rap_event = RapEvent(
                     external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                     internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
+                    record_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
                     current_step=event_type)
 
     webhook_event = WebhookEvent(event_type, rap_event)
