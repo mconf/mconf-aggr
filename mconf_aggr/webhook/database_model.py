@@ -14,9 +14,16 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 
 
+"""Base class from which we extend table classes.
+"""
 Base = declarative_base()
 
+"""Status of a recording life-cycle.
+"""
 STATUS = ('processing', 'processed', 'published', 'unpublished', 'deleted')
+
+"""New data type in database.
+"""
 status_enum = Enum(*STATUS, name="status")
 
 
@@ -29,30 +36,30 @@ class Meetings(Base):
 
     Attributes
     ----------
-    id : Column of the type Integer
+    id : Column of type Integer
         Primary key. Identifier of the table.
-    meeting_event_id : Column of the type Integer
+    meeting_event_id : Column of type Integer
         Foreign Key. Identifier of the associated MeetingsEvents table (instatiated by id).
-    created_at : Column of the type DateTime
+    created_at : Column of type DateTime
         Datetime of the meeting creation.
-    updated_at : Column of the type DateTime
+    updated_at : Column of type DateTime
         Last datetime the meeting was updated.
+    running : Column of type Boolean
         Indicates if the meeting is running.
-    has_user_joined : Column of the type Boolean
+    has_user_joined : Column of type Boolean
         Indicates if a user has already joined.
-        running : Column of the type Boolean
-    participant_count : Column of the type Integer
+    participant_count : Column of type Integer
         Number of participants on the meeting.
-    listener_count : Column of the type Integer
+    listener_count : Column of type Integer
         Number of listeners on the meeting.
-    voice_participant_count : Column of the type Integer
+    voice_participant_count : Column of type Integer
         Number of participants on the meeting with active voice chat.
-    video_count : Column of the type Integer
+    video_count : Column of type Integer
         Number of participants on the meeting with video share.
-    moderator_count : Column of the type Integer
+    moderator_count : Column of type Integer
         Number of moderators on the meeting.
-    attendees : Column of the type JSON
-        Each attendee on the meeting, especified on the format::
+    attendees : Column of type JSON
+        Each attendee on the meeting, especified on the format:
 
         [
             {
@@ -74,8 +81,9 @@ class Meetings(Base):
 
     id = Column(Integer, primary_key=True)
     meeting_event_id = Column(Integer, ForeignKey("meetings_events.id"))
-    #meeting_event = relationship("MeetingsEvents", backref=backref("Meetings", uselist=False))
     meeting_event = relationship("MeetingsEvents")
+
+    #meeting_event = relationship("MeetingsEvents", backref=backref("meetings", uselist=False))
 
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, onupdate=datetime.datetime.now)
@@ -117,7 +125,7 @@ class MeetingsEvents(Base):
     id : Column of type Integer
         Primary key. Identifier of the table.
     shared_secret_guid : Column of type String
-        Shared Secret Guid.
+        Shared Secret GUID.
     shared_secret_name : Column of type String
         Shared Secret Name.
     server_guid : Column of type String
@@ -186,7 +194,7 @@ class MeetingsEvents(Base):
 
     id = Column(Integer, primary_key=True)
 
-    shared_secret_guid = Column(String) #index?
+    shared_secret_guid = Column(String) # Index?
     shared_secret_name = Column(String)
     server_guid = Column(String)
     server_url = Column(String)
@@ -194,8 +202,8 @@ class MeetingsEvents(Base):
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, onupdate=datetime.datetime.now)
 
-    external_meeting_id = Column(String) #index?
-    internal_meeting_id = Column(String, unique=True) #index?
+    external_meeting_id = Column(String) # Index?
+    internal_meeting_id = Column(String, unique=True) # Index?
     name = Column(String)
     create_time = Column(BigInteger)
     create_date = Column(String)
@@ -211,7 +219,7 @@ class MeetingsEvents(Base):
     max_users = Column(Integer)
     is_breakout = Column(Boolean)
     unique_users = Column(Integer)
-    meta_data = Column("metadata", JSON)
+    meta_data = Column("metadata", JSON) # Name metadata is used by Base class.
 
     def __repr__(self):
         return ("<MeetingsEvents("
@@ -252,41 +260,45 @@ class Recordings(Base):
 
     Attributes
     ----------
-    id : Column of the type Interger
+    id : Column of type Interger
         Primary key. Identifier of the recording.
-    created_at : Column of the type DateTime
+    created_at : Column of type DateTime
         Datetime of the recording creation.
-    updated_at : Column of the type DateTime
+    updated_at : Column of type DateTime
         Last datetime the recording was updated.
-    name : Column of the type String
+    record_id : Column of type String.
+        Internal identifier of the recording.
+    server_id : Column of type Integer.
+        Identifier of the associated Servers table.
+    name : Column of type String
         Name of the recording.
-    status : Column of the type String
+    status : Column of type String
         Current status of the recording.
-    internal_meeting_id : Column of the type String
+    internal_meeting_id : Column of type String
         Internal meeting ID of the recording.
-    external_meeting_id : Column of the type String
+    external_meeting_id : Column of type String
         External meeting ID of the recording.
-    is_breakout : Column of the type Boolean
+    is_breakout : Column of type Boolean
         Indicates if the recording if from a breakout room.
-    published : Column of the type Boolean
+    published : Column of type Boolean
         Indicates if the recording's been published.
-    start_time : Column of the type BigInteger
+    start_time : Column of type BigInteger
         Timestamp of when the recording was created.
-    end_time : Column of the type BigInteger
+    end_time : Column of type BigInteger
         Timestamp of when the recording ended.
-    participants : Column of the type Integer
+    participants : Column of type Integer
         Number of participants on the recorded meeting.
-    size : Column of the type BigInteger
+    size : Column of type BigInteger
         Size of the recording.
-    raw_size : Column of the type BigInteger.
+    raw_size : Column of type BigInteger.
         Raw size of the recording.
-    current_step : Column of the type String.
+    current_step : Column of type String.
         Current step of the recordig.
-    meta_data : Column of the type JSON
+    meta_data : Column of type JSON
         Information about the recording metadata.
-    playback : Column of the type JSON
+    playback : Column of type JSON
         Information about the recording playback.
-    download : Column of the type JSON
+    download : Column of type JSON
         Information about the recording download.
     """
     __tablename__ = "recordings"
@@ -313,7 +325,7 @@ class Recordings(Base):
     raw_size = Column(BigInteger)
     current_step = Column(String)
 
-    meta_data = Column("metadata", JSON)
+    meta_data = Column("metadata", JSON) # Name metadata is used by Base class.
     playback = Column(JSON)
     download = Column(JSON)
 
@@ -351,35 +363,36 @@ class UsersEvents(Base):
 
     Attributes
     ----------
-    id : Column of the type Integer
+    id : Column of type Integer
         Primary key. Identifier of the table.
-    meeting_event_id : Column of the type Integer
+    meeting_event_id : Column of type Integer
         Foreign Key. Identifier of the associated MeetingsEvents table (instatiated by id).
-    created_at : Column of the type DateTime
+    created_at : Column of type DateTime
         Datetime of the user creation.
-    updated_at : Column of the type DateTime
+    updated_at : Column of type DateTime
         Last datetime the user was updated.
-    name : Column of the type String
+    name : Column of type String
         Name of the user.
-    role : Column of the type String
+    role : Column of type String
         Role of the user.
-    join_time : Column of the type BigInteger
+    join_time : Column of type BigInteger
         Timestamp of when the user joined.
-    leave_time : Column of the type BigInteger
+    leave_time : Column of type BigInteger
         Timestamp of when the user left.
-    internal_user_id : Column of the type String
+    internal_user_id : Column of type String
         Internal user ID of the user.
-    external_user_id : Column of the type String
+    external_user_id : Column of type String
         External user ID of the user.
-    metadata : Column of the type JSON
+    metadata : Column of type JSON
         Information about the user metadata.
     """
     __tablename__ = "users_events"
 
     id = Column(Integer, primary_key=True)
     meeting_event_id = Column(Integer, ForeignKey("meetings_events.id"))
-
     meeting_event = relationship("MeetingsEvents")
+
+    #meeting_event = relationship("MeetingsEvents", backref=backref("users_events", uselist=False))
 
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, onupdate=datetime.datetime.now)
@@ -391,12 +404,12 @@ class UsersEvents(Base):
     internal_user_id = Column(String, unique=True)
     external_user_id = Column(String)
 
-    meta_data = Column("metadata", JSON)
-
+    meta_data = Column("metadata", JSON) # Name metadata is used by Base class.
 
     def __repr__(self):
         return ("<UsersEvents("
                 + "id=" + str(self.id)
+                + ", meeting_event_id=" + str(self.meeting_event_id)
                 + ", created_at=" + str(self.created_at)
                 + ", updated_at=" + str(self.updated_at)
                 + ", name=" + str(self.name)
@@ -405,8 +418,5 @@ class UsersEvents(Base):
                 + ", leave_time=" + str(self.leave_time)
                 + ", internal_user_id=" + str(self.internal_user_id)
                 + ", external_user_id=" + str(self.external_user_id)
-                + ", is_presenter=" + str(self.is_presenter)
-                + ", is_listening_only=" + str(self.is_listening_only)
-                + ", has_joined_voice=" + str(self.has_joined_voice)
-                + ", has_video=" + str(self.has_video)
+                + ", meta_data=" + str(self.meta_data)
                 + ")>")

@@ -8,7 +8,7 @@ which event was received by the `update` method on `WebhookDataWriter` and passe
 import logging
 
 import sqlalchemy
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func, distinct
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.attributes import flag_modified
 
@@ -36,8 +36,6 @@ class DatabaseEventHandler:
             Informations that the methods in this class will use to update the database.
         """
         self.session = session
-        #self.webhook_msg = data[0]
-        #self.mapped_msg = data[1]
         self.logger = logger or logging.getLogger(__name__)
 
     def handle(self, event):
@@ -65,6 +63,37 @@ class MeetingCreatedHandler(DatabaseEventHandler):
         new_meeting.meeting_event = new_meetings_events
 
         self.session.add(new_meeting)
+
+
+class MeetingEndedHandler(DatabaseEventHandler):
+    def handle(self, event):
+        event_type = event.event_type
+        event = event.event
+
+        int_id = event.internal_meeting_id
+        self.logger.info("Processing meeting-ended event for internal-meeting-id: '{}'"
+        .format(int_id))
+
+        # MeetingsEvents table to be updated
+        meetings_events_table = self.session.query(MeetingsEvents).\
+                            filter(MeetingsEvents.internal_meeting_id == int_id).first()
+
+        if meetings_events_table:
+            meetings_events_table = self.session.query(MeetingsEvents).get(meetings_events_table.id)
+            meetings_events_table.end_time = event.end_time
+
+            self.session.add(meetings_events_table)
+
+            # Meeting table to be updated
+            meetings_table = self.session.query(Meetings).\
+                            join(Meetings.meeting_event).\
+                            filter(MeetingsEvents.internal_meeting_id == int_id).first()
+
+            if meetings_table:
+                meetings_table = self.session.query(Meetings).get(meetings_table.id)
+
+                self.session.delete(meetings_table)
+
 
 class UserJoinedHandler(DatabaseEventHandler):
     def handle(self, event):
@@ -112,16 +141,16 @@ class UserJoinedHandler(DatabaseEventHandler):
 
             self.session.add(users_events_table)
             self.session.add(meetings_table)
+            self.session.flush()
         else:
             self.logger.warn("No meeting found for user '{}'.".format(event.internal_user_id))
             raise WebhookDatabaseError("no meeting found for user '{}'".format(event.internal_user_id))
 
         # Update unique users
         meetings_events_table = self.session.query(MeetingsEvents).get(meetings_events_table.id)
-        meetings_events_table.unique_users = int(self.session.query(UsersEvents.id).\
-                                        join(UsersEvents.meeting_event).\
-                                        filter(MeetingsEvents.internal_meeting_id == int_id).\
-                                        count())
+        meetings_events_table.unique_users = (self.session.query(func.count(distinct(UsersEvents.internal_user_id)))
+                                              .join(UsersEvents.meeting_event)
+                                              .filter(MeetingsEvents.internal_meeting_id == int_id))
 
     def _get_users_events(self, raw_event):
         event_dict = raw_event._asdict()
@@ -136,7 +165,6 @@ class UserJoinedHandler(DatabaseEventHandler):
         users_events = UsersEvents(**event_dict)
 
         return users_events
-
 
     def _attendee_json(self, base, new):
         if not base:
@@ -153,48 +181,10 @@ class UserJoinedHandler(DatabaseEventHandler):
 
             return arr
 
-
     def _update_meeting(self, meetings_table):
         meetings_table.running = True
         _update_meeting(meetings_table)
         meetings_table.has_user_joined = True
-
-
-    def _update_meeting(self, meetings_table):
-        meetings_table.running = True
-        meetings_table.has_user_joined = True
-
-        _update_meeting(meetings_table)
-
-
-class MeetingEndedHandler(DatabaseEventHandler):
-    def handle(self, event):
-        event_type = event.event_type
-        event = event.event
-
-        int_id = event.internal_meeting_id
-        self.logger.info("Processing meeting-ended event for internal-meeting-id: '{}'"
-        .format(int_id))
-
-        # MeetingsEvents table to be updated
-        meetings_events_table = self.session.query(MeetingsEvents).\
-                            filter(MeetingsEvents.internal_meeting_id == int_id).first()
-
-        if meetings_events_table:
-            meetings_events_table = self.session.query(MeetingsEvents).get(meetings_events_table.id)
-            meetings_events_table.end_time = event.end_time
-
-            self.session.add(meetings_events_table)
-
-            # Meeting table to be updated
-            meetings_table = self.session.query(Meetings).\
-                            join(Meetings.meeting_event).\
-                            filter(MeetingsEvents.internal_meeting_id == int_id).first()
-
-            if meetings_table:
-                meetings_table = self.session.query(Meetings).get(meetings_table.id)
-
-                self.session.delete(meetings_table)
 
 
 class UserLeftHandler(DatabaseEventHandler):
@@ -270,7 +260,7 @@ class UserEventHandler(DatabaseEventHandler):
             self._update_attendees(meetings_table.attendees, event, user_id)
             self._update_meeting(meetings_table)
 
-            flag_modified(meetings_table,"attendees")
+            flag_modified(meetings_table, "attendees")
 
             self.session.add(meetings_table)
         else:
@@ -386,8 +376,8 @@ class RapHandler(DatabaseEventHandler):
 
 
 def _update_meeting(meetings_table):
-    meetings_table.has_user_joined = meetings_table.participant_count != 0
     meetings_table.participant_count = len(meetings_table.attendees)
+    meetings_table.has_user_joined = meetings_table.participant_count != 0
     meetings_table.moderator_count = sum(1 for attendee in meetings_table.attendees if attendee["role"] == "MODERATOR")
     meetings_table.listener_count = sum(1 for attendee in meetings_table.attendees if attendee["is_listening_only"])
     meetings_table.voice_participant_count = sum(1 for attendee in meetings_table.attendees if attendee["has_joined_voice"])
@@ -508,7 +498,7 @@ class PostgresConnector:
         configure the session.
         """
         self.logger.debug("Creating new database session.")
-        engine = create_engine(self.database_uri, echo=False)
+        engine = create_engine(self.database_uri, echo=True)
         Session.configure(bind=engine)
 
     def close(self):
