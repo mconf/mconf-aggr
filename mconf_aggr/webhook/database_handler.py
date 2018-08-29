@@ -49,7 +49,7 @@ class MeetingCreatedHandler(DatabaseEventHandler):
         event_type = event.event_type
         event = event.event
 
-        self.logger.info("Processing meeting-created event for internal-meeting-id: '{}'"
+        self.logger.info("Processing meeting-created event for internal-meeting-id: '{}'."
                         .format(event.internal_meeting_id))
 
         # Create MeetingsEvents and Meetings table.
@@ -508,7 +508,7 @@ class PostgresConnector:
         configure the session.
         """
         self.logger.debug("Creating new database session.")
-        engine = create_engine(self.database_uri, echo=True)
+        engine = create_engine(self.database_uri, echo=False)
         Session.configure(bind=engine)
 
     def close(self):

@@ -8,12 +8,16 @@ from sqlalchemy import (BigInteger,
                         ForeignKey,
                         Integer,
                         JSON,
-                        String)
+                        String,
+                        Enum)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 
 
 Base = declarative_base()
+
+STATUS = ('processing', 'processed', 'published', 'unpublished', 'deleted')
+status_enum = Enum(*STATUS, name="status")
 
 
 class Meetings(Base):
@@ -296,7 +300,7 @@ class Recordings(Base):
     server_id = Column(Integer)
 
     name = Column(String)
-    status = Column(String)
+    status = Column(status_enum)
     internal_meeting_id = Column(String, unique=True)
     external_meeting_id = Column(String)
 

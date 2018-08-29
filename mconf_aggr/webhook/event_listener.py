@@ -1,8 +1,6 @@
-"""This module is responsible for treating HTTP POSTs
+"""This module is responsible for treating HTTP requests.
 
-It will receive, validate, parse and send the parsed data to an Aggregator thread,
-which will properly manipulate the data.
-
+It will receive, validate, parse and send the parsed data to be processed.
 """
 import json
 import logging
@@ -27,11 +25,12 @@ transitions, which map to HTTP verbs.
 class WebhookEventListener:
     """Listener for webhooks.
 
-    This class is passed to falcon_API to handle requests made to it, this class might have
-    more methods if needed, on the format on_*. It could treat POST,GET,PUT and DELETE requests.
+    This class is passed to falcon.API to handle requests made to itself.
+    This class might have more methods if needed, on the format on_*.
+    It could treat POST, GET, PUT and DELETE requests as well.
     """
     def __init__(self, event_handler, logger=None):
-        """Constructor of the HookListener
+        """Constructor of the WebhookEventListener
 
         Parameters
         ----------
@@ -47,7 +46,6 @@ class WebhookEventListener:
 
         After receiving a POST call the event_handler to treat the received message.
         """
-        # Parse received message
         with time_logger(self.logger.debug,
                          "Processing webhook event took {elapsed}s."):
             server_url = req.get_param("domain")
@@ -68,9 +66,21 @@ class WebhookEventListener:
 
 
 class WebhookResponse:
-    def __init__(self, message):
-        self.message = message
+    """Basic response.
 
+    This class represents the basic format of a response provided by the
+    webhook listener. It can be extended to fullfil future needs and extensions
+    of the webhook listener API.
+    """
+    def __init__(self, message):
+        """Constructor of the WebhookResponse.
+
+        Parameters
+        ----------
+        message : str
+            Message to be sent back to the requester.
+        """
+        self.message = message
 
     @property
     def success(self):
@@ -88,16 +98,10 @@ class WebhookResponse:
 class AuthMiddleware:
     """Middleware used for authentication.
 
-    This class is used directly by falcon to authenticate incoming events.
+    This class is used directly by Falcon to authenticate incoming events.
     """
     def process_request(self, req, resp):
         """Process the request before routing it.
-
-        It follows the RFC 7235 (https://tools.ietf.org/html/rfc7235)
-        and general guidelines provided by
-        http://self-issued.info/docs/draft-ietf-oauth-v2-bearer.html
-        and
-        https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/WWW-Authenticate
 
         Parameters
         ----------
@@ -107,6 +111,12 @@ class AuthMiddleware:
         resp : falcon.request.Response
             Response object that will be routed to
             the on_* responder.
+
+        References
+        ----------
+        https://tools.ietf.org/html/rfc7235
+        http://self-issued.info/docs/draft-ietf-oauth-v2-bearer.html
+        https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/WWW-Authenticate
         """
         self.logger = logging.getLogger(__name__)
 
@@ -168,10 +178,10 @@ class AuthMiddleware:
 class WebhookEventHandler:
     """Handler of events from webhooks.
 
-    This class is responsible for publishing the data to Aggregator to create a new thread
-    and instantiate the proper WebhookDataWriter.
+    This class is responsible for publishing the data to Aggregator to create
+    a new thread and instantiate the proper WebhookDataWriter.
 
-    It's called by the HookListener everytime it gets a new message.
+    It's called by the WebhookvEventListener everytime it gets a new message.
     """
     def __init__(self, publisher, channel, logger=None):
         """Constructor of WebhookEventHandler.
@@ -189,7 +199,6 @@ class WebhookEventHandler:
         self.logger = logger or logging.getLogger(__name__)
 
     def stop(self):
-        # stop falcon?
         pass
 
     def process_event(self, server_url, event):
@@ -203,8 +212,6 @@ class WebhookEventHandler:
             event to be parsed and published.
         """
         unquoted_event = unquote(event)
-
-        print(unquoted_event)
 
         try:
             decoded_events = json.loads(unquoted_event)
@@ -232,7 +239,7 @@ class WebhookEventHandler:
 
 
 def normalize_server_url(server_url):
-    # Naive approach to schemeless server URL.
+    """ Naive approach for sanitizing URLs."""
     server_url = server_url.strip()
 
     if not server_url.startswith(("http://", "https://")):
