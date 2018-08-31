@@ -41,6 +41,11 @@ class DatabaseEventHandler:
 
     def handle(self, event):
         """This method is meant to be implemented downstream.
+
+        Raises
+        ------
+        NotImplementedError
+            If called from an object of class DatabaseEventHandler.
         """
         raise NotImplementedError()
 
@@ -491,6 +496,11 @@ class DataProcessor:
         """Event dispatcher.
 
         Choose which handler will process the event based on the event type.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            An event to be handled and persisted into database.
         """
         self.logger.info("Selecting event processor")
 
@@ -595,6 +605,11 @@ class PostgresConnector:
         ----------
         data : dict
             The data to be updated in the database.
+
+        Raises
+        ------
+        sqlalchemy.exc.OperationalError
+            If an error occur while persisting data into database.
         """
         try:
             with time_logger(self.logger.debug,
@@ -656,6 +671,11 @@ class WebhookDataWriter(AggregatorCallback):
 
         data : event_mapper.WebhookEvent
             This is a single event to be handled and persisted into database.
+
+        Raises
+        ------
+        aggregator.aggregator.CallbackError
+            If any error occur while persisting event into database.
         """
         try:
             self.connector.update(data)

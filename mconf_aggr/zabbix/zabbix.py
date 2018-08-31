@@ -737,7 +737,7 @@ class ZabbixDataReader():
 
         Returns
         -------
-        data : dict
+        dict
             A data in the format described in the module's documentation.
         """
         # Here comes the logic to read data from Zabbix API.

@@ -42,7 +42,7 @@ They are must implement the :class:`AggregatorCallback` interface from the modul
 
 The interface has the following three methods:
 
-.. autoclass:: aggregator.AggregatorCallback
+.. autoclass:: aggregator.aggregator.AggregatorCallback
     :members:
     :noindex:
 
@@ -80,7 +80,7 @@ controller performs are:
 
 The API of the :class:`Aggregator` is as follows:
 
-.. autoclass:: aggregator.Aggregator
+.. autoclass:: aggregator.aggregator.Aggregator
     :members: setup, start, stop, register_callback
     :noindex:
 
@@ -94,7 +94,7 @@ aggregator's `publisher`. The `publisher` is an instace of the class
 To send data to the aggregator (and in turn to a data writer), a client code
 needs to call the `Publisher`'s `publish` method. The API is as follows:
 
-.. autoclass:: aggregator.Publisher
+.. autoclass:: aggregator.aggregator.Publisher
     :members: publish
     :noindex:
 
@@ -106,16 +106,16 @@ Exceptions
 
 The following exceptions are raised as part of the API:
 
-.. autoclass:: aggregator.AggregatorNotRunning
+.. autoclass:: aggregator.aggregator.AggregatorNotRunning
     :noindex:
 
-.. autoclass:: aggregator.CallbackError
+.. autoclass:: aggregator.aggregator.CallbackError
     :noindex:
 
-.. autoclass:: aggregator.SetupError
+.. autoclass:: aggregator.aggregator.SetupError
     :noindex:
 
-.. autoclass:: aggregator.PublishError
+.. autoclass:: aggregator.aggregator.PublishError
     :noindex:
 
 Example

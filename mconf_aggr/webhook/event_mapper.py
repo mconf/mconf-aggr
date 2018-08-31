@@ -176,7 +176,7 @@ def map_webhook_event(event):
 
 
 def _map_create_event(event, event_type):
-    """Map `meeting-created` event to internal representation.
+    """Map `meeting-created` event to internal representation
     """
     create_event = MeetingCreatedEvent(
                        server_url=event.get("server_url", ""),

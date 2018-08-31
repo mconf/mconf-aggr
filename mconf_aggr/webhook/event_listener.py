@@ -112,6 +112,11 @@ class AuthMiddleware:
             Response object that will be routed to
             the on_* responder.
 
+        Raises
+        ------
+        falcon.HTTPUnauthorized
+            If request authentication fails.
+
         References
         ----------
         https://tools.ietf.org/html/rfc7235
@@ -204,6 +209,10 @@ class WebhookEventHandler:
     def process_event(self, server_url, event):
         """Parse and publish data to aggregator.
 
+        Raises
+        Exception
+            If any error occur during event handling.
+
         Parameters
         ----------
         server_url : str
@@ -220,7 +229,7 @@ class WebhookEventHandler:
             raise RequestProcessingError("Event provided is not a valid JSON")
 
         if server_url:
-            server_url = normalize_server_url(server_url)
+            server_url = _normalize_server_url(server_url)
 
         for webhook_event in decoded_events:
             webhook_event["server_url"] = server_url
@@ -239,7 +248,7 @@ class WebhookEventHandler:
                     continue
 
 
-def normalize_server_url(server_url):
+def _normalize_server_url(server_url):
     """ Naive approach for sanitizing URLs."""
     server_url = server_url.strip()
 
