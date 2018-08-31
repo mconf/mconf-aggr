@@ -225,6 +225,7 @@ class WebhookEventHandler:
         for webhook_event in decoded_events:
             webhook_event["server_url"] = server_url
             try:
+                # Instance of WebhookEvent.
                 webhook_event = map_webhook_event(webhook_event)
             except Exception as err:
                 webhook_event = None

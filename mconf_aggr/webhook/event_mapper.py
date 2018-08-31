@@ -121,6 +121,11 @@ def map_webhook_event(event):
     ----------
     event : dict
         Dict with fields and values of the event as received by the webhook.
+
+    Returns
+    -------
+    mapped_event : event_mapper.WebhookEvent
+        It encapsulates both the event type and the event itself.
     """
     logger = logging.getLogger(__name__)
 

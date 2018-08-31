@@ -25,32 +25,45 @@ session_scope = create_session_scope(Session)
 
 
 class DatabaseEventHandler:
+    """This is an abstract class that handles webhook events.
+    """
+
     def __init__(self, session, logger=None):
-        """Constructor of the DataProcessor.
+        """Constructor of the DataEventHandler.
 
         Parameters
         ----------
         session : sqlalchemy.Session
             Session used by SQLAlchemy to interact with the database.
-        data : dict list
-            Informations that the methods in this class will use to update the database.
         """
         self.session = session
         self.logger = logger or logging.getLogger(__name__)
 
     def handle(self, event):
+        """This method is meant to be implemented downstream.
+        """
         raise NotImplementedError()
 
 
 class MeetingCreatedHandler(DatabaseEventHandler):
+    """This class handles meeting-created events.
+    """
+
     def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
         event_type = event.event_type
         event = event.event
 
         self.logger.info("Processing meeting-created event for internal-meeting-id: '{}'."
                         .format(event.internal_meeting_id))
 
-        # Create MeetingsEvents and Meetings table.
+        # Create tables meetings_events and meetings.
         new_meetings_events = MeetingsEvents(**event._asdict())
         new_meeting = Meetings(running=False,
                                has_user_joined=False,
@@ -66,7 +79,17 @@ class MeetingCreatedHandler(DatabaseEventHandler):
 
 
 class MeetingEndedHandler(DatabaseEventHandler):
+    """This class handles meeting-ended events.
+    """
+
     def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
         event_type = event.event_type
         event = event.event
 
@@ -74,7 +97,7 @@ class MeetingEndedHandler(DatabaseEventHandler):
         self.logger.info("Processing meeting-ended event for internal-meeting-id: '{}'"
         .format(int_id))
 
-        # MeetingsEvents table to be updated
+        # Table meetings_events to be updated.
         meetings_events_table = self.session.query(MeetingsEvents).\
                             filter(MeetingsEvents.internal_meeting_id == int_id).first()
 
@@ -84,7 +107,7 @@ class MeetingEndedHandler(DatabaseEventHandler):
 
             self.session.add(meetings_events_table)
 
-            # Meeting table to be updated
+            # Table meetings to be updated.
             meetings_table = self.session.query(Meetings).\
                             join(Meetings.meeting_event).\
                             filter(MeetingsEvents.internal_meeting_id == int_id).first()
@@ -96,7 +119,17 @@ class MeetingEndedHandler(DatabaseEventHandler):
 
 
 class UserJoinedHandler(DatabaseEventHandler):
+    """This class handles user-joined events.
+    """
+
     def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
         event_type = event.event_type
         event = event.event
 
@@ -106,7 +139,7 @@ class UserJoinedHandler(DatabaseEventHandler):
 
         users_events_table = self._get_users_events(event)
 
-        # Create attendee json for meeting table
+        # Create attendee JSON for meetings table.
         attendee = {
             "external_user_id" : event.external_user_id,
             "internal_user_id" : event.internal_user_id,
@@ -118,14 +151,14 @@ class UserJoinedHandler(DatabaseEventHandler):
             "has_video" : False
         }
 
-        # Query for MeetingsEvents to link with UsersEvents table
+        # Query for meetings_events to link with users_events table.
         meetings_events_table = self.session.query(MeetingsEvents).\
                             filter(MeetingsEvents.internal_meeting_id.match(int_id)).first()
 
         if meetings_events_table:
             users_events_table.meeting_event = meetings_events_table
 
-        # Meeting table to be updated
+        # Table meetings to be updated.
         meetings_table = self.session.query(Meetings).\
                         join(Meetings.meeting_event).\
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
@@ -136,7 +169,7 @@ class UserJoinedHandler(DatabaseEventHandler):
             meetings_table.attendees = self._attendee_json(meetings_table.attendees, attendee)
             self._update_meeting(meetings_table)
 
-            # SQLAlchemy was not considering the attendees array as modified, so it had to be forced
+            # SQLAlchemy was not considering the attendees array as modified, so it had to be forced.
             flag_modified(meetings_table, "attendees")
 
             self.session.add(users_events_table)
@@ -146,7 +179,7 @@ class UserJoinedHandler(DatabaseEventHandler):
             self.logger.warn("No meeting found for user '{}'.".format(event.internal_user_id))
             raise WebhookDatabaseError("no meeting found for user '{}'".format(event.internal_user_id))
 
-        # Update unique users
+        # Update unique_users in table meetings_events.
         meetings_events_table = self.session.query(MeetingsEvents).get(meetings_events_table.id)
         meetings_events_table.unique_users = (self.session.query(func.count(distinct(UsersEvents.internal_user_id)))
                                               .join(UsersEvents.meeting_event)
@@ -188,7 +221,17 @@ class UserJoinedHandler(DatabaseEventHandler):
 
 
 class UserLeftHandler(DatabaseEventHandler):
+    """This class handles user-left events.
+    """
+
     def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
         event_type = event.event_type
         event = event.event
 
@@ -197,7 +240,7 @@ class UserLeftHandler(DatabaseEventHandler):
         self.logger.info("Processing user-left message for internal-user-id: {} in {}"
                         .format(user_id, int_id))
 
-        # Meeting table to be updated
+        # Table meetings to be updated.
         meetings_table = self.session.query(Meetings).\
                         join(Meetings.meeting_event).\
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
@@ -208,19 +251,19 @@ class UserLeftHandler(DatabaseEventHandler):
             self._remove_attendee(meetings_table, user_id)
             self._update_meeting(meetings_table)
 
-            # Mark Meetings.attendees as modified for SQLAlchemy
+            # Mark meetings.attendees as modified for SQLAlchemy.
             flag_modified(meetings_table, "attendees")
 
             self.session.add(meetings_table)
         else:
             self.logger.warn("No meeting found with internal-meeting-id '{}'".format(int_id))
 
-        # User table to be updated
+        # Table users_events to be updated.
         users_table = self.session.query(UsersEvents).\
                         filter(UsersEvents.internal_user_id == user_id).first()
 
         if users_table:
-            # Update UsersEvents table
+            # Update table users_events.
             users_table = self.session.query(UsersEvents).get(users_table.id)
             users_table.leave_time = event.leave_time
         else:
@@ -238,7 +281,17 @@ class UserLeftHandler(DatabaseEventHandler):
 
 
 class UserEventHandler(DatabaseEventHandler):
+    """This class handles general user events.
+    """
+
     def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
         event_type = event.event_type
         event = event.event
 
@@ -249,7 +302,7 @@ class UserEventHandler(DatabaseEventHandler):
         self.logger.info("Processing {} event for internal-user-id '{}' on meeting '{}'"
                         .format(event.event_name, user_id, int_id))
 
-        # Meeting table to be updated
+        # Table meetings to be updated.
         meetings_table = self.session.query(Meetings).\
                         join(Meetings.meeting_event).\
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
@@ -283,62 +336,96 @@ class UserEventHandler(DatabaseEventHandler):
 
 
 class UserVoiceEnabledHandler(UserEventHandler):
+    """This class adds specific behavior for user-audio-voice-enabled events.
+    """
+
     def _update_attendee(self, attendee, update):
         attendee["has_joined_voice"] = update.has_joined_voice
         attendee["is_listening_only"] = update.is_listening_only
 
 
 class UserVoiceDisabledHandler(UserEventHandler):
+    """This class adds specific behavior for user-audio-voice-disabled events.
+    """
+
     def _update_attendee(self, attendee, update):
         attendee["has_joined_voice"] = False
 
 
 class UserListenOnlyEnabledHandler(UserEventHandler):
+    """This class adds specific behavior for user-audio-listen-only-enabled events.
+    """
     def _update_attendee(self, attendee, update):
         attendee["is_listening_only"] = True
 
 
 class UserListenOnlyDisabledHandler(UserEventHandler):
+    """This class adds specific behavior for user-audio-listen-only-disabled events.
+    """
+
     def _update_attendee(self, attendee, update):
         attendee["is_listening_only"] = False
 
 
 class UserCamBroadCastStartHandler(UserEventHandler):
+    """This class adds specific behavior for user-cam-broadcast-start events.
+    """
+
     def _update_attendee(self, attendee, update):
         attendee["has_video"] = True
 
 
 class UserCamBroadCastEndHandler(UserEventHandler):
+    """This class adds specific behavior for user-cam-broadcast-end events.
+    """
+
     def _update_attendee(self, attendee, update):
         attendee["has_video"] = False
 
 
 class UserPresenterAssignedHandler(UserEventHandler):
+    """This class adds specific behavior for user-presenter-assigned events.
+    """
+
     def _update_attendee(self, attendee, update):
         attendee["is_presenter"] = True
 
 
 class UserPresenterUnassignedHandler(UserEventHandler):
+    """This class adds specific behavior for user-presenter-unassigned events.
+    """
+
     def _update_attendee(self, attendee, update):
         attendee["is_presenter"] = False
 
 
 class RapHandler(DatabaseEventHandler):
+    """This class handles general recording events.
+    """
+
     def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
         event_type = event.event_type
         event = event.event
 
         int_id = event.internal_meeting_id
         self.logger.info("Processing {} event for internal-meeting-id '{}'"
                         .format(event_type, int_id))
-        # Check if table already exists
+
+        # Check if table records already exists.
         try:
             records_table = self.session.query(Recordings.id).\
                             filter(Recordings.internal_meeting_id == int_id).first()
-            # Check if there's records_table
+            # Check if there is table records.
             records_table = self.session.query(Recordings).get(records_table.id)
         except:
-            # Create table
+            # Create table records.
             records_table = Recordings(**event._asdict())
             records_table.participants = int(self.session.query(UsersEvents.id).\
                                         join(MeetingsEvents).\
@@ -349,7 +436,7 @@ class RapHandler(DatabaseEventHandler):
                             filter(Recordings.internal_meeting_id == int_id).first()
             records_table = self.session.query(Recordings).get(records_table.id)
         finally:
-            # When publish end update most of information
+            # When publish end update most of information.
             if(event.current_step == "rap-publish-ended"):
                 records_table.name = event.name
                 records_table.is_breakout = event.is_breakout
@@ -362,8 +449,8 @@ class RapHandler(DatabaseEventHandler):
                 records_table.download = event.download
                 records_table.current_step = event.current_step
 
-            # Update status based on event
-            # Treat "unpublished" and "deleted" when webhooks are emitting those events.
+            # Update status based on event.
+            # Handle "unpublished" and "deleted" when webhooks are emitting those events.
             if(event.current_step == "rap-process-started"):
                 records_table.status = "processing"
             elif(event.current_step == "rap-process-ended"):
@@ -376,6 +463,8 @@ class RapHandler(DatabaseEventHandler):
 
 
 def _update_meeting(meetings_table):
+    """Common updates on table meetings.
+    """
     meetings_table.participant_count = len(meetings_table.attendees)
     meetings_table.has_user_joined = meetings_table.participant_count != 0
     meetings_table.moderator_count = sum(1 for attendee in meetings_table.attendees if attendee["role"] == "MODERATOR")
@@ -385,13 +474,7 @@ def _update_meeting(meetings_table):
 
 
 class DataProcessor:
-    """Data processor of the received information.
-
-    It provides methods to update rows in the following tables:
-        -Meetings;
-        -MeetingsEvents;
-        -Recordings;
-        -UsersEvents.
+    """Data processor (dispatcher) of the received event.
     """
     def __init__(self, session, logger=None):
         """Constructor of the DataProcessor.
@@ -400,21 +483,17 @@ class DataProcessor:
         ----------
         session : sqlalchemy.Session
             Session used by SQLAlchemy to interact with the database.
-        data : dict list
-            Informations that the methods in this class will use to update the database.
         """
         self.session = session
         self.logger = logger or logging.getLogger(__name__)
 
     def update(self, event):
-        """Event Selector.
+        """Event dispatcher.
 
-        Choose which event will be processed (which method to call), based on
-        the received data.
-
-        The methods won't commit any update, just add them to the session.
+        Choose which handler will process the event based on the event type.
         """
         self.logger.info("Selecting event processor")
+
         event_type = event.event_type
 
         if(event_type == "meeting-created"):
@@ -575,8 +654,8 @@ class WebhookDataWriter(AggregatorCallback):
         This method is intended to run in a separate thread by the aggregator
         whenever new data must be persisted.
 
-        data : dict
-            The data may be compound of many metrics of different server hosts.
+        data : event_mapper.WebhookEvent
+            This is a single event to be handled and persisted into database.
         """
         try:
             self.connector.update(data)
