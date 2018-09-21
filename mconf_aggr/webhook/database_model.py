@@ -86,7 +86,7 @@ class Meetings(Base):
     #meeting_event = relationship("MeetingsEvents", backref=backref("meetings", uselist=False))
 
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(DateTime, onupdate=datetime.datetime.now)
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     running = Column(Boolean)
     has_user_joined = Column(Boolean)
@@ -200,7 +200,7 @@ class MeetingsEvents(Base):
     server_url = Column(String)
 
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(DateTime, onupdate=datetime.datetime.now)
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     external_meeting_id = Column(String) # Index?
     internal_meeting_id = Column(String, unique=True) # Index?
@@ -306,7 +306,7 @@ class Recordings(Base):
     id = Column(Integer, primary_key=True)
 
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(DateTime, onupdate=datetime.datetime.now)
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     record_id = Column(String, unique=True)
     server_id = Column(Integer)
@@ -395,7 +395,7 @@ class UsersEvents(Base):
     #meeting_event = relationship("MeetingsEvents", backref=backref("users_events", uselist=False))
 
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(DateTime, onupdate=datetime.datetime.now)
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     name = Column(String)
     role = Column(String)

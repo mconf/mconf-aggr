@@ -16,7 +16,7 @@ from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger, create_session_scope
 from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents
-from mconf_aggr.webhook.exceptions import WebhookDatabaseError
+from mconf_aggr.webhook.exceptions import WebhookDatabaseError, InvalidWebhookEventError
 
 
 Session = sessionmaker()
@@ -70,6 +70,9 @@ class MeetingCreatedHandler(DatabaseEventHandler):
 
         # Create tables meetings_events and meetings.
         new_meetings_events = MeetingsEvents(**event._asdict())
+        new_meetings_events.has_forcibly_ended = False
+        new_meetings_events.unique_users = 0
+
         new_meeting = Meetings(running=False,
                                has_user_joined=False,
                                participant_count=0,
@@ -163,32 +166,42 @@ class UserJoinedHandler(DatabaseEventHandler):
         if meetings_events_table:
             users_events_table.meeting_event = meetings_events_table
 
-        # Table meetings to be updated.
-        meetings_table = self.session.query(Meetings).\
-                        join(Meetings.meeting_event).\
-                        filter(MeetingsEvents.internal_meeting_id == int_id).first()
+            # Table meetings to be updated.
+            meetings_table = self.session.query(Meetings).\
+                            join(Meetings.meeting_event).\
+                            filter(MeetingsEvents.internal_meeting_id == int_id).first()
 
-        if meetings_table:
-            meetings_table = self.session.query(Meetings).get(meetings_table.id)
+            if meetings_table:
+                meetings_table = self.session.query(Meetings).get(meetings_table.id)
 
-            meetings_table.attendees = self._attendee_json(meetings_table.attendees, attendee)
-            self._update_meeting(meetings_table)
+                meetings_table.attendees = self._attendee_json(meetings_table.attendees, attendee)
+                self._update_meeting(meetings_table)
 
-            # SQLAlchemy was not considering the attendees array as modified, so it had to be forced.
-            flag_modified(meetings_table, "attendees")
+                # SQLAlchemy was not considering the attendees array as modified, so it had to be forced.
+                flag_modified(meetings_table, "attendees")
 
-            self.session.add(users_events_table)
-            self.session.add(meetings_table)
-            self.session.flush()
-        else:
-            self.logger.warn("No meeting found for user '{}'.".format(event.internal_user_id))
-            raise WebhookDatabaseError("no meeting found for user '{}'".format(event.internal_user_id))
+                self.session.add(users_events_table)
+                self.session.add(meetings_table)
+                self.session.flush()
+            else:
+                self.logger.warn("No meeting found for user '{}'.".format(event.internal_user_id))
+                raise WebhookDatabaseError("no meeting found for user '{}'".format(event.internal_user_id))
 
-        # Update unique_users in table meetings_events.
-        meetings_events_table = self.session.query(MeetingsEvents).get(meetings_events_table.id)
-        meetings_events_table.unique_users = (self.session.query(func.count(distinct(UsersEvents.internal_user_id)))
-                                              .join(UsersEvents.meeting_event)
-                                              .filter(MeetingsEvents.internal_meeting_id == int_id))
+            # Update unique_users in table meetings_events.
+            users_joined = (
+                self.session.query(UsersEvents)
+                .join(UsersEvents.meeting_event)
+                .filter(MeetingsEvents.internal_meeting_id == int_id)
+                .count()
+            )
+
+            meetings_events_table.unique_users = users_joined
+
+            # Meeting starts when first user joins it.
+            if users_joined == 1:
+                meetings_events_table.start_time = event.join_time
+
+            self.session.add(meetings_events_table)
 
     def _get_users_events(self, raw_event):
         event_dict = raw_event._asdict()
@@ -372,7 +385,7 @@ class UserListenOnlyDisabledHandler(UserEventHandler):
         attendee["is_listening_only"] = False
 
 
-class UserCamBroadCastStartHandler(UserEventHandler):
+class UserCamBroadcastStartHandler(UserEventHandler):
     """This class adds specific behavior for user-cam-broadcast-start events.
     """
 
@@ -380,7 +393,7 @@ class UserCamBroadCastStartHandler(UserEventHandler):
         attendee["has_video"] = True
 
 
-class UserCamBroadCastEndHandler(UserEventHandler):
+class UserCamBroadcastEndHandler(UserEventHandler):
     """This class adds specific behavior for user-cam-broadcast-end events.
     """
 
@@ -423,37 +436,14 @@ class RapHandler(DatabaseEventHandler):
         self.logger.info("Processing {} event for internal-meeting-id '{}'"
                         .format(event_type, int_id))
 
-        # Check if table records already exists.
-        try:
-            records_table = self.session.query(Recordings.id).\
-                            filter(Recordings.internal_meeting_id == int_id).first()
-            # Check if there is table records.
-            records_table = self.session.query(Recordings).get(records_table.id)
-        except:
-            # Create table records.
-            records_table = Recordings(**event._asdict())
-            records_table.participants = int(self.session.query(UsersEvents.id).\
-                                        join(MeetingsEvents).\
-                                        filter(MeetingsEvents.internal_meeting_id == int_id).\
-                                        count())
-            self.session.add(records_table)
-            records_table = self.session.query(Recordings.id).\
-                            filter(Recordings.internal_meeting_id == int_id).first()
-            records_table = self.session.query(Recordings).get(records_table.id)
-        finally:
-            # When publish end update most of information.
-            if(event.current_step == "rap-publish-ended"):
-                records_table.name = event.name
-                records_table.is_breakout = event.is_breakout
-                records_table.start_time = event.start_time
-                records_table.end_time = event.end_time
-                records_table.size = event.size
-                records_table.raw_size = event.raw_size
-                records_table.meta_data = event.meta_data
-                records_table.playback = event.playback
-                records_table.download = event.download
-                records_table.current_step = event.current_step
+        records_table = (
+            self.session.query(Recordings).
+            filter(Recordings.internal_meeting_id == int_id).
+            first()
+        )
 
+        # Table recordings already exists.
+        if records_table:
             # Update status based on event.
             # Handle "unpublished" and "deleted" when webhooks are emitting those events.
             if(event.current_step == "rap-process-started"):
@@ -463,8 +453,40 @@ class RapHandler(DatabaseEventHandler):
             elif(event.current_step == "rap-publish-ended"):
                 records_table.status = "published"
                 records_table.published = True
+        else:
+            # Create and initialize table recordings.
+            records_table = Recordings(**event._asdict())
+            records_table.published = False
+            records_table.participants = (
+                int(
+                    self.session.query(UsersEvents.id).
+                    join(MeetingsEvents).
+                    filter(MeetingsEvents.internal_meeting_id == int_id).
+                    count()
+                )
+            )
 
-            self.session.add(records_table)
+        records_table.current_step = event.current_step
+
+        if(event.current_step == "rap-publish-ended"):
+            times = (
+                self.session.query(MeetingsEvents.start_time, MeetingsEvents.end_time).
+                filter(MeetingsEvents.internal_meeting_id == int_id).first()
+            )
+            start_time, end_time = times
+
+            records_table.name = event.name
+            records_table.is_breakout = event.is_breakout
+            records_table.start_time = start_time
+            records_table.end_time = end_time
+            records_table.size = event.size
+            records_table.raw_size = event.raw_size
+            records_table.meta_data = event.meta_data
+            records_table.playback = event.playback
+            records_table.download = event.download
+            records_table.current_step = event.current_step
+
+        self.session.add(records_table)
 
 
 def _update_meeting(meetings_table):
@@ -493,6 +515,11 @@ class DataProcessor:
         self.logger = logger or logging.getLogger(__name__)
 
     def update(self, event):
+        event_handler = self._select_handler(event.event_type)
+
+        event_handler.handle(event)
+
+    def _select_handler(self, event_type):
         """Event dispatcher.
 
         Choose which handler will process the event based on the event type.
@@ -503,8 +530,6 @@ class DataProcessor:
             An event to be handled and persisted into database.
         """
         self.logger.info("Selecting event processor")
-
-        event_type = event.event_type
 
         if(event_type == "meeting-created"):
             event_handler = MeetingCreatedHandler(self.session)
@@ -531,10 +556,10 @@ class DataProcessor:
             event_handler = UserListenOnlyDisabledHandler(self.session)
 
         elif event_type == "user-cam-broadcast-start":
-            event_handler = UserCamBroadCastStartHandler(self.session)
+            event_handler = UserCamBroadcastStartHandler(self.session)
 
         elif event_type == "user-cam-broadcast-end":
-            event_handler = UserCamBroadCastEndHandler(self.session)
+            event_handler = UserCamBroadcastEndHandler(self.session)
 
         elif event_type == "user-presenter-assigned":
             event_handler = UserPresenterAssignedHandler(self.session)
@@ -554,7 +579,7 @@ class DataProcessor:
             self.logger.warn("Unknown event type '{}'.".format(event_type))
             raise InvalidWebhookEventError("unknown event type '{}'".format(event_type))
 
-        event_handler.handle(event)
+        return event_handler
 
 
 class PostgresConnector:
@@ -587,7 +612,7 @@ class PostgresConnector:
         configure the session.
         """
         self.logger.debug("Creating new database session.")
-        engine = create_engine(self.database_uri, echo=True)
+        engine = create_engine(self.database_uri, echo=False)
         Session.configure(bind=engine)
 
     def close(self):
@@ -616,9 +641,8 @@ class PostgresConnector:
                              "Processing information to database took {elapsed}s."):
                 with session_scope() as session:
                     DataProcessor(session).update(data)
-        except sqlalchemy.exc.OperationalError as err:
+        except Exception as err:
             self.logger.error(err)
-
             raise
 
     def _build_uri(self):

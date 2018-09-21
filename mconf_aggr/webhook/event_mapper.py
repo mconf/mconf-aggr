@@ -183,15 +183,15 @@ def _map_create_event(event, event_type):
                        external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                        internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
                        name=_get_nested(event, ["data", "attributes", "meeting", "name"], ""),
-                       create_time=_get_nested(event, ["data", "attributes", "meeting", "create-time"], ""),
-                       create_date=_get_nested(event, ["data", "attributes", "meeting", "create-date"], ""),
-                       voice_bridge=_get_nested(event, ["data", "attributes", "meeting", "voice-bridge"], ""),
+                       create_time=_get_nested(event, ["data", "attributes", "meeting", "create-time"], 0),
+                       create_date=_get_nested(event, ["data", "attributes", "meeting", "create-date"], None),
+                       voice_bridge=_get_nested(event, ["data", "attributes", "meeting", "voice-conf"], ""),
                        dial_number=_get_nested(event, ["data", "attributes", "meeting", "dial-number"], ""),
-                       attendee_pw=_get_nested(event, ["data", "attributes", "meeting", "attendee-pw"], ""),
+                       attendee_pw=_get_nested(event, ["data", "attributes", "meeting", "viewer-pass"], ""),
                        moderator_pw=_get_nested(event, ["data", "attributes", "meeting", "moderator-pass"], ""),
-                       duration=_get_nested(event, ["data", "attributes", "meeting", "duration"], ""),
-                       recording=_get_nested(event, ["data", "attributes", "meeting", "recording"], False),
-                       max_users=_get_nested(event, ["data", "attributes", "meeting", "max-users"], ""),
+                       duration=_get_nested(event, ["data", "attributes", "meeting", "duration"], 0),
+                       recording=_get_nested(event, ["data", "attributes", "meeting", "record"], False),
+                       max_users=_get_nested(event, ["data", "attributes", "meeting", "max-users"], 0),
                        is_breakout=_get_nested(event, ["data", "attributes", "meeting", "is-breakout"], False),
                        meta_data=_get_nested(event, ["data", "attributes", "meeting", "metadata"], {}))
 
@@ -206,7 +206,7 @@ def _map_end_event(event, event_type):
     end_event = MeetingEndedEvent(
                     external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                     internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
-                    end_time=_get_nested(event, ["data", "event", "ts"], ""))
+                    end_time=_get_nested(event, ["data", "event", "ts"], 0))
 
     webhook_event = WebhookEvent(event_type, end_event)
 
@@ -252,8 +252,8 @@ def _map_user_voice_enabled_event(event, event_type):
     user_event = UserVoiceEnabledEvent(
                      internal_user_id=_get_nested(event, ["data", "attributes", "user", "internal-user-id"], ""),
                      external_user_id=_get_nested(event, ["data", "attributes", "user", "external-user-id"], ""),
-                     external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                      internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
+                     external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                      has_joined_voice=_get_nested(event, ["data", "attributes", "user", "sharing-mic"], True),
                      is_listening_only=_get_nested(event, ["data", "attributes", "user", "listening_only"], True),
                      event_name=event_type)

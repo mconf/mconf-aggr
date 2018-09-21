@@ -6,9 +6,9 @@ from mconf_aggr.aggregator.aggregator import Aggregator
 
 class TestAggregator(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
-        self.aggregator = Aggregator()
-        self.channel = "channel"
+    def setUpClass(cls):
+        cls.aggregator = Aggregator()
+        cls.channel = "channel"
 
     def test_no_channel(self):
         with self.assertRaises(KeyError):

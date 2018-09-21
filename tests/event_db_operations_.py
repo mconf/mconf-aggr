@@ -6,7 +6,7 @@ from mconf_aggr.webhook.db_operations import DataProcessor, Meetings, MeetingsEv
 
 class TestOperationsMeetings(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         session_mock = mock.Mock()
         session_mock.query = mock.Mock()
         session_mock.query.get = mock.Mock()
@@ -135,7 +135,7 @@ class TestOperationsMeetings(unittest.TestCase):
 
 class TestOperationsUsers(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         self.user_mock = {"is_presenter":False,"is_listening_only":False,
                     "has_joined_voice":False,"has_video":False,
                     "ext_user_id":"mock","int_user_id":"mock",
@@ -357,7 +357,7 @@ class TestOperationsUsers(unittest.TestCase):
 
 class TestOperationsRecording(unittest.TestCase):
     @classmethod
-    def setUpClass(self):
+    def setUpClass(cls):
         session_mock = mock.Mock()
         data = ["mock","mock"]
         self.data_processor = DataProcessor(session_mock, data)

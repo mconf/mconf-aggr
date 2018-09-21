@@ -10,8 +10,13 @@
         "zabbix": ["zabbix_server_test",
                    "zabbix_servers_pool_test"],
         "webhook": [
-            "event_db_mapping_test",
-            "event_db_operations_test"
+            "database_handler_test",
+            "event_listener_test",
+            "event_mapper_test"
+        ],
+        "integration": [
+            "integration_use_cases_test",
+            "integration_recordings_test"
         ]
     }
 }

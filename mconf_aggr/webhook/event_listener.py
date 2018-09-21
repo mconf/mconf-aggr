@@ -56,6 +56,12 @@ class WebhookEventListener:
             try:
                 self.event_handler.process_event(server_url, event)
             except WebhookError as err:
+                self.logger.error("An error occurred while processing event.")
+                response = WebhookResponse(str(err))
+                resp.body = json.dumps(response.error)
+                resp.status = falcon.HTTP_200
+            except Exception as err:
+                self.logger.error("An unexpected error occurred while processing event.")
                 response = WebhookResponse(str(err))
                 resp.body = json.dumps(response.error)
                 resp.status = falcon.HTTP_200
@@ -223,13 +229,14 @@ class WebhookEventHandler:
         unquoted_event = unquote(event)
 
         try:
-            decoded_events = json.loads(unquoted_event)
+            decoded_events = self._decode(unquoted_event)
         except json.JSONDecodeError as err:
+            self.logger.error(err)
             self.logger.error("Error during event decoding: invalid JSON.")
             raise RequestProcessingError("Event provided is not a valid JSON")
 
         if server_url:
-            server_url = _normalize_server_url(server_url)
+            server_url = self._normalize_server_url(server_url)
 
         for webhook_event in decoded_events:
             webhook_event["server_url"] = server_url
@@ -238,21 +245,24 @@ class WebhookEventHandler:
                 webhook_event = map_webhook_event(webhook_event)
             except Exception as err:
                 webhook_event = None
-                raise err
 
-            if(webhook_event):
+            if webhook_event:
                 try:
                     self.publisher.publish(webhook_event, channel=self.channel)
                 except PublishError as err:
                     self.logger.error("Something went wrong while publishing.")
                     continue
+            else:
+                self.logger.warn("Not publishing event from '{}'".format(server_url))
 
+    def _decode(self, event):
+        return json.loads(event)
 
-def _normalize_server_url(server_url):
-    """ Naive approach for sanitizing URLs."""
-    server_url = server_url.strip()
+    def _normalize_server_url(self, server_url):
+        """ Naive approach for sanitizing URLs."""
+        server_url = server_url.strip()
 
-    if not server_url.startswith(("http://", "https://")):
-        server_url = "https://" + server_url
+        if not server_url.startswith(("http://", "https://")):
+            server_url = "https://" + server_url
 
-    return server_url
+        return server_url
