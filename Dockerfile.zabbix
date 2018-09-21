@@ -23,7 +23,6 @@ RUN apk update && apk add postgresql-libs libpq
 COPY --from=builder /install /usr/local
 
 COPY ./config/default.json /usr/src/mconf-aggr/config/default.json
-COPY ./config/config.json /usr/src/mconf-aggr/config/config.json
 COPY ./mconf_aggr/__init__.py /usr/src/mconf-aggr/mconf_aggr/__init__.py
 COPY ./mconf_aggr/aggregator/ /usr/src/mconf-aggr/mconf_aggr/aggregator/
 COPY ./mconf_aggr/zabbix/ /usr/src/mconf-aggr/mconf_aggr/zabbix/
@@ -31,4 +30,14 @@ COPY ./main_zabbix.py /usr/src/mconf-aggr/main_zabbix.py
 
 WORKDIR /usr/src/mconf-aggr/
 
-CMD ["python", "main_zabbix.py", "-c", "config/config.json"]
+COPY ./config/config_zabbix.json.tmpl ./config/config_zabbix.json.tmpl
+
+RUN apk add --no-cache openssl
+
+ENV DOCKERIZE_VERSION v0.6.1
+
+RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+&& tar -C /usr/local/bin -xzvf dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
+&& rm dockerize-alpine-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+
+CMD dockerize -template ./config/config_zabbix.json.tmpl:./config/config.json python main_zabbix.py -c config/config.json

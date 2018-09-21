@@ -1,0 +1,34 @@
+version: "3"
+services:
+  mconf-aggr-webhook:
+    image: ${IMAGE_NAME}:${MCONF_AGGR_WEBHOOK_IMAGE_VERSION}
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "8000:8000"
+    networks:
+      - mconf-aggr-net
+    env_file:
+      - ${MCONF_AGGR_WEBHOOK_ENV_FILE}
+  mconf-aggr-zabbix:
+    image: ${IMAGE_NAME}:${MCONF_AGGR_ZABBIX_IMAGE_VERSION}
+    deploy:
+      replicas: 0
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+    networks:
+      - mconf-aggr-net
+    env_file:
+      - ${MCONF_AGGR_ZABBIX_ENV_FILE}
+networks:
+  mconf-aggr-net:

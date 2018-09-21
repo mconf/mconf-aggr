@@ -9,7 +9,8 @@ MAJOR_VERSION?=$(shell cat .version | cut -d '.' -f 1)
 STAGE_VERSION?=$(shell cat .version | sed -n -r "s/[^-]*-(.+)$$/\1/p")
 REVISION?=$(shell git rev-parse --short HEAD)
 IMAGE_NAME=$(DOCKER_USERNAME)/$(REPOSITORY)
-LOCAL_TAG=$(APP)-$(FULL_VERSION)-$(REVISION)
+IMAGE_VERSION=$(FULL_VERSION)-$(REVISION)
+LOCAL_TAG=$(APP)-$(IMAGE_VERSION)
 
 ifndef APP
 $(error APP variable is not set)
@@ -17,6 +18,9 @@ endif
 
 run:
 	python main_$(APP).py -c $(CONFIG_PATH)
+
+start:
+	IMAGE_NAME=$(IMAGE_NAME) MCONF_AGGR_WEBHOOK_IMAGE_VERSION=webhook-$(IMAGE_VERSION) MCONF_AGGR_ZABBIX_IMAGE_VERSION=zabbix-$(IMAGE_VERSION) docker-compose -f production.yml up
 
 docker-build:
 	docker build -f Dockerfile.$(APP) -t $(IMAGE_NAME):$(LOCAL_TAG) .

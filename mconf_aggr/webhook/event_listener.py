@@ -170,7 +170,8 @@ class AuthMiddleware:
                 )
 
     def _token_is_valid(self, host, token):
-        tokens = cfg.config['webhook']['auth']['tokens']
+        tokens_str = cfg.config['webhook']['auth']['tokens']
+        tokens = json.loads(tokens_str)
 
         try:
             valid_token = tokens[host]
