@@ -1,7 +1,7 @@
 AGGR_PATH=$(shell pwd)
 CONFIG_PATH=$(AGGR_PATH)/config/config.json
 IMAGE_WORKDIR=/usr/src/mconf-aggr
-DOCKER_USERNAME?=mconftec
+DOCKER_USERNAME?=mconf
 REPOSITORY?=mconf-aggr
 FULL_VERSION?=$(shell cat .version)
 NUMBER_VERSION?=$(shell cat .version | cut -d '-' -f 1)
@@ -19,11 +19,24 @@ endif
 run:
 	python main_$(APP).py -c $(CONFIG_PATH)
 
+up:
+	IMAGE_NAME=$(IMAGE_NAME) \
+	MCONF_AGGR_WEBHOOK_IMAGE_VERSION=webhook-$(IMAGE_VERSION) \
+	MCONF_AGGR_ZABBIX_IMAGE_VERSION=zabbix-$(IMAGE_VERSION) \
+	docker-compose -f production.yml up
+
 start:
-	IMAGE_NAME=$(IMAGE_NAME) MCONF_AGGR_WEBHOOK_IMAGE_VERSION=webhook-$(IMAGE_VERSION) MCONF_AGGR_ZABBIX_IMAGE_VERSION=zabbix-$(IMAGE_VERSION) docker-compose -f production.yml up
+	docker-compose -f production.yml start ${SERVICE}
+
+restart:
+	docker-compose -f production.yml restart ${SERVICE}
+
+stop:
+	docker-compose -f production.yml stop ${SERVICE}
 
 docker-build:
-	docker build -f Dockerfile.$(APP) -t $(IMAGE_NAME):$(LOCAL_TAG) .
+	docker build -f Dockerfile.dockerize.$(APP) -t $(IMAGE_NAME):$(LOCAL_TAG) .
+	docker image rm `docker images -f dangling=true -a -q`
 
 docker-run:
 	docker run --rm -v $(CONFIG_PATH):$(IMAGE_WORKDIR)/config/config.json -ti $(IMAGE_NAME):$(LOCAL_TAG)
@@ -31,7 +44,7 @@ docker-run:
 docker-run-dev:
 	docker run --rm -v $(CONFIG_PATH):$(IMAGE_WORKDIR)/config/config.json -v $(AGGR_PATH):$(IMAGE_WORKDIR)/ --env AGGR_APP=$(AGGR_APP) $(EXTRA_OPTS) -ti $(IMAGE_NAME):$(LOCAL_TAG)
 
-docker-tag: docker-build
+docker-tag:
 	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-$(NUMBER_VERSION)
 	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-$(MAJOR_VERSION)
 	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-$(REVISION)
@@ -43,7 +56,7 @@ docker-push: docker-tag
 	docker push $(IMAGE_NAME):$(APP)-$(REVISION)
 	docker push $(IMAGE_NAME):$(APP)-latest
 
-docker-tag-unstable: docker-build
+docker-tag-unstable:
 	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-$(FULL_VERSION)
 	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-$(REVISION)
 
@@ -62,6 +75,25 @@ tags:
 tags-unstable:
 	@echo "$(IMAGE_NAME):$(APP)-$(FULL_VERSION)"
 	@echo "$(IMAGE_NAME):$(APP)-$(REVISION)"
+
+.PHONY:docker-image
+docker-image:
+	@docker image ls $(IMAGE_NAME)*
+
+.PHONY:docker-rm
+docker-rm:
+	@docker image rm -f `docker image ls mconf/mconf-aggr* -q`
+
+.PHONY: docker-rm-dangling
+docker-rm-dangling:
+	@docker image rm `docker images -f dangling=true -a -q`
+
+.PHONY:docker-prune
+docker-prune:
+	@docker system prune -f
+
+.PHONY:docker-clean
+docker-clean: docker-rm-dangling docker-rm docker-prune
 
 test:
 	@python tests.py
