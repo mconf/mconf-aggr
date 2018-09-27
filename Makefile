@@ -37,6 +37,7 @@ stop:
 docker-build:
 	docker build -f Dockerfile.dockerize.$(APP) -t $(IMAGE_NAME):$(LOCAL_TAG) .
 	docker image rm `docker images -f dangling=true -a -q`
+	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-latest
 
 docker-run:
 	docker run --rm -v $(CONFIG_PATH):$(IMAGE_WORKDIR)/config/config.json -ti $(IMAGE_NAME):$(LOCAL_TAG)
