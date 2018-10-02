@@ -11,6 +11,7 @@ import falcon
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.webhook.database_handler import WebhookDataWriter
 from mconf_aggr.webhook.event_listener import WebhookEventHandler, WebhookEventListener, AuthMiddleware
+from mconf_aggr.webhook.hook_register import WebhookRegister
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
 
 
@@ -25,6 +26,13 @@ cfg.config.setup_logging()
 
 route = cfg.config['webhook']['route']
 logger = logging.getLogger(__name__)
+
+webhook_register = WebhookRegister(
+    servers=cfg.config['webhook']['auth']['tokens'],
+    callback_url=cfg.config['webhook']['callback_url'],
+)
+
+webhook_register.create_hooks()
 
 channel = "webhooks"
 webhook_writer = WebhookDataWriter()
