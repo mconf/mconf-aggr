@@ -12,7 +12,7 @@ import falcon
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
 from mconf_aggr.aggregator.utils import time_logger
-from mconf_aggr.webhook.database_handler import WebhookDataWriter
+from mconf_aggr.webhook.database_handler import WebhookDataWriter, AuthenticationHandler
 from mconf_aggr.webhook.event_mapper import map_webhook_event
 from mconf_aggr.webhook.exceptions import WebhookError, RequestProcessingError
 
@@ -170,18 +170,15 @@ class AuthMiddleware:
                 )
 
     def _token_is_valid(self, host, token):
-        tokens = cfg.config['webhook']['auth']['tokens']
+        handler = AuthenticationHandler()
 
-        try:
-            valid_token = tokens[host]
-        except KeyError as err:
-            self.logger.warn("Host '{}' not in the authorization list".format(host))
-            return False
+        db_token = handler.token(host)
 
-        expected = 'Bearer ' + valid_token
+        if db_token:
+            expected = 'Bearer ' + db_token
 
-        if(expected == token):
-            return True
+            if(expected == token):
+                return True
 
         return False
 

@@ -420,3 +420,24 @@ class UsersEvents(Base):
                 + ", external_user_id=" + str(self.external_user_id)
                 + ", meta_data=" + str(self.meta_data)
                 + ")>")
+
+
+class Servers(Base):
+    __tablename__ = "servers"
+
+    id = Column(Integer, primary_key=True)
+    guid = Column(String, unique=True)
+    institution_guid = Column(String, unique=True)
+    name = Column(String)
+    secret = Column(String)
+    ip = Column(String)
+
+    def __repr__(self):
+        return ("<Servers("
+                + "id=" + str(self.id)
+                + ", guid=" + str(self.guid)
+                + ", institution_guid=" + str(self.institution_guid)
+                + ", name=" + str(self.name)
+                + ", secret=" + str(self.secret)
+                + ", ip=" + str(self.ip)
+                + ")>")

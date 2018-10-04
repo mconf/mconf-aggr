@@ -15,7 +15,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger, create_session_scope
-from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents
+from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents, Servers
 from mconf_aggr.webhook.exceptions import WebhookDatabaseError, InvalidWebhookEventError
 
 
@@ -718,3 +718,17 @@ class WebhookDataWriter(AggregatorCallback):
             self.logger.debug(err)
 
             raise CallbackError() from err
+
+
+class AuthenticationHandler:
+    def __init__(self, logger=None):
+        self.logger = logger or logging.getLogger(__name__)
+
+    def token(self, server):
+        with session_scope() as session:
+            token = session.query(Servers.secret).filter(Servers.name == server).first()
+
+            if token:
+                token = token.secret
+
+        return token
