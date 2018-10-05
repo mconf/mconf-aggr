@@ -1,6 +1,6 @@
 {
     "zabbix": {
-        "period": "{{ .Env.MCONF_AGGR_ZABBIX_PERIOD }}",
+        "period": {{ .Env.MCONF_AGGR_ZABBIX_PERIOD }},
         "application": "{{ .Env.MCONF_AGGR_ZABBIX_APPLICATION }}",
         "servers": [
           {
