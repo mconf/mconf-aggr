@@ -137,25 +137,38 @@ class ServersPool:
         except:
             self.logger.warn("Invalid server {} to remove.".format(server))
 
-    def connect(self):
+    def connect(self, max_retries=3):
         """Connect each ZabbixServer of the pool.
 
         If a exception occurs while connecting to a given ZabbixServer,
         this server is removed from the pool with no retry.
         """
         self.logger.info("Connecting to servers.")
-        failed_servers = []
-        for server in self.servers:
-            try:
-                server.connect()
-            except ZabbixLoginError:
-                self.logger.warn(
-                    "Login to server {} has failed. Removing it from server pool."
-                    .format(server)
-                )
-                failed_servers.append(server)
+        trying_servers = self.servers.copy()
+        retries = 1
+        while retries <= max_retries and trying_servers:
+            self.logger.debug(trying_servers)
+            self.logger.warn(f"Retrying to connect to servers: {retries}")
+            success_servers = []
+            for server in trying_servers:
+                if not server.connected:
+                    try:
+                        server.connect()
+                    except ZabbixLoginError:
+                        self.logger.warn(f"Login to server '{server}' has failed.")
+                    except Exception as err:
+                        self.logger.debug(err)
+                    else:
+                        success_servers.append(server)
 
-        for failed_server in failed_servers:
+            for server in success_servers:
+                if server in trying_servers:
+                    trying_servers.remove(server)
+
+            retries += 1
+
+        self.logger.warn("Some Zabbix servers were not able to connect.")
+        for failed_server in trying_servers:
             self.remove_server(failed_server)
 
     def close(self):
@@ -328,6 +341,10 @@ class ZabbixServer:
                     self._ok = True
 
         return {self.name: results}
+
+    @property
+    def connected(self):
+        return self._ok
 
     def __repr__(self):
         return "{!s}(url={!r})".format(self.__class__.__name__, self.url)

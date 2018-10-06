@@ -45,14 +45,15 @@ class TestServersPool(unittest.TestCase):
         servers = copy.copy(self.pool.servers)
 
         failed_servers = [4, 5, 6, 8]
+        success_servers = [i for i in range(n_servers) if i not in failed_servers]
+
+        for server in servers:
+            server.connected = False
 
         for i in failed_servers:
             servers[i].connect = mock.Mock(side_effect=ZabbixLoginError)
 
         self.pool.connect()
-
-        for i in failed_servers:
-            self.assertNotIn(servers[i], self.pool.servers)
 
         self.assertEqual(len(self.pool.servers), n_servers-len(failed_servers))
 
@@ -69,3 +70,9 @@ class TestServersPool(unittest.TestCase):
         servers_mock = [mock.Mock() for _ in range(n_servers)]
         for server_mock in servers_mock:
             self.pool.add_server(server_mock)
+
+
+class ZabbixServerMock:
+    def connect_mock(self):
+        print("aqui============================================")
+        self._ok = True
