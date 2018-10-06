@@ -16,10 +16,15 @@ If no suite is supplied, all is implied.""")
 CONFIG_DIR = "config"
 TESTS_DIR = "tests"
 TEST_FILE_RE = re.compile(r'\w+\_test\.py$')
+INTEGRATION_TEST_FILE_RE = re.compile(r'integration\_\w+\_test\.py$')
 
 
 def is_test_file(file):
     return os.path.isfile(file) and TEST_FILE_RE.match(file)
+
+
+def is_integration_test_file(file):
+    return os.path.isfile(file) and INTEGRATION_TEST_FILE_RE.match(file)
 
 
 def remove_ext(file):
@@ -45,7 +50,7 @@ if __name__ == '__main__':
 
     if len(sys.argv) == 1:
         modules = [remove_ext(name) for name in os.listdir(os.getcwd())
-                   if is_test_file(name)]
+                   if is_test_file(name) and not is_integration_test_file(name)]
     elif len(sys.argv) == 2:
         if is_test_file(sys.argv[1]):
             modules = [remove_ext(sys.argv[1])]
