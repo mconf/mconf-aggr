@@ -732,3 +732,16 @@ class AuthenticationHandler:
                 token = token.secret
 
         return token
+
+
+class WebhookServerHandler:
+    def __init__(self, logger=None):
+        self.logger = logger or logging.getLogger(__name__)
+
+    def servers(self):
+        servers = None
+        with session_scope() as session:
+            servers = session.query(Servers).all()
+            session.expunge_all()
+
+        return servers

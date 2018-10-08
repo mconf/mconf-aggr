@@ -5,9 +5,10 @@ import urllib.parse
 from urllib.parse import urljoin
 from xml.etree import ElementTree
 
+from mconf_aggr.webhook.database_handler import WebhookServerHandler
+
 class WebhookRegister:
     def __init__(self, servers, callback_url, get_raw=False, hook_id=None, logger=None):
-        self._servers = servers
         self._callback_url = callback_url
         self._get_raw = get_raw
         self._hook_id = hook_id
@@ -15,6 +16,13 @@ class WebhookRegister:
         self._failed_servers = []
 
         self.logger = logger or logging.getLogger(__name__)
+
+        handler = WebhookServerHandler()
+        servers = handler.servers()
+
+        self._servers = {}
+        for server in servers:
+            self._servers[server.name] = server.secret
 
     @property
     def servers(self):
@@ -76,14 +84,18 @@ class WebhookServer:
 
             raise HookCreateError from err
         else:
-            success = parse_response(r)
-
-            if success:
-                self.logger.info(f"Webhook registered successfuly to '{self._server}'.")
-            else:
+            try:
+                success = parse_response(r)
+            except WebhookAlreadyExistsError as err:
                 self.logger.info(f"Webhook registration to '{self._server}' failed.")
 
                 raise HookCreateError()
+                if success:
+                    self.logger.info(f"Webhook registered successfuly to '{self._server}'.")
+                else:
+                    self.logger.info(f"Webhook registration to '{self._server}' failed.")
+
+                    raise HookCreateError()
 
     def _build_create_hook_url(self):
         return urljoin(self._server, "bigbluebutton/api/hooks/create")
@@ -104,6 +116,9 @@ def parse_response(response):
     if response.status_code == requests.codes.ok:
         response_xml = ElementTree.fromstring(response.text)
         return_code = response_xml.find("returncode").text
+        message_key = response_xml.find("messageKey").text
+
+        if message_key == "duplicateWarning": return False
 
         return True if return_code == "SUCCESS" else False
     else:
