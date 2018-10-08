@@ -8,9 +8,9 @@ NUMBER_VERSION?=$(shell cat .version | cut -d '-' -f 1)
 MAJOR_VERSION?=$(shell cat .version | cut -d '.' -f 1)
 STAGE_VERSION?=$(shell cat .version | sed -n -r "s/[^-]*-(.+)$$/\1/p")
 REVISION?=$(shell git rev-parse --short HEAD)
-IMAGE_NAME=$(DOCKER_USERNAME)/$(REPOSITORY)
-IMAGE_VERSION=$(FULL_VERSION)-$(REVISION)
-LOCAL_TAG=$(APP)-$(IMAGE_VERSION)
+IMAGE_NAME?=$(DOCKER_USERNAME)/$(REPOSITORY)
+IMAGE_VERSION?=$(FULL_VERSION)-$(REVISION)
+LOCAL_TAG?=$(APP)-$(IMAGE_VERSION)
 
 ifndef APP
 $(error APP variable is not set)

@@ -172,6 +172,9 @@
 
         "sqlalchemy": {
             "propagate": false
+        },
+        "urllib3": {
+            "propagate": false
         }
     },
 
