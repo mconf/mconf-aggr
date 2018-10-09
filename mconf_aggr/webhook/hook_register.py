@@ -7,6 +7,16 @@ from xml.etree import ElementTree
 
 from mconf_aggr.webhook.database_handler import WebhookServerHandler
 
+
+class WebhookCreateError(Exception):
+    def __init__(self, reason="unexpected reason"):
+        self.reason = reason
+
+
+class WebhookAlreadyExistsError(Exception):
+    def __init__(self):
+        self.reason = "webhook already exists"
+
 class WebhookRegister:
     def __init__(self, servers, callback_url, get_raw=False, hook_id=None, logger=None):
         self._callback_url = callback_url
@@ -41,14 +51,14 @@ class WebhookRegister:
             inner_server = WebhookServer(server, token)
             try:
                 _ = inner_server.create_hook(self._callback_url, self._get_raw, self._hook_id)
-            except HookCreateError as err:
-                self.logger.warn(f"Webhook registration for server '{server}' failed.")
+            except WebhookCreateError as err:
+                self.logger.warn(f"Webhook registration for server '{server}' failed ({err.reason}).")
 
                 self.failed_servers.append(server)
+            except WebhookAlreadyExistsError as err:
+                self.logger.info(f"Webhook registration for server '{server}' ok (webhook already exists).")
             except Exception as err:
-                self.logger.warn(f"Webhook registration for server '{server}' failed.")
-                self.logger.warn("An exceptional error occurred when trying to register webhooks.")
-                self.logger.debug(err)
+                self.logger.warn(f"Webhook registration for server '{server}' failed (unexpected reason).")
 
                 self.failed_servers.append(server)
             else:
@@ -75,34 +85,21 @@ class WebhookServer:
         r = None
         try:
             r = requests.get(hook_url, params=params)
+            self.logger.debug(f"webhook server: '{hook_url}'\nresponse: '{r.text}'.")
         except requests.exceptions.ConnectionError as err:
-            self.logger.warn(f"Connection error with '{hook_url}'.")
-
-            raise HookCreateError from err
+            raise WebhookCreateError("connection error") from err
         except Exception as err:
-            self.logger.warn(f"An unexpected error occurred with '{hook_url}'.")
-
-            raise HookCreateError from err
+            raise WebhookCreateError(str(err)) from err
         else:
             try:
-                success = parse_response(r)
-            except WebhookAlreadyExistsError as err:
-                self.logger.info(f"Webhook registration to '{self._server}' failed.")
-
-                raise HookCreateError()
-                if success:
-                    self.logger.info(f"Webhook registered successfuly to '{self._server}'.")
-                else:
-                    self.logger.info(f"Webhook registration to '{self._server}' failed.")
-
-                    raise HookCreateError()
+                parse_response(r)
+            except (WebhookCreateError, WebhookAlreadyExistsError) as err:
+                raise err
+            except Exception as err:
+                raise WebhookCreateError()
 
     def _build_create_hook_url(self):
         return urljoin(self._server, "bigbluebutton/api/hooks/create")
-
-
-class HookCreateError(Exception):
-    pass
 
 
 def checksum(method, params, secret):
@@ -114,12 +111,21 @@ def checksum(method, params, secret):
 
 def parse_response(response):
     if response.status_code == requests.codes.ok:
-        response_xml = ElementTree.fromstring(response.text)
-        return_code = response_xml.find("returncode").text
-        message_key = response_xml.find("messageKey").text
-
-        if message_key == "duplicateWarning": return False
-
-        return True if return_code == "SUCCESS" else False
+        try:
+            response_xml = ElementTree.fromstring(response.text)
+            return_code = response_xml.find("returncode").text
+        except Exception as err:
+            raise WebhookCreateError() from err
+        else:
+            if return_code == "SUCCESS":
+                message_key = response_xml.find("messageKey").text
+                if message_key == "duplicateWarning":
+                    raise WebhookAlreadyExistsError()
+            elif return_code == "FAILED":
+                message_key = response_xml.find("messageKey").text
+                if message_key == "checksumError":
+                    raise WebhookCreateError("checksum error")
+            else:
+                raise WebhookCreateError(return_code)
     else:
-        return False
+        raise WebhookCreateError(f"status code: {response.status_code}")
