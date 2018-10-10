@@ -113,19 +113,25 @@ def parse_response(response):
     if response.status_code == requests.codes.ok:
         try:
             response_xml = ElementTree.fromstring(response.text)
-            return_code = response_xml.find("returncode").text
         except Exception as err:
             raise WebhookCreateError() from err
         else:
-            if return_code == "SUCCESS":
-                message_key = response_xml.find("messageKey").text
-                if message_key == "duplicateWarning":
-                    raise WebhookAlreadyExistsError()
+            return_code_node = response_xml.find("returncode")
+            message_key_node = response_xml.find("messageKey")
+            return_code = return_code_node.text if return_code_node is not None else None
+            message_key = message_key_node.text if message_key_node is not None else None
+
+            if return_code == "SUCCESS" and message_key == "duplicateWarning":
+                raise WebhookAlreadyExistsError()
+            elif return_code == "FAILED" and message_key == "checksumError":
+                raise WebhookCreateError("checksum error")
+            elif return_code == "FAILED" and message_key is not None:
+                raise WebhookCreateError(message_key)
             elif return_code == "FAILED":
-                message_key = response_xml.find("messageKey").text
-                if message_key == "checksumError":
-                    raise WebhookCreateError("checksum error")
-            else:
-                raise WebhookCreateError(return_code)
+                raise WebhookCreateError()
+            elif return_code != "SUCCESS":
+                raise WebhookCreateError(return_code.text)
+            elif not return_code and not message_key:
+                raise WebhookCreateError()
     else:
         raise WebhookCreateError(f"status code: {response.status_code}")
