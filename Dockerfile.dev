@@ -1,14 +1,28 @@
-FROM python:3.6
+FROM python:3.6-alpine
 
-ADD . /usr/src/mconf-aggr/
-
-RUN chmod 0544 /usr/src/mconf-aggr/start.sh
-
-RUN pip install -r /usr/src/mconf-aggr/requirements_webhook.txt --default-timeout=100
-
-RUN pip install -r /usr/src/mconf-aggr/requirements_zabbix.txt --default-timeout=100
+RUN apk update && \
+    apk add postgresql-libs && \
+    apk add --virtual .build-deps gcc musl-dev postgresql-dev
 
 WORKDIR /usr/src/mconf-aggr/
+
+COPY ./requirements_webhook.txt /usr/src/mconf-aggr/requirements_webhook.txt
+COPY ./requirements_zabbix.txt /usr/src/mconf-aggr/requirements_zabbix.txt
+RUN pip install -r /usr/src/mconf-aggr/requirements_webhook.txt --default-timeout=100
+RUN pip install -r /usr/src/mconf-aggr/requirements_zabbix.txt --default-timeout=100
+
+COPY ./start.sh /usr/src/mconf-aggr/start.sh
+RUN chmod 0544 /usr/src/mconf-aggr/start.sh
+
+COPY ./config/default.json /usr/src/mconf-aggr/config/default.json
+COPY ./config/config.json /usr/src/mconf-aggr/config/config.json
+COPY ./config/logging.json /usr/src/mconf-aggr/config/logging.json
+COPY ./mconf_aggr/__init__.py /usr/src/mconf-aggr/mconf_aggr/__init__.py
+COPY ./mconf_aggr/aggregator/ /usr/src/mconf-aggr/mconf_aggr/aggregator/
+COPY ./mconf_aggr/webhook/ /usr/src/mconf-aggr/mconf_aggr/webhook/
+COPY ./mconf_aggr/zabbix/ /usr/src/mconf-aggr/mconf_aggr/zabbix/
+COPY ./main_webhook.py /usr/src/mconf-aggr/main_webhook.py
+COPY ./main_zabbix.py /usr/src/mconf-aggr/main_zabbix.py
 
 EXPOSE 8000
 

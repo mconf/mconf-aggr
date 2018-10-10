@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 if [ -z ${AGGR_APP} ]; then
     exit 1
