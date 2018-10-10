@@ -1,6 +1,7 @@
 AGGR_PATH=$(shell pwd)
-CONFIG_PATH=$(AGGR_PATH)/config/config.json
 IMAGE_WORKDIR=/usr/src/mconf-aggr
+CONFIG_PATH=config/config.json
+LOGGING_PATH=config/logging.json
 DOCKER_USERNAME?=mconf
 REPOSITORY?=mconf-aggr
 FULL_VERSION?=$(shell cat .version)
@@ -36,14 +37,23 @@ stop:
 
 docker-build:
 	docker build -f Dockerfile.dockerize.$(APP) -t $(IMAGE_NAME):$(LOCAL_TAG) .
-	docker image rm `docker images -f dangling=true -a -q`
 	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-latest
+	docker image rm `docker images -f dangling=true -a -q`
+
+docker-build-dev:
+	docker build -f Dockerfile.dev -t $(IMAGE_NAME):dev .
+	docker tag $(IMAGE_NAME):dev $(IMAGE_NAME):dev-latest
+	docker image rm `docker images -f dangling=true -a -q`
 
 docker-run:
 	docker run --rm -v $(CONFIG_PATH):$(IMAGE_WORKDIR)/config/config.json -ti $(IMAGE_NAME):$(LOCAL_TAG)
 
 docker-run-dev:
-	docker run --rm -v $(CONFIG_PATH):$(IMAGE_WORKDIR)/config/config.json -v $(AGGR_PATH):$(IMAGE_WORKDIR)/ --env AGGR_APP=$(AGGR_APP) $(EXTRA_OPTS) -ti $(IMAGE_NAME):$(LOCAL_TAG)
+	docker run --rm \
+	-v $(AGGR_PATH)/$(CONFIG_PATH):$(IMAGE_WORKDIR)/$(CONFIG_PATH) \
+	-v $(AGGR_PATH)/$(LOGGING_PATH):$(IMAGE_WORKDIR)/$(LOGGING_PATH) \
+	-v $(AGGR_PATH):$(IMAGE_WORKDIR)/ \
+	--env AGGR_APP=$(APP) $(EXTRA_OPTS) -ti $(IMAGE_NAME):dev-latest
 
 docker-tag:
 	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-$(NUMBER_VERSION)
@@ -80,6 +90,11 @@ tags-unstable:
 .PHONY:docker-image
 docker-image:
 	@docker image ls $(IMAGE_NAME)*
+
+.PHONY:docker-container-rm
+docker-container-rm:
+	@docker container stop `docker container ls -a -q`
+	@docker container rm `docker container ls -a -q`
 
 .PHONY:docker-rm
 docker-rm:

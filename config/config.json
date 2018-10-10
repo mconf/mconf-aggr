@@ -24,6 +24,7 @@
         }
     },
     "webhook": {
+        "callback_url": "my-callback-server.com",
         "database": {
             "user": "mconf",
             "password": "postgres",
@@ -32,10 +33,7 @@
         },
         "route": "/",
         "auth": {
-            "required": true,
-            "tokens": {
-                "localhost": "my-authorization-token"
-            }
+            "required": true
         }
     }
 }

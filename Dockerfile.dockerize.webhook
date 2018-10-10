@@ -23,6 +23,7 @@ RUN apk update && apk add postgresql-libs libpq
 COPY --from=builder /install /usr/local
 
 COPY ./config/default.json /usr/src/mconf-aggr/config/default.json
+COPY ./config/logging.json /usr/src/mconf-aggr/config/logging.json
 COPY ./mconf_aggr/__init__.py /usr/src/mconf-aggr/mconf_aggr/__init__.py
 COPY ./mconf_aggr/aggregator/ /usr/src/mconf-aggr/mconf_aggr/aggregator/
 COPY ./mconf_aggr/webhook/ /usr/src/mconf-aggr/mconf_aggr/webhook/

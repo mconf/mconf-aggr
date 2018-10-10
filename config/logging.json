@@ -13,116 +13,6 @@
             "level": "DEBUG",
             "formatter": "simple",
             "stream": "ext://sys.stdout"
-        },
-
-        "debug_file_handler": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "DEBUG",
-            "formatter": "simple",
-            "filename": "log/debug.log",
-            "maxBytes": 10485760,
-            "backupCount": 20,
-            "encoding": "utf8"
-        },
-
-        "info_file_handler": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "INFO",
-            "formatter": "simple",
-            "filename": "log/info.log",
-            "maxBytes": 10485760,
-            "backupCount": 20,
-            "encoding": "utf8"
-        },
-
-        "warn_file_handler": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "WARN",
-            "formatter": "simple",
-            "filename": "log/warning.log",
-            "maxBytes": 10485760,
-            "backupCount": 20,
-            "encoding": "utf8"
-        },
-
-        "error_file_handler": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "ERROR",
-            "formatter": "simple",
-            "filename": "log/error.log",
-            "maxBytes": 10485760,
-            "backupCount": 20,
-            "encoding": "utf8"
-        },
-
-        "critical_file_handler": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "CRITICAL",
-            "formatter": "simple",
-            "filename": "log/critical.log",
-            "maxBytes": 10485760,
-            "backupCount": 20,
-            "encoding": "utf8"
-        },
-
-        "zabbix_debug_file_handler": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "DEBUG",
-            "formatter": "simple",
-            "filename": "log/zabbix_debug.log",
-            "maxBytes": 10485760,
-            "backupCount": 20,
-            "encoding": "utf8"
-        },
-
-        "zabbix_info_file_handler": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "INFO",
-            "formatter": "simple",
-            "filename": "log/zabbix_info.log",
-            "maxBytes": 10485760,
-            "backupCount": 20,
-            "encoding": "utf8"
-        },
-
-        "webhook_op_info_file_handler": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "INFO",
-            "formatter": "simple",
-            "filename": "log/evt_list_op_info.log",
-            "maxBytes": 10485760,
-            "backupCount": 20,
-            "encoding": "utf8"
-        },
-
-        "webhook_op_debug_file_handler": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "DEBUG",
-            "formatter": "simple",
-            "filename": "log/evt_list_op_debug.log",
-            "maxBytes": 10485760,
-            "backupCount": 20,
-            "encoding": "utf8"
-        },
-
-        "webhook_info_file_handler": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "INFO",
-            "formatter": "simple",
-            "filename": "log/evt_list_info.log",
-            "maxBytes": 10485760,
-            "backupCount": 20,
-            "encoding": "utf8"
-        },
-
-        "webhook_debug_file_handler": {
-            "class": "logging.handlers.RotatingFileHandler",
-            "level": "DEBUG",
-            "formatter": "simple",
-            "filename": "log/evt_list_debug.log",
-            "maxBytes": 10485760,
-            "backupCount": 20,
-            "encoding": "utf8"
         }
     },
 
@@ -130,8 +20,7 @@
         "mconf_aggr.aggregator": {
             "level": "DEBUG",
             "handlers": [
-                "console",
-                "debug_file_handler"
+                "console"
             ],
             "propagate": false
         },
@@ -139,9 +28,7 @@
         "mconf_aggr.zabbix.zabbix": {
             "level": "DEBUG",
             "handlers": [
-                "console",
-                "zabbix_debug_file_handler",
-                "zabbix_info_file_handler"
+                "console"
             ],
             "propagate": false
         },
@@ -149,9 +36,7 @@
         "mconf_aggr.webhook.db_operations": {
             "level": "DEBUG",
             "handlers": [
-                "console",
-                "webhook_op_debug_file_handler",
-                "webhook_op_info_file_handler"
+                "console"
             ],
             "propagate": false
         },
@@ -159,9 +44,7 @@
         "mconf_aggr.webhook.event_listener": {
             "level": "DEBUG",
             "handlers": [
-                "console",
-                "webhook_debug_file_handler",
-                "webhook_info_file_handler"
+                "console"
             ],
             "propagate": false
         },
@@ -179,14 +62,9 @@
     },
 
     "root": {
-        "level": "DEBUG",
+        "level": "INFO",
         "handlers": [
-            "console",
-            "debug_file_handler",
-            "info_file_handler",
-            "warn_file_handler",
-            "error_file_handler",
-            "critical_file_handler"
+            "console"
         ]
     }
 }
