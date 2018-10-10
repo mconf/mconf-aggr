@@ -53,6 +53,7 @@ docker-run-dev:
 	-v $(AGGR_PATH)/$(CONFIG_PATH):$(IMAGE_WORKDIR)/$(CONFIG_PATH) \
 	-v $(AGGR_PATH)/$(LOGGING_PATH):$(IMAGE_WORKDIR)/$(LOGGING_PATH) \
 	-v $(AGGR_PATH):$(IMAGE_WORKDIR)/ \
+	-p 8000:8000 \
 	--env AGGR_APP=$(APP) $(EXTRA_OPTS) -ti $(IMAGE_NAME):dev-latest
 
 docker-tag:
