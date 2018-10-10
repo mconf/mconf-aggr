@@ -145,6 +145,7 @@ class AuthMiddleware:
                     "Provide a valid domain as part of the request"
                 )
 
+            server_url = _normalize_server_url(server_url)
             token = req.get_header("Authorization")
             www_authentication = ["Bearer realm=\"mconf-aggregator\""]
 
@@ -233,7 +234,7 @@ class WebhookEventHandler:
             raise RequestProcessingError("Event provided is not a valid JSON")
 
         if server_url:
-            server_url = self._normalize_server_url(server_url)
+            server_url = _normalize_server_url(server_url)
 
         for webhook_event in decoded_events:
             webhook_event["server_url"] = server_url
@@ -255,11 +256,11 @@ class WebhookEventHandler:
     def _decode(self, event):
         return json.loads(event)
 
-    def _normalize_server_url(self, server_url):
-        """ Naive approach for sanitizing URLs."""
-        server_url = server_url.strip()
+def _normalize_server_url(server_url):
+    """ Naive approach for sanitizing URLs."""
+    server_url = server_url.strip()
 
-        if not server_url.startswith(("http://", "https://")):
-            server_url = "https://" + server_url
+    if not server_url.startswith(("http://", "https://")):
+        server_url = "https://" + server_url
 
-        return server_url
+    return server_url
