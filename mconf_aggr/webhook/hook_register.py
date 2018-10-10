@@ -18,7 +18,7 @@ class WebhookAlreadyExistsError(Exception):
         self.reason = "webhook already exists"
 
 class WebhookRegister:
-    def __init__(self, servers, callback_url, get_raw=False, hook_id=None, logger=None):
+    def __init__(self, callback_url, servers=None, get_raw=False, hook_id=None, logger=None):
         self._callback_url = callback_url
         self._get_raw = get_raw
         self._hook_id = hook_id
@@ -27,12 +27,15 @@ class WebhookRegister:
 
         self.logger = logger or logging.getLogger(__name__)
 
-        handler = WebhookServerHandler()
-        servers = handler.servers()
+        if servers:
+            self._servers = servers
+        else:
+            handler = WebhookServerHandler()
+            servers = handler.servers()
 
-        self._servers = {}
-        for server in servers:
-            self._servers[server.name] = server.secret
+            self._servers = {}
+            for server in servers:
+                self._servers[server.name] = server.secret
 
     @property
     def servers(self):
