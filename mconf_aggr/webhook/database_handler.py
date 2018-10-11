@@ -721,27 +721,68 @@ class WebhookDataWriter(AggregatorCallback):
 
 
 class AuthenticationHandler:
+    """Provide a way to get server data from database.
+    """
     def __init__(self, logger=None):
+        """Constructor of the `AuthenticationHandler`.
+
+        Parameters
+        ----------
+        logger : logging.Logger
+            If not supplied, it will instantiate a new logger from __name__.
+        """
         self.logger = logger or logging.getLogger(__name__)
 
     def token(self, server):
+        """Get a token (shared secret) for a given server in the database.
+
+        Parameters
+        ----------
+        server : str
+            Server for which it should get a token from database.
+
+        Returns
+        -------
+        token : str
+            Token of the server as retrieved from database.
+        """
         with session_scope() as session:
             token = session.query(Servers.secret).filter(Servers.name == server).first()
 
             if token:
+                # If it found a row for the given server, extract its secret column.
                 token = token.secret
 
         return token
 
 
 class WebhookServerHandler:
+    """Provide a way to get all available servers from database.
+    """
     def __init__(self, logger=None):
+        """Constructor of the `WebhookServerHandler`.
+
+        Parameters
+        ----------
+        logger : logging.Logger
+            If not supplied, it will instantiate a new logger from __name__.
+        """
         self.logger = logger or logging.getLogger(__name__)
 
     def servers(self):
+        """Get all available servers from database.
+
+        Returns
+        -------
+        servers : Servers.
+            The list of all available servers from database.
+        """
         servers = None
         with session_scope() as session:
             servers = session.query(Servers).all()
+
+            # Since it returns Servers objects used by the database, we need
+            # to detach the objects returned from the database's session.
             session.expunge_all()
 
         return servers

@@ -28,7 +28,7 @@ status_enum = Enum(*STATUS, name="status")
 
 
 class Meetings(Base):
-    """Table Meetings in the database.
+    """Table meetings in the database.
 
     Each row in this table represents an information about the attendees of a meeting,
     retrieved from the webhooks.
@@ -114,7 +114,7 @@ class Meetings(Base):
 
 
 class MeetingsEvents(Base):
-    """Table MeetingsEvents in the database.
+    """Table meetings_events in the database.
 
     Each row in the table represents an information about a meeting, retrieve
     from the webhooks.
@@ -125,9 +125,9 @@ class MeetingsEvents(Base):
     id : Column of type Integer
         Primary key. Identifier of the table.
     shared_secret_guid : Column of type String
-        Shared Secret GUID.
+        Shared secret GUID.
     shared_secret_name : Column of type String
-        Shared Secret Name.
+        Shared secret Name.
     server_guid : Column of type String
         Server Guid.
     server_url : Column of type String
@@ -252,7 +252,7 @@ class MeetingsEvents(Base):
 
 
 class Recordings(Base):
-    """Table Recordings in the database.
+    """Table recordings in the database.
 
     Each row in this table represents information about a recording, retrieved
     from the webhooks.
@@ -355,7 +355,7 @@ class Recordings(Base):
 
 
 class UsersEvents(Base):
-    """Table UsersEvents in the database.
+    """Table users_events in the database.
 
     Each row in the table represents information about a specific user, retrieved
     from webhooks.
@@ -423,6 +423,24 @@ class UsersEvents(Base):
 
 
 class Servers(Base):
+    """Table servers in the database.
+
+    Each row in the table represents information about a specific server.
+    It inherits from Base - a base class to represent tables by SQLAlchemy.
+
+    Attributes
+    ----------
+    id : Column of type Integer
+        Primary key. Identifier of the table.
+    guid : Column of type String
+        Server Guid.
+    institution_guid : Column of type String
+        Institution GUID.
+    secret : Column of type String
+        Shared secret.
+    ip : Column of type String
+        Server IP.
+    """
     __tablename__ = "servers"
 
     id = Column(Integer, primary_key=True)

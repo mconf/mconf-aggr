@@ -27,10 +27,10 @@ class WebhookEventListener:
 
     This class is passed to falcon.API to handle requests made to itself.
     This class might have more methods if needed, on the format on_*.
-    It could treat POST, GET, PUT and DELETE requests as well.
+    It could handle POST, GET, PUT and DELETE requests as well.
     """
     def __init__(self, event_handler, logger=None):
-        """Constructor of the WebhookEventListener
+        """Constructor of the WebhookEventListener.
 
         Parameters
         ----------
@@ -42,9 +42,14 @@ class WebhookEventListener:
         self.logger = logger or logging.getLogger(__name__)
 
     def on_post(self, req, resp):
-        """Handles POST requests.
+        """Handle POST requests.
 
-        After receiving a POST call the event_handler to treat the received message.
+        After receiving a POST call the event_handler to handle the received message.
+
+        Parameters
+        ----------
+        req : falcon.Request
+        resp : falcon.Response
         """
         with time_logger(self.logger.debug,
                          "Processing webhook event took {elapsed}s."):
@@ -53,6 +58,8 @@ class WebhookEventListener:
 
             self.logger.info("Webhook event received from '{}' (last hop: '{}').".format(server_url, req.host))
 
+            # Always responds with HTTP status code 200 in order to prevent
+            # the sending webhook endpoint from stopping requesting.
             try:
                 self.event_handler.process_event(server_url, event)
             except WebhookError as err:
@@ -105,18 +112,20 @@ class AuthMiddleware:
     """Middleware used for authentication.
 
     This class is used directly by Falcon to authenticate incoming events.
+    It is used before the request is handled.
     """
     def process_request(self, req, resp):
         """Process the request before routing it.
 
+        If the request is in any way invalid, raise an error. Otherwise, it returns
+        normally.
+
         Parameters
         ----------
-        req : falcon.request.Request
-            Request object that will eventually be
-            routed to an on_* responder method.
-        resp : falcon.request.Response
-            Response object that will be routed to
-            the on_* responder.
+        req : falcon.Request
+            Request object that will eventually be routed to an on_* responder method.
+        resp : falcon.Response
+            Response object that will be routed to the on_* responder.
 
         Raises
         ------
@@ -125,9 +134,9 @@ class AuthMiddleware:
 
         References
         ----------
-        https://tools.ietf.org/html/rfc7235
-        http://self-issued.info/docs/draft-ietf-oauth-v2-bearer.html
-        https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/WWW-Authenticate
+        * https://tools.ietf.org/html/rfc7235
+        * http://self-issued.info/docs/draft-ietf-oauth-v2-bearer.html
+        * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/WWW-Authenticate
         """
         self.logger = logging.getLogger(__name__)
 
@@ -171,6 +180,10 @@ class AuthMiddleware:
                 )
 
     def _token_is_valid(self, host, token):
+        """Return True if it can find a token for the given host and
+        the token found, when prefixed with an authentication preamble (Bearer),
+        matches exactly the token received. Otherwise, it returns False.
+        """
         handler = AuthenticationHandler()
 
         db_token = handler.token(host)
@@ -229,13 +242,15 @@ class WebhookEventHandler:
         try:
             decoded_events = self._decode(unquoted_event)
         except json.JSONDecodeError as err:
-            self.logger.error(err)
             self.logger.error("Error during event decoding: invalid JSON.")
+            self.logger.debug(err)
             raise RequestProcessingError("Event provided is not a valid JSON")
 
         if server_url:
+            # In case the server URL does not contain a valid scheme.
             server_url = _normalize_server_url(server_url)
 
+        # We can handle more than one event at once.
         for webhook_event in decoded_events:
             webhook_event["server_url"] = server_url
             try:
@@ -261,6 +276,7 @@ def _normalize_server_url(server_url):
     server_url = server_url.strip()
 
     if not server_url.startswith(("http://", "https://")):
+        # HTTPS is the default scheme.
         server_url = "https://" + server_url
 
     return server_url
