@@ -46,7 +46,10 @@ docker-build-dev:
 	docker image rm `docker images -f dangling=true -a -q`
 
 docker-run:
-	docker run --rm -v $(CONFIG_PATH):$(IMAGE_WORKDIR)/config/config.json -ti $(IMAGE_NAME):$(LOCAL_TAG)
+	docker run --rm \
+	-v $(AGGR_PATH)/$(CONFIG_PATH):$(IMAGE_WORKDIR)/$(CONFIG_PATH) \
+	-v $(AGGR_PATH)/$(LOGGING_PATH):$(IMAGE_WORKDIR)/$(LOGGING_PATH) \
+	-ti $(IMAGE_NAME):$(LOCAL_TAG)
 
 docker-run-dev:
 	docker run --rm \
