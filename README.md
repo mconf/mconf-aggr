@@ -361,6 +361,30 @@ $ make docker-run-dev APP=webhook EXTRA_OPTS="-p 8000:8000"
 
 Note that `APP` is now important. It can be `webhook` or `zabbix`.
 
+### Dockerize
+
+In order to shorten build time, we recommend using images based on a "dockerized" base image.
+
+We use [dockerize](https://github.com/jwilder/dockerize) to generate configuration files
+from template files and environment variables in Docker containers. To do this, we need
+to install dockerize in the Docker image, a process that is time-consuming.
+
+To make build time faster, you can build new base images with dockerize already included.
+In the `dockerize/` directory, there are two Dockerfiles:
+
+* `Dockerfile.alpine.dockerize`: builds `alpine:latest-dockerize` that is `alpine:latest` with Dockerize installed.
+* `Dockerfile.python3.dockerize`: builds `python:3.6-alpine-dockerize` that is `python:3.6-alpine` with Dockerize installed.
+
+To make things easier, we provide a Makefile with the command `docker-build`. To build these
+two dockerized images, you only need to run (from `dockerize/`):
+
+```
+$ make docker-build
+```
+
+> You actually have to this to use the Makefile commands below since it is configured to
+build the final images from the dockerized base images.
+
 ## Makefile
 
 Some tasks can be done using the `make` utility. The most important ones are
