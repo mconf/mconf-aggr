@@ -18,6 +18,7 @@ from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishErro
 # falcon.API instances are callable WSGI apps.
 app = falcon.API(middleware=AuthMiddleware())
 
+# Consume and merge request's contents into params.
 req_opt = app.req_options
 req_opt.auto_parse_form_urlencoded = True
 
@@ -45,10 +46,10 @@ hook = WebhookEventListener(event_handler)
 
 app.add_route(route, hook)
 
+# Auto-register webhook callback to servers.
 webhook_register = WebhookRegister(
     callback_url=cfg.config['webhook']['callback_url']
 )
-
 webhook_register.create_hooks()
 
 aggregator.start()
