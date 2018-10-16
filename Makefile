@@ -49,6 +49,7 @@ docker-run:
 	docker run --rm \
 	-v $(AGGR_PATH)/$(CONFIG_PATH):$(IMAGE_WORKDIR)/$(CONFIG_PATH) \
 	-v $(AGGR_PATH)/$(LOGGING_PATH):$(IMAGE_WORKDIR)/$(LOGGING_PATH) \
+	--env-file=envs/$(APP)-env-file.env \
 	-ti $(IMAGE_NAME):$(LOCAL_TAG)
 
 docker-run-dev:
