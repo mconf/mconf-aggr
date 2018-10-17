@@ -15,7 +15,7 @@ from sqlalchemy.orm.attributes import flag_modified
 from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger, create_session_scope
-from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents, Servers
+from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents, Servers, SharedSecrets
 from mconf_aggr.webhook.exceptions import WebhookDatabaseError, InvalidWebhookEventError
 
 
@@ -53,6 +53,21 @@ class DatabaseEventHandler:
 class MeetingCreatedHandler(DatabaseEventHandler):
     """This class handles meeting-created events.
     """
+    class MeetingCreatedMetadata:
+        def __init__(self, metadata, default_value="", logger=None):
+            self._metadata = metadata
+            self._default_value = default_value
+            self._logger = logger or logging.getLogger(__name__)
+
+        def __getattr__(self, name):
+            field = name.replace("_", "-")
+            value = None
+            try:
+                value = self._metadata.get(field, self._default_value)
+            except AttributeError as err:
+                value = self._default_value
+
+            return value
 
     def handle(self, event):
         """Implementation of abstract handle method from DatabaseEventHandler.
@@ -72,6 +87,31 @@ class MeetingCreatedHandler(DatabaseEventHandler):
         new_meetings_events = MeetingsEvents(**event._asdict())
         new_meetings_events.has_forcibly_ended = False
         new_meetings_events.unique_users = 0
+
+        metadata = self.MeetingCreatedMetadata(event.meta_data, None, self.logger)
+        new_meetings_events.shared_secret_guid = metadata.mconf_shared_secret_guid
+        new_meetings_events.shared_secret_name = metadata.mconf_shared_secret_name
+        new_meetings_events.server_guid = metadata.mconf_server_guid
+        new_meetings_events.server_url = metadata.mconf_server_url
+        new_meetings_events.institution_guid = metadata.mconf_institution_guid
+
+        if metadata.mconf_shared_secret_guid and not metadata.mconf_shared_secret_name:
+            new_meetings_events.shared_secret_name = (
+                self.session.query(SharedSecrets)
+                .filter(SharedSecrets.guid == metadata.mconf_shared_secret_guid)
+                .first().name
+            )
+
+        if not metadata.mconf_server_guid and not metadata.mconf_server_url:
+            servers_table = (
+                self.session.query(Servers)
+                .filter(Servers.name == event.server_url)
+                .first()
+            )
+
+            new_meetings_events.server_url, new_meetings_events.server_guid = (
+                servers_table.name, servers_table.guid
+            )
 
         new_meeting = Meetings(running=False,
                                has_user_joined=False,
