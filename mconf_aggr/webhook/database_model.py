@@ -129,9 +129,11 @@ class MeetingsEvents(Base):
     shared_secret_name : Column of type String
         Shared secret Name.
     server_guid : Column of type String
-        Server Guid.
+        Server GUID.
     server_url : Column of type String
-        Url of the server the meeting is hosted.
+        URL of the server the meeting is hosted.
+    institution_guid : Column of the type String.
+        Institution GUID.
     created_at : Column of type DateTime
         Datetime of the meeting creation.
     updated_at : Column of type DateTime
@@ -198,6 +200,7 @@ class MeetingsEvents(Base):
     shared_secret_name = Column(String)
     server_guid = Column(String)
     server_url = Column(String)
+    institution_guid = Column(String)
 
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
@@ -228,6 +231,7 @@ class MeetingsEvents(Base):
                 + ", shared_secret_name=" + str(self. shared_secret_name)
                 + ", server_guid=" + str(self. server_guid)
                 + ", server_url=" + str(self.server_url)
+                + ", institution_guid=" + str(self.institution_guid)
                 + ", created_at=" + str(self.created_at)
                 + ", updated_at=" + str(self.updated_at)
                 + ", external_meeting_id=" + str(self.external_meeting_id)
@@ -433,7 +437,7 @@ class Servers(Base):
     id : Column of type Integer
         Primary key. Identifier of the table.
     guid : Column of type String
-        Server Guid.
+        Server GUID.
     institution_guid : Column of type String
         Institution GUID.
     secret : Column of type String
@@ -458,4 +462,53 @@ class Servers(Base):
                 + ", name=" + str(self.name)
                 + ", secret=" + str(self.secret)
                 + ", ip=" + str(self.ip)
+                + ")>")
+
+
+class SharedSecrets(Base):
+    """Table shared_secrets in the database.
+
+    Each row in the table represents information about a specific shared secret.
+    It inherits from Base - a base class to represent tables by SQLAlchemy.
+
+    Attributes
+    ----------
+    id : Column of type Integer
+        Primary key. Identifier of the table.
+    guid : Column of type String
+        Shared secret GUID.
+    institution_guid : Column of type String
+        Institution GUID.
+    secret : Column of type String
+        Shared secret.
+    name : Column of type String
+        Name of the shared secret.
+    scope : Column of type String
+        Scope of the shared secret.
+    created_at : Column of type DateTime
+        Datetime of the meeting creation.
+    updated_at : Column of type DateTime
+        Last datetime the meeting was updated.
+    """
+    __tablename__ = "shared_secrets"
+
+    id = Column(Integer, primary_key=True)
+    guid = Column(String, unique=True)
+    institution_guid = Column(String, unique=True)
+    name = Column(String)
+    secret = Column(String)
+    scope = Column(String)
+    created_at = Column(DateTime, default=datetime.datetime.now)
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+
+    def __repr__(self):
+        return ("<SharedSecrets("
+                + "id=" + str(self.id)
+                + ", guid=" + str(self.guid)
+                + ", institution_guid=" + str(self.institution_guid)
+                + ", name=" + str(self.name)
+                + ", secret=" + str(self.secret)
+                + ", scope=" + str(self.scope)
+                + ", created_at=" + str(self.created_at)
+                + ", updated_at=" + str(self.updated_at)
                 + ")>")
