@@ -152,7 +152,6 @@ class MeetingEndedHandler(DatabaseEventHandler):
         )
 
         if meetings_events_table:
-            #meetings_events_table = self.session.query(MeetingsEvents).get(meetings_events_table.id)
             meetings_events_table.end_time = event.end_time
 
             self.session.add(meetings_events_table)
@@ -166,7 +165,6 @@ class MeetingEndedHandler(DatabaseEventHandler):
             )
 
             if meetings_table:
-                #meetings_table = self.session.query(Meetings).get(meetings_table.id)
                 self.session.delete(meetings_table)
 
 
@@ -221,7 +219,6 @@ class UserJoinedHandler(DatabaseEventHandler):
             )
 
             if meetings_table:
-                #meetings_table = self.session.query(Meetings).get(meetings_table.id)
                 meetings_table.attendees = self._attendee_json(meetings_table.attendees, attendee)
                 self._update_meeting(meetings_table)
 
@@ -311,8 +308,6 @@ class UserLeftHandler(DatabaseEventHandler):
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
 
         if meetings_table:
-            meetings_table = self.session.query(Meetings).get(meetings_table.id)
-
             self._remove_attendee(meetings_table, user_id)
             self._update_meeting(meetings_table)
 
@@ -329,7 +324,6 @@ class UserLeftHandler(DatabaseEventHandler):
 
         if users_table:
             # Update table users_events.
-            users_table = self.session.query(UsersEvents).get(users_table.id)
             users_table.leave_time = event.leave_time
         else:
             self.logger.warn(f"No user found with internal-user-id '{user_id}'.")
@@ -372,8 +366,6 @@ class UserEventHandler(DatabaseEventHandler):
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
 
         if meetings_table:
-            meetings_table = self.session.query(Meetings).get(meetings_table.id)
-
             self._update_attendees(meetings_table.attendees, event, user_id)
             self._update_meeting(meetings_table)
 
