@@ -80,8 +80,7 @@ class MeetingCreatedHandler(DatabaseEventHandler):
         event_type = event.event_type
         event = event.event
 
-        self.logger.info("Processing meeting-created event for internal-meeting-id: '{}'."
-                        .format(event.internal_meeting_id))
+        self.logger.info(f"Processing meeting-created event for internal-meeting-id: '{event.internal_meeting_id}'.")
 
         # Create tables meetings_events and meetings.
         new_meetings_events = MeetingsEvents(**event._asdict())
@@ -99,7 +98,8 @@ class MeetingCreatedHandler(DatabaseEventHandler):
             new_meetings_events.shared_secret_name = (
                 self.session.query(SharedSecrets)
                 .filter(SharedSecrets.guid == metadata.mconf_shared_secret_guid)
-                .first().name
+                .first()
+                .name
             )
 
         if not metadata.mconf_server_guid and not metadata.mconf_server_url:
@@ -142,27 +142,31 @@ class MeetingEndedHandler(DatabaseEventHandler):
         event = event.event
 
         int_id = event.internal_meeting_id
-        self.logger.info("Processing meeting-ended event for internal-meeting-id: '{}'"
-        .format(int_id))
+        self.logger.info(f"Processing meeting-ended event for internal-meeting-id: '{int_id}'.")
 
         # Table meetings_events to be updated.
-        meetings_events_table = self.session.query(MeetingsEvents).\
-                            filter(MeetingsEvents.internal_meeting_id == int_id).first()
+        meetings_events_table = (
+            self.session.query(MeetingsEvents)
+            .filter(MeetingsEvents.internal_meeting_id == int_id)
+            .first()
+        )
 
         if meetings_events_table:
-            meetings_events_table = self.session.query(MeetingsEvents).get(meetings_events_table.id)
+            #meetings_events_table = self.session.query(MeetingsEvents).get(meetings_events_table.id)
             meetings_events_table.end_time = event.end_time
 
             self.session.add(meetings_events_table)
 
             # Table meetings to be updated.
-            meetings_table = self.session.query(Meetings).\
-                            join(Meetings.meeting_event).\
-                            filter(MeetingsEvents.internal_meeting_id == int_id).first()
+            meetings_table = (
+                self.session.query(Meetings)
+                .join(Meetings.meeting_event)
+                .filter(MeetingsEvents.internal_meeting_id == int_id)
+                .first()
+            )
 
             if meetings_table:
-                meetings_table = self.session.query(Meetings).get(meetings_table.id)
-
+                #meetings_table = self.session.query(Meetings).get(meetings_table.id)
                 self.session.delete(meetings_table)
 
 
@@ -182,8 +186,7 @@ class UserJoinedHandler(DatabaseEventHandler):
         event = event.event
 
         int_id = event.internal_meeting_id
-        self.logger.info("Processing user-joined event for internal-user-id '{}'.'"
-                    .format(event.internal_user_id))
+        self.logger.info(f"Processing user-joined event for internal-user-id '{event.internal_user_id}'.'")
 
         users_events_table = self._get_users_events(event)
 
@@ -200,20 +203,25 @@ class UserJoinedHandler(DatabaseEventHandler):
         }
 
         # Query for meetings_events to link with users_events table.
-        meetings_events_table = self.session.query(MeetingsEvents).\
-                            filter(MeetingsEvents.internal_meeting_id.match(int_id)).first()
+        meetings_events_table = (
+            self.session.query(MeetingsEvents)
+            .filter(MeetingsEvents.internal_meeting_id.match(int_id))
+            .first()
+        )
 
         if meetings_events_table:
             users_events_table.meeting_event = meetings_events_table
 
             # Table meetings to be updated.
-            meetings_table = self.session.query(Meetings).\
-                            join(Meetings.meeting_event).\
-                            filter(MeetingsEvents.internal_meeting_id == int_id).first()
+            meetings_table = (
+                self.session.query(Meetings)
+                .join(Meetings.meeting_event)
+                .filter(MeetingsEvents.internal_meeting_id == int_id)
+                .first()
+            )
 
             if meetings_table:
-                meetings_table = self.session.query(Meetings).get(meetings_table.id)
-
+                #meetings_table = self.session.query(Meetings).get(meetings_table.id)
                 meetings_table.attendees = self._attendee_json(meetings_table.attendees, attendee)
                 self._update_meeting(meetings_table)
 
@@ -224,8 +232,8 @@ class UserJoinedHandler(DatabaseEventHandler):
                 self.session.add(meetings_table)
                 self.session.flush()
             else:
-                self.logger.warn("No meeting found for user '{}'.".format(event.internal_user_id))
-                raise WebhookDatabaseError("no meeting found for user '{}'".format(event.internal_user_id))
+                self.logger.warn(f"No meeting found for user '{event.internal_user_id}'.")
+                raise WebhookDatabaseError(f"no meeting found for user '{event.internal_user_id}'")
 
             # Update unique_users in table meetings_events.
             users_joined = (
@@ -295,8 +303,7 @@ class UserLeftHandler(DatabaseEventHandler):
 
         user_id = event.internal_user_id
         int_id = event.internal_meeting_id
-        self.logger.info("Processing user-left message for internal-user-id: {} in {}"
-                        .format(user_id, int_id))
+        self.logger.info(f"Processing user-left message for internal-user-id '{user_id}' in meeting '{int_id}'.")
 
         # Table meetings to be updated.
         meetings_table = self.session.query(Meetings).\
@@ -314,7 +321,7 @@ class UserLeftHandler(DatabaseEventHandler):
 
             self.session.add(meetings_table)
         else:
-            self.logger.warn("No meeting found with internal-meeting-id '{}'".format(int_id))
+            self.logger.warn(f"No meeting found with internal-meeting-id '{int_id}'.")
 
         # Table users_events to be updated.
         users_table = self.session.query(UsersEvents).\
@@ -325,7 +332,7 @@ class UserLeftHandler(DatabaseEventHandler):
             users_table = self.session.query(UsersEvents).get(users_table.id)
             users_table.leave_time = event.leave_time
         else:
-            self.logger.warn("No user found with internal-user-id '{}'".format(user_id))
+            self.logger.warn(f"No user found with internal-user-id '{user_id}'.")
 
 
     def _remove_attendee(self, meetings_table, user_id):
@@ -357,8 +364,7 @@ class UserEventHandler(DatabaseEventHandler):
 
         user_id = event.internal_user_id
         int_id = event.internal_meeting_id
-        self.logger.info("Processing {} event for internal-user-id '{}' on meeting '{}'"
-                        .format(event.event_name, user_id, int_id))
+        self.logger.info(f"Processing {event.event_name} event for internal-user-id '{user_id}' on meeting '{int_id}'.")
 
         # Table meetings to be updated.
         meetings_table = self.session.query(Meetings).\
@@ -375,7 +381,7 @@ class UserEventHandler(DatabaseEventHandler):
 
             self.session.add(meetings_table)
         else:
-            self.logger.warn("No meeting found with internal-meeting-id '{}'".format(int_id))
+            self.logger.warn(f"No meeting found with internal-meeting-id '{int_id}'.")
 
 
     def _update_meeting(self, meetings_table):
@@ -473,8 +479,7 @@ class RapHandler(DatabaseEventHandler):
         event = event.event
 
         int_id = event.internal_meeting_id
-        self.logger.info("Processing {} event for internal-meeting-id '{}'"
-                        .format(event_type, int_id))
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
 
         records_table = (
             self.session.query(Recordings).
@@ -569,7 +574,7 @@ class DataProcessor:
         event : event_mapper.WebhookEvent
             An event to be handled and persisted into database.
         """
-        self.logger.info("Selecting event processor")
+        self.logger.info("Selecting event processor.")
 
         if(event_type == "meeting-created"):
             event_handler = MeetingCreatedHandler(self.session)
@@ -616,8 +621,8 @@ class DataProcessor:
                     "rap-post-publish-started", "rap-post-publish-ended"]):
             event_handler = RapHandler(self.session)
         else:
-            self.logger.warn("Unknown event type '{}'.".format(event_type))
-            raise InvalidWebhookEventError("unknown event type '{}'".format(event_type))
+            self.logger.warn(f"Unknown event type '{event_type}'.")
+            raise InvalidWebhookEventError(f"unknown event type '{event_type}'")
 
         return event_handler
 
@@ -686,10 +691,12 @@ class PostgresConnector:
             raise
 
     def _build_uri(self):
-        return "postgresql://{}:{}@{}/{}".format(self.config['user'],
-                                                 self.config['password'],
-                                                 self.config['host'],
-                                                 self.config['database'])
+        user = self.config['user']
+        password = self.config['password']
+        host = self.config['host']
+        database = self.config['database']
+
+        return f"postgresql://{user}:{password}@{host}/{database}"
 
 
 class WebhookDataWriter(AggregatorCallback):
