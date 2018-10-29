@@ -46,10 +46,12 @@ hook = WebhookEventListener(event_handler)
 
 app.add_route(route, hook)
 
-# Auto-register webhook callback to servers.
-webhook_register = WebhookRegister(
-    callback_url=cfg.config['webhook']['callback_url']
-)
-webhook_register.create_hooks()
+should_register = cfg.config['webhook']['should_register']
+if should_register:
+    # Auto-register webhook callback to servers.
+    webhook_register = WebhookRegister(
+        callback_url=cfg.config['webhook']['callback_url']
+    )
+    webhook_register.create_hooks()
 
 aggregator.start()

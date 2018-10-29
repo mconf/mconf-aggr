@@ -761,7 +761,7 @@ class ZabbixDataReader():
         # It iterates over all Zabbix servers reading a subset of the
         # monitored items.
         if not self.pool:
-            self.logger.warn("No servers in pool. Nothing to fetch.")
+            self.logger.debug("No servers in pool. Nothing to fetch.")
             return None
 
         self.logger.debug("Fetching data from server pool.")

@@ -1,7 +1,7 @@
 version: "3"
 services:
   mconf-aggr-webhook:
-    image: ${IMAGE_NAME}:${MCONF_AGGR_WEBHOOK_IMAGE_VERSION}
+    image: mconf/mconf-aggr:webhook-latest
     deploy:
       replicas: 1
       resources:
@@ -13,11 +13,12 @@ services:
     ports:
       - "8000:8000"
     networks:
-      - mconf-aggr-net
+      - mconf-net
     env_file:
       - ${MCONF_AGGR_WEBHOOK_ENV_FILE}
+
   mconf-aggr-zabbix:
-    image: ${IMAGE_NAME}:${MCONF_AGGR_ZABBIX_IMAGE_VERSION}
+    image: mconf/mconf-aggr:zabbix-latest
     deploy:
       replicas: 0
       resources:
@@ -27,8 +28,9 @@ services:
       restart_policy:
         condition: on-failure
     networks:
-      - mconf-aggr-net
+      - mconf-net
     env_file:
       - ${MCONF_AGGR_ZABBIX_ENV_FILE}
+
 networks:
-  mconf-aggr-net:
+  mconf-net:

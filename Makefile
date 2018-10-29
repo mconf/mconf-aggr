@@ -18,7 +18,7 @@ $(error APP variable is not set)
 endif
 
 run:
-	python main_$(APP).py -c $(CONFIG_PATH)
+	AGGR_APP=$(APP) bash start.sh
 
 up:
 	IMAGE_NAME=$(IMAGE_NAME) \
