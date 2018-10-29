@@ -80,6 +80,18 @@ docker-push-unstable: docker-tag-unstable
 	docker push $(IMAGE_NAME):$(APP)-$(FULL_VERSION)
 	docker push $(IMAGE_NAME):$(APP)-$(REVISION)
 
+docker-tag-latest:
+	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-latest
+
+docker-push-latest: docker-tag-latest
+	docker push $(IMAGE_NAME):$(APP)-latest
+
+docker-tag-staging:
+	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-staging
+
+docker-push-staging: docker-tag-staging
+		docker push $(IMAGE_NAME):$(APP)-staging
+
 .PHONY:tags
 tags:
 	@echo "$(IMAGE_NAME):$(APP)-$(NUMBER_VERSION)"
@@ -91,6 +103,10 @@ tags:
 tags-unstable:
 	@echo "$(IMAGE_NAME):$(APP)-$(FULL_VERSION)"
 	@echo "$(IMAGE_NAME):$(APP)-$(REVISION)"
+
+.PHONY:tag-staging
+tag-staging:
+	@echo "$(IMAGE_NAME):$(APP)-staging"
 
 .PHONY:docker-image
 docker-image:
