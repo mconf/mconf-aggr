@@ -1,6 +1,7 @@
 {
     "webhook": {
         "callback_url": "{{ .Env.MCONF_AGGR_WEBHOOK_CALLBACK_URL  }}",
+        "should_register": "{{ .Env.MCONF_AGGR_WEBHOOK_SHOULD_REGISTER  }}",
         "database": {
             "host": "{{ .Env.MCONF_AGGR_WEBHOOK_DATABASE_HOST }}",
             "user": "{{ .Env.MCONF_AGGR_WEBHOOK_DATABASE_USER }}",

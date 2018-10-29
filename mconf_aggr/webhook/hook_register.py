@@ -76,6 +76,7 @@ class WebhookRegister:
         return self._failed_servers
 
     def create_hooks(self):
+        self.logger.info(f"Creating hooks.")
         # Iterate over its dictionary of server_name-server_secret key-values.
         # We still use token and secret interchangeably.
         for server, token in self._servers.items():
@@ -100,6 +101,8 @@ class WebhookRegister:
                 self.logger.info(f"Webhook registration for server '{server}' ok.")
 
                 self.success_servers.append(server)
+
+        self.logger.info(f"Hooks registration done.")
 
 
 class WebhookServer:
