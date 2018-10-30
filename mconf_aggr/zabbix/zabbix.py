@@ -65,6 +65,7 @@ outside the module.
 import logging
 import reprlib
 import sqlalchemy as sa
+import time
 from contextlib import contextmanager
 from datetime import datetime
 from sqlalchemy.ext.declarative import declarative_base
@@ -148,7 +149,7 @@ class ServersPool:
         retries = 1
         while retries <= max_retries and trying_servers:
             self.logger.debug(trying_servers)
-            self.logger.warn(f"Retrying to connect to servers: {retries}")
+            self.logger.warn(f"Trying to connect to servers. Attempt {retries}.")
             success_servers = []
             for server in trying_servers:
                 if not server.connected:
@@ -167,9 +168,15 @@ class ServersPool:
 
             retries += 1
 
-        self.logger.warn("Some Zabbix servers were not able to connect.")
-        for failed_server in trying_servers:
-            self.remove_server(failed_server)
+            if trying_servers:
+                backoff_delay = 2**(retries-1)
+                self.logger.warn(f"Retrying to connect to servers in {backoff_delay}s.")
+                time.sleep(backoff_delay)
+
+        if trying_servers:
+            self.logger.warn("Some Zabbix servers were not able to connect.")
+            for failed_server in trying_servers:
+                self.remove_server(failed_server)
 
     def close(self):
         """Close connection of each ZabbixServer of the pool.
