@@ -121,7 +121,7 @@ class ServersPool:
         server : ZabbixServer
             The server to be added to the pool.
         """
-        self.logger.debug("Adding server {} to server pool.".format(server))
+        self.logger.debug(f"Adding server {server} to server pool.")
         self.servers.append(server)
 
     def remove_server(self, server):
@@ -132,11 +132,11 @@ class ServersPool:
         server : ZabbixServer
             The server to be removed from the pool.
         """
-        self.logger.info("Removing server {} from server pool.".format(server))
+        self.logger.info(f"Removing server {server} from server pool.")
         try:
             self.servers.remove(server)
         except:
-            self.logger.warn("Invalid server {} to remove.".format(server))
+            self.logger.warn(f"Invalid server {server} to remove.")
 
     def connect(self, max_retries=3):
         """Connect each ZabbixServer of the pool.
@@ -144,12 +144,16 @@ class ServersPool:
         If a exception occurs while connecting to a given ZabbixServer,
         this server is removed from the pool with no retry.
         """
-        self.logger.info("Connecting to servers.")
+        self.logger.info(f"Connecting to servers.")
         trying_servers = self.servers.copy()
         retries = 1
         while retries <= max_retries and trying_servers:
+<<<<<<< HEAD
             self.logger.debug(trying_servers)
             self.logger.warn(f"Trying to connect to servers. Attempt {retries}.")
+=======
+            self.logger.warn(f"Retrying to connect to servers: {retries}")
+>>>>>>> refactor-YmA8ThHj
             success_servers = []
             for server in trying_servers:
                 if not server.connected:
@@ -168,6 +172,7 @@ class ServersPool:
 
             retries += 1
 
+<<<<<<< HEAD
             if trying_servers:
                 backoff_delay = 2**(retries-1)
                 self.logger.warn(f"Retrying to connect to servers in {backoff_delay}s.")
@@ -177,11 +182,16 @@ class ServersPool:
             self.logger.warn("Some Zabbix servers were not able to connect.")
             for failed_server in trying_servers:
                 self.remove_server(failed_server)
+=======
+        self.logger.warn(f"Some Zabbix servers were not able to connect.")
+        for failed_server in trying_servers:
+            self.remove_server(failed_server)
+>>>>>>> refactor-YmA8ThHj
 
     def close(self):
         """Close connection of each ZabbixServer of the pool.
         """
-        self.logger.info("Closing server pool.")
+        self.logger.info(f"Closing server pool.")
         for server in self.servers:
             server.close()
 
@@ -236,24 +246,21 @@ class ZabbixServer:
 
         It tries to connect to the API by performing a regular login.
         """
-        self.logger.debug("Connecting to server {}.".format(self))
+        self.logger.debug(f"Connecting to server {self}.")
         self.connection = api.ZabbixAPI(self.url)
 
         try:
-            self.logger.debug("Login to server {}.".format(self))
+            self.logger.debug(f"Login to server {self}.")
             with time_logger(self.logger.debug,
                              "Connecting to {server} took {elapsed}s.",
                              server=self):
                 self.connection.login(self.login, self.password)
         except api.ZabbixAPIException as err:
-            self.logger.error(
-                "Something went wrong while trying to login to server {}: {}."
-                .format(self, err)
-            )
+            self.logger.error(f"Something went wrong while trying to login to server {self}: {err}.")
             self.connection = None
             self._ok = False
 
-            raise ZabbixLoginError("Cannot login to server {}.".format(self)) \
+            raise ZabbixLoginError(f"Cannot login to server {self}.") \
                 from err
         else:
             self._ok = True
@@ -263,7 +270,7 @@ class ZabbixServer:
 
         Currently, nothing must be performed in order to close the connection.
         """
-        self.logger.debug("Closing server {}.".format(self))
+        self.logger.debug(f"Closing server {self}.")
 
     def get_hosts(self, parameters):
         """Get the hosts being monitored by this Zabbix server.
@@ -313,7 +320,7 @@ class ZabbixServer:
             The host that caused the exception to be thrown is removed from the
             results.
         """
-        self.logger.debug("Fetching data from server {}.".format(self))
+        self.logger.debug(f"Fetching data from server {self}.")
         if self.connection is None:
             raise ZabbixNoConnectionError()
 
@@ -329,10 +336,7 @@ class ZabbixServer:
             except:
                 # Suppress stack trace from this exception as it logs
                 # many not so useful information.
-                self.logger.error(
-                    "Something went wrong while getting items from {}."
-                    .format(self)
-                )
+                self.logger.error(f"Something went wrong while getting items from {self}.")
 
                 # Remove the host from results.
                 # Returning None avoids it raising KeyError.
@@ -343,8 +347,7 @@ class ZabbixServer:
                 raise
             else:
                 if not self._ok:
-                    self.logger.info("Connection to server {} restored."
-                                     .format(self))
+                    self.logger.info(f"Connection to server {self} restored.")
                     self._ok = True
 
         return {self.name: results}
@@ -466,10 +469,7 @@ class ServerMetricDAO:
             current value.
         """
         if data['server_name'] not in server_cache:
-            self.logger.debug(
-                "Server {} not found in server cache."
-                .format(data['server_name'])
-            )
+            self.logger.debug(f"Server {data['server_name']} not found in server cache.")
 
             server_id = self.session.query(ServerTable) \
                             .filter(ServerTable.name == data['server_name'])\
@@ -477,10 +477,7 @@ class ServerMetricDAO:
 
             server_cache[data['server_name']] = server_id
         else:
-            self.logger.debug(
-                "Server {} found in server cache."
-                .format(data['server_name'])
-            )
+            self.logger.debug(f"Server {data['server_name']} found in server cache.")
 
             server_id = server_cache[data['server_name']]
 
@@ -536,7 +533,7 @@ class PostgresConnector:
         It is responsible for creating an engine for the URI provided and
         configure the session.
         """
-        self.logger.debug("Creating new database session.")
+        self.logger.debug(f"Creating new database session.")
         engine = sa.create_engine(self.database_uri)
         Session.configure(bind=engine)
 
@@ -545,7 +542,7 @@ class PostgresConnector:
 
         It currently does nothing.
         """
-        self.logger.info("Closing connection to PostgreSQL. Nothing to do.")
+        self.logger.info(f"Closing connection to PostgreSQL. Nothing to do.")
         pass
 
     def update(self, data):
@@ -567,10 +564,12 @@ class PostgresConnector:
             raise
 
     def _build_uri(self):
-        return "postgresql+psycopg2://{}:{}@{}/{}".format(self.config['user'],
-                                                          self.config['password'],
-                                                          self.config['host'],
-                                                          self.config['database'])
+        user = self.config['user']
+        password = self.config['password']
+        host = self.config['host']
+        database = self.config['database']
+
+        return f"postgresql+psycopg2://{user}:{password}@{host}/{database}"
 
     def __repr__(self):
         return "{!s}(database_uri={!r})".format(self.__class__.__name__,
@@ -628,7 +627,7 @@ class ZabbixDataWriter(AggregatorCallback):
             try:
                 self.connector.update(metric)
             except sa.exc.OperationalError as err:
-                self.logger.error("Operational error on database.")
+                self.logger.error(f"Operational error on database.")
 
                 raise CallbackError() from err
 
@@ -691,7 +690,7 @@ class ZabbixDataReader():
 
         If a Zabbix server fails to get ready, it is removed from the pool.
         """
-        self.logger.info("Setting up ZabbixDataReader.")
+        self.logger.info(f"Setting up ZabbixDataReader.")
         # Connect to the Zabbix servers of the pool.
         self.connect()
 
@@ -703,15 +702,10 @@ class ZabbixDataReader():
             try:
                 server.get_hosts(parameters)
             except ZabbixNoConnectionError:
-                self.logger.exception(
-                    "No connection to server {}.".format(server)
-                )
+                self.logger.exception(f"No connection to server {server}.")
                 failed_servers.append(server)
             except Exception:
-                self.logger.error(
-                    "Something went wrong while getting hosts from server {}."
-                    .format(server)
-                )
+                self.logger.error(f"Something went wrong while getting hosts from server {server}.")
                 failed_servers.append(server)
 
         for server in failed_servers:
@@ -734,11 +728,11 @@ class ZabbixDataReader():
 
         This method creates a pool of servers and try to connect to them.
         """
-        self.logger.info("Connecting ZabbixDataReader.")
+        self.logger.info(f"Connecting ZabbixDataReader.")
         # Create a new server pool.
         self.pool = ServersPool()
 
-        self.logger.info("Adding servers to the server pool.")
+        self.logger.info(f"Adding servers to the server pool.")
         # Add each server to the server pool.
         for server in cfg.config.zabbix['servers']:
             try:
@@ -746,10 +740,7 @@ class ZabbixDataReader():
                                         server['login'],
                                         server['password'])
             except KeyError:
-                self.logger.exception(
-                    "URL, login or password not supplied for server {}"
-                    .format(server)
-                )
+                self.logger.exception(f"URL, login or password not supplied for server {server}.")
             else:
                 self.pool.add_server(ZabbixServer(url, login, password))
 
