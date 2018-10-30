@@ -698,6 +698,7 @@ class ZabbixDataReader():
         # Get all hosts of interest in each Zabbix server.
         application = cfg.config.zabbix['application']
         parameters = {"with_applications": application}
+        failed_servers = []
         for server in self.pool:
             try:
                 server.get_hosts(parameters)
@@ -705,13 +706,16 @@ class ZabbixDataReader():
                 self.logger.exception(
                     "No connection to server {}.".format(server)
                 )
-                self.pool.remove_server(server)
+                failed_servers.append(server)
             except Exception:
                 self.logger.error(
-                    "Something went wrong when getting hosts for server {}."
+                    "Something went wrong while getting hosts from server {}."
                     .format(server)
                 )
-                self.pool.remove_server(server)
+                failed_servers.append(server)
+
+        for server in failed_servers:
+            self.pool.remove_server(server)
 
         self.logger.info("ZabbixDataReader running.")
 
