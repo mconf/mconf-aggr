@@ -1,7 +1,7 @@
 AGGR_PATH=$(shell pwd)
 IMAGE_WORKDIR=/usr/src/mconf-aggr
-CONFIG_PATH=config/config.json
-LOGGING_PATH=config/logging.json
+CONFIG_PATH?=config/config.json
+LOGGING_PATH?=config/logging.json
 DOCKER_USERNAME?=mconf
 REPOSITORY?=mconf-aggr
 FULL_VERSION?=$(shell cat .version)
@@ -18,7 +18,7 @@ $(error APP variable is not set)
 endif
 
 run:
-	AGGR_APP=$(APP) bash start.sh
+	AGGR_APP=$(APP) bash start.sh -c $(CONFIG_PATH)
 
 up:
 	IMAGE_NAME=$(IMAGE_NAME) \
