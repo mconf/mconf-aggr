@@ -417,7 +417,7 @@ class ServerTable(Base):
         return f"{self.__class__.__name__!s}(name={self.name})"
 
 
-server_cache = cachetools.TTLCache(maxsize=20, ttl=9)
+server_cache = cachetools.TTLCache(maxsize=20, ttl=60)
 
 
 class ServerMetricDAO:
