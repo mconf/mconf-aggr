@@ -25,6 +25,7 @@
     },
     "webhook": {
         "callback_url": "my-callback-server.com",
+        "should_register": true,
         "database": {
             "user": "mconf",
             "password": "postgres",

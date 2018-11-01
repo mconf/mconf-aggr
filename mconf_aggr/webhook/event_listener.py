@@ -171,11 +171,11 @@ class AuthMiddleware:
             if not self._token_is_valid(server_url, token):
                 requester = req.host
                 self.logger.warn(
-                    "Invalid token '{}' from '{}' (last hop: '{}').".format(token, server_url, requester)
+                    "Unable to validate token '{}' from '{}' (last hop: '{}').".format(token, server_url, requester)
                 )
                 raise falcon.HTTPUnauthorized(
-                    "Invalid authentication token",
-                    "The provided authentication token is not valid",
+                    "Unable to validate authentication token",
+                    "The provided authentication token could not be validate",
                     www_authentication
                 )
 
@@ -186,10 +186,10 @@ class AuthMiddleware:
         """
         handler = AuthenticationHandler()
 
-        db_token = handler.token(host)
+        secret = handler.secret(host)
 
-        if db_token:
-            expected = 'Bearer ' + db_token
+        if secret:
+            expected = 'Bearer ' + secret
 
             if(expected == token):
                 return True

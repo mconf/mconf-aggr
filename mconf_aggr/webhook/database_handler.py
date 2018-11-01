@@ -16,7 +16,7 @@ from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger, create_session_scope
 from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents, Servers, SharedSecrets
-from mconf_aggr.webhook.exceptions import WebhookDatabaseError, InvalidWebhookEventError
+from mconf_aggr.webhook.exceptions import DatabaseNotReadyError, InvalidWebhookEventError, WebhookDatabaseError
 
 
 Session = sessionmaker()
@@ -772,8 +772,8 @@ class AuthenticationHandler:
         """
         self.logger = logger or logging.getLogger(__name__)
 
-    def token(self, server):
-        """Get a token (shared secret) for a given server in the database.
+    def secret(self, server):
+        """Get a shared secret for a given server in the database.
 
         Parameters
         ----------
@@ -785,14 +785,22 @@ class AuthenticationHandler:
         token : str
             Token of the server as retrieved from database.
         """
+        found_secret = None
         with session_scope() as session:
-            token = session.query(Servers.secret).filter(Servers.name == server).first()
+            try:
+                server = session.query(Servers.secret).filter(Servers.name == server).first()
+            except sqlalchemy.exc.OperationalError as err:
+                self.logger.error("Operational error on database while validating token.")
+                server = None
+            except Exception as err:
+                self.logger.warn(f"Unknown error while validating token: {err}")
+                server = None
 
-            if token:
+            if server:
                 # If it found a row for the given server, extract its secret column.
-                token = token.secret
+                found_secret = server.secret
 
-        return token
+        return found_secret
 
 
 class WebhookServerHandler:
@@ -818,10 +826,19 @@ class WebhookServerHandler:
         """
         servers = None
         with session_scope() as session:
-            servers = session.query(Servers).all()
+            try:
+                servers = session.query(Servers).all()
+            except sqlalchemy.exc.OperationalError as err:
+                self.logger.error("Operational error on database while gathering Zabbix servers.")
 
-            # Since it returns Servers objects used by the database, we need
-            # to detach the objects returned from the database's session.
-            session.expunge_all()
+                raise DatabaseNotReadyError()
+            except Exception as err:
+                self.logger.warn(f"Unknown error while gathering Zabbix servers: {err}")
 
-        return servers
+                raise DatabaseNotReadyError()
+            else:
+                # Since it returns Servers objects used by the database, we need
+                # to detach the objects returned from the database's session.
+                session.expunge_all()
+
+                return servers

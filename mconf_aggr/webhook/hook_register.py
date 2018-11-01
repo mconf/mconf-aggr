@@ -6,6 +6,7 @@ from urllib.parse import urljoin
 from xml.etree import ElementTree
 
 from mconf_aggr.webhook.database_handler import WebhookServerHandler
+from mconf_aggr.webhook.exceptions import DatabaseNotReadyError
 
 
 class WebhookCreateError(Exception):
@@ -55,13 +56,7 @@ class WebhookRegister:
             self._servers = servers
         else:
             # Otherwise, fetch a server list to be used from database.
-            handler = WebhookServerHandler()
-            servers = handler.servers()
-
-            # Put them in a server_name-server_secret dictionary.
-            self._servers = {}
-            for server in servers:
-                self._servers[server.name] = server.secret
+            self._fetch_servers_from_database()
 
     @property
     def servers(self):
@@ -103,6 +98,21 @@ class WebhookRegister:
                 self.success_servers.append(server)
 
         self.logger.info(f"Hooks registration done.")
+
+    def _fetch_servers_from_database(self):
+        handler = WebhookServerHandler()
+
+        try:
+            servers = handler.servers()
+        except DatabaseNotReadyError as err:
+            # If any known or unknown error occurred in the database,
+            # create an empty dict.
+            self._servers = dict()
+        else:
+            # Otherwise, put the servers in a server_name-server_secret dictionary.
+            self._servers = {}
+            for server in servers:
+                self._servers[server.name] = server.secret
 
 
 class WebhookServer:
