@@ -16,7 +16,7 @@ from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger, create_session_scope
 from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents, Servers, SharedSecrets
-from mconf_aggr.webhook.exceptions import WebhookDatabaseError, InvalidWebhookEventError
+from mconf_aggr.webhook.exceptions import DatabaseNotReadyError, InvalidWebhookEventError, WebhookDatabaseError
 
 
 Session = sessionmaker()
@@ -826,10 +826,19 @@ class WebhookServerHandler:
         """
         servers = None
         with session_scope() as session:
-            servers = session.query(Servers).all()
+            try:
+                servers = session.query(Servers).all()
+            except sqlalchemy.exc.OperationalError as err:
+                self.logger.error("Operational error on database while gathering Zabbix servers.")
 
-            # Since it returns Servers objects used by the database, we need
-            # to detach the objects returned from the database's session.
-            session.expunge_all()
+                raise DatabaseNotReadyError()
+            except Exception as err:
+                self.logger.warn(f"Unknown error while gathering Zabbix servers: {err}")
 
-        return servers
+                raise DatabaseNotReadyError()
+            else:
+                # Since it returns Servers objects used by the database, we need
+                # to detach the objects returned from the database's session.
+                session.expunge_all()
+
+                return servers

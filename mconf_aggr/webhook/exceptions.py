@@ -28,3 +28,7 @@ class WebhookDatabaseError(WebhookError):
     """Raised if any error occurrs while interacting with the database.
     """
     pass
+
+class DatabaseNotReadyError(WebhookError):
+    """Raised if the database does not seem ready for connections.
+    """
