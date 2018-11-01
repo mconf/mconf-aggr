@@ -202,8 +202,7 @@ class ServersPool:
         return bool(self.servers)
 
     def __repr__(self):
-        return "{!s}(servers={})".format(self.__class__.__name__,
-                                         reprlib.repr(self.servers))
+        return f"{self.__class__.__name__!s}(servers={reprlib.repr(self.servers)})"
 
 
 class ZabbixServer:
@@ -357,7 +356,7 @@ class ZabbixServer:
         return self._ok
 
     def __repr__(self):
-        return "{!s}(url={!r})".format(self.__class__.__name__, self.url)
+        return f"{self.__class__.__name__!s}(url={self.url!r})"
 
     def __str__(self):
         return self.name
@@ -380,7 +379,7 @@ class ServerMetricTable(Base):
     id : Column of type Integer
         Primary key. Identifier of the metric.
     server_id : Column of type Integer
-        Identifier of the server.
+        Identifier of the monitored server.
     zabbix_server : Column of type String
         Name of the Zabbix server.
     name : Column of type String
@@ -403,9 +402,7 @@ class ServerMetricTable(Base):
     updated_at = sa.Column(sa.DateTime)
 
     def __repr__(self):
-        return "{!s}(name={!r}, value={!r}, updated_at={!r})" \
-            .format(self.__class__.__name__, self.name,
-                    self.value, self.updated_at)
+        return (f"{self.__class__.__name__!s}(name={self.name!r}, value={self.value!r}, updated_at={self.updated_at!r})")
 
 
 class ServerTable(Base):
@@ -427,7 +424,7 @@ class ServerTable(Base):
     name = sa.Column(sa.String)
 
     def __repr__(self):
-        return "{!s}(name={})".format(self.__class__.__name__, self.name)
+        return f"{self.__class__.__name__!s}(name={self.name})"
 
 
 server_cache = cachetools.TTLCache(maxsize=20, ttl=9)
@@ -578,7 +575,7 @@ class PostgresConnector:
         try:
             with session_scope() as session:
                 with time_logger(self.logger.debug,
-                                 "Saving data to database took {elapsed}s."):
+                                 "Database session took {elapsed}s."):
                     ServerMetricDAO(session).update(data)
         except sa.exc.OperationalError as err:
             self.logger.error(err)
@@ -594,8 +591,7 @@ class PostgresConnector:
         return f"postgresql+psycopg2://{user}:{password}@{host}/{database}"
 
     def __repr__(self):
-        return "{!s}(database_uri={!r})".format(self.__class__.__name__,
-                                                self.database_uri)
+        return f"{self.__class__.__name__!s}(database_uri={self.database_uri!r})"
 
 
 class ZabbixDataWriter(AggregatorCallback):
@@ -654,8 +650,7 @@ class ZabbixDataWriter(AggregatorCallback):
                 raise CallbackError() from err
 
     def __repr__(self):
-        return "{!s}(connector={!r})".format(self.__class__.__name__,
-                                             self.connector)
+        return f"{self.__class__.__name__!s}(connector={self.connector!r})"
 
 
 def make_data(data):
@@ -807,5 +802,4 @@ class ZabbixDataReader():
         return data
 
     def __repr__(self):
-        return "{!s}(pool={!r})".format(self.__class__.__name__,
-                                        self.pool)
+        return f"{self.__class__.__name__!s}(pool={self.pool!r})"
