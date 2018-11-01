@@ -148,12 +148,7 @@ class ServersPool:
         trying_servers = self.servers.copy()
         retries = 1
         while retries <= max_retries and trying_servers:
-<<<<<<< HEAD
-            self.logger.debug(trying_servers)
             self.logger.warn(f"Trying to connect to servers. Attempt {retries}.")
-=======
-            self.logger.warn(f"Retrying to connect to servers: {retries}")
->>>>>>> refactor-YmA8ThHj
             success_servers = []
             for server in trying_servers:
                 if not server.connected:
@@ -172,8 +167,8 @@ class ServersPool:
 
             retries += 1
 
-<<<<<<< HEAD
-            if trying_servers:
+            if retries < max_retries and trying_servers:
+                # If there is still any retry to do or server to try.
                 backoff_delay = 2**(retries-1)
                 self.logger.warn(f"Retrying to connect to servers in {backoff_delay}s.")
                 time.sleep(backoff_delay)
@@ -182,11 +177,6 @@ class ServersPool:
             self.logger.warn("Some Zabbix servers were not able to connect.")
             for failed_server in trying_servers:
                 self.remove_server(failed_server)
-=======
-        self.logger.warn(f"Some Zabbix servers were not able to connect.")
-        for failed_server in trying_servers:
-            self.remove_server(failed_server)
->>>>>>> refactor-YmA8ThHj
 
     def close(self):
         """Close connection of each ZabbixServer of the pool.
