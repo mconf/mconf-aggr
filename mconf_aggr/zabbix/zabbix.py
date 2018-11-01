@@ -468,38 +468,60 @@ class ServerMetricDAO:
             provided the data, the name of the metric being updated and its
             current value.
         """
-        if data['server_name'] not in server_cache:
-            self.logger.debug(f"Server {data['server_name']} not found in server cache.")
+        server_name, server_id = data['server_name'], None
+        if server_name not in server_cache:
+            self.logger.debug(f"Server '{server_name}' not found in server cache.")
 
-            server_id = self.session.query(ServerTable) \
-                            .filter(ServerTable.name == data['server_name'])\
-                            .first().id
+            # If server is not in cache, try to find it in the database.
+            server = (
+                self.session
+                .query(ServerTable)
+                .filter(ServerTable.name.like(f"%{server_name}%"))
+                .first()
+            )
 
-            server_cache[data['server_name']] = server_id
+            if server:
+                # If the server was found in database, get its id and put in cache.
+                server_id = server.id
+                server_cache[server_name] = server_id
         else:
-            self.logger.debug(f"Server {data['server_name']} found in server cache.")
+            self.logger.debug(f"Server '{server_name}' found in server cache.")
+            server_id = server_cache[server_name]
 
-            server_id = server_cache[data['server_name']]
+        if server_id:
+            # If the server was found in cache or in the database, try to find
+            # the metric in the database.
+            metric = (
+                self.session
+                .query(ServerMetricTable)
+                .filter(ServerMetricTable.server_id == server_id,
+                        ServerMetricTable.name == data['metric'])
+                .first()
+            )
 
-        metric = self.session.query(ServerMetricTable) \
-                             .filter(ServerMetricTable.server_id == server_id,
-                                     ServerMetricTable.name == data['metric'])\
-                             .first()
+            if metric:
+                # If the metric was found in database, just update it.
+                self.logger.debug(f"Updating server '{server_name}'.")
+                metric.value = data['value']
+                metric.zabbix_server = data['zabbix_server']
+                metric.updated_at = data['updated_at']
+            else:
+                self.logger.debug(f"Creating new row for server '{server_name}'.")
 
-        if metric:
-            metric.value = data['value']
-            metric.zabbix_server = data['zabbix_server']
-            metric.updated_at = data['updated_at']
+                now = datetime.now()
+                metric = ServerMetricTable(
+                    server_id=server_id,
+                    zabbix_server=data['zabbix_server'],
+                    name=data['metric'],
+                    value=data['value'],
+                    created_at=now,
+                    updated_at=now
+                )
+
+            # Anyway, add the metric to the database.
+            self.session.add(metric)
         else:
-            now = datetime.now()
-            metric = ServerMetricTable(server_id=server_id,
-                                       zabbix_server=data['zabbix_server'],
-                                       name=data['metric'],
-                                       value=data['value'],
-                                       created_at=now,
-                                       updated_at=now)
-
-        self.session.add(metric)
+            self.logger.debug(f"Server '{server_name}' not found in database.")
 
 
 class PostgresConnector:
