@@ -33,4 +33,6 @@ WORKDIR /usr/src/mconf-aggr/
 
 COPY ./config/config_webhook.json.tmpl ./config/config_webhook.json.tmpl
 
+EXPOSE 8000
+
 CMD dockerize -template ./config/config_webhook.json.tmpl:./config/config.json gunicorn main_webhook:app --bind=0.0.0.0:8000
