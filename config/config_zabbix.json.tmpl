@@ -2,13 +2,7 @@
     "zabbix": {
         "period": {{ .Env.MCONF_AGGR_ZABBIX_PERIOD }},
         "application": "{{ .Env.MCONF_AGGR_ZABBIX_APPLICATION }}",
-        "servers": [
-          {
-            "url": "https://zabbix-server.com",
-            "login": "user",
-            "password": "changeme"
-          }
-        ],
+        "servers": {{ .Env.MCONF_AGGR_ZABBIX_SERVERS }},
         "database": {
             "host": "{{ .Env.MCONF_AGGR_ZABBIX_DATABASE_HOST}}",
             "user": "{{ .Env.MCONF_AGGR_ZABBIX_DATABASE_USER }}",
