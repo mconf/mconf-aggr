@@ -165,13 +165,13 @@ class ServersPool:
                 if server in trying_servers:
                     trying_servers.remove(server)
 
-            retries += 1
-
             if retries < max_retries and trying_servers:
                 # If there is still any retry to do or server to try.
-                backoff_delay = 2**(retries-1)
+                backoff_delay = 2**(retries)
                 self.logger.warn(f"Retrying to connect to servers in {backoff_delay}s.")
                 time.sleep(backoff_delay)
+
+            retries += 1
 
         if trying_servers:
             self.logger.warn("Some Zabbix servers were not able to connect.")
