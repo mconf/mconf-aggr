@@ -230,6 +230,8 @@ class ZabbixServer:
 
         self.name = urlsplit(self.url).netloc  # Extract just the domain.
 
+        self._item_names_map = {"CPU $2 time": "cpu", "Used memory in %": "mem"}
+
     def connect(self):
         """Connect to the Zabbix server.
 
@@ -319,7 +321,9 @@ class ZabbixServer:
                 with time_logger(self.logger.debug,
                                  "Getting items from {host} took {elapsed}s.",
                                  host=host):
-                    results[host] = self.connection.item.get(parameters)
+                    items = self.connection.item.get(parameters)
+                    items = self._convert_items_names(items)
+                    results[host] = items
 
             except:
                 # Suppress stack trace from this exception as it logs
@@ -349,6 +353,14 @@ class ZabbixServer:
 
     def __str__(self):
         return self.name
+
+    def _convert_items_names(self, items):
+        for item in items:
+            old_item_name = item['name']
+            if old_item_name in self._item_names_map:
+                item['name'] = self._item_names_map[old_item_name]
+
+        return items
 
 
 Base = declarative_base()
