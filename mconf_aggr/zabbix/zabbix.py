@@ -249,8 +249,7 @@ class ZabbixServer:
             self.connection = None
             self._ok = False
 
-            raise ZabbixLoginError(f"Cannot login to server {self}.") \
-                from err
+            raise ZabbixLoginError(f"Cannot login to server {self}.") from err
         else:
             self._ok = True
 
@@ -281,13 +280,13 @@ class ZabbixServer:
             with time_logger(self.logger.debug,
                              "Getting hosts from {server} took {elapsed}s.",
                              server=self):
-                results = self.connection.host.get(parameters)
+                results = self.connection.application.get(parameters)
         except:
             self._ok = False
 
             raise
         else:
-            self.hosts = {host['hostid']: host['host'] for host in results}
+            self.hosts = {host['hostid']: host['host']['host'] for host in results}
 
     def get_items(self, parameters):
         """Get the items from the hosts being monitored by this Zabbix server.
@@ -703,7 +702,7 @@ class ZabbixDataReader():
 
         # Get all hosts of interest in each Zabbix server.
         application = cfg.config.zabbix['application']
-        parameters = {"with_applications": application}
+        parameters = {'filter': {'name': application}, 'selectHost': {'host': 'host'}}
         failed_servers = []
         for server in self.pool:
             try:
