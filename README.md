@@ -320,6 +320,8 @@ And the unstable release will have tags:
 * `zabbix-0.0.2-pre-alpha`
 * `zabbix-36fba5`
 
+There is also a `staging` tag that is intended for pre-release images.
+
 > The version is obtained from the `.version` file.
 
 ### Developing with Docker
@@ -399,10 +401,16 @@ shown below:
 * To run the Docker image of development: `$ make docker-run-dev APP=[webhook|zabbix] [CONFIG_PATH=path/to/webhook-config.json] [LOGGING_PATH=path/to/logging.json] [EXTRA_OPTS=""]`
 * To tag stable Docker images: `$ make docker-tag APP=[zabbix|webhook]`
 * To tag unstable Docker images: `$ make docker-tag-unstable APP=[zabbix|webhook]`
+* To tag latest Docker images: `$ make docker-tag-latest APP=[zabbix|webhook]`
+* To tag staging Docker images: `$ make docker-tag-staging APP=[zabbix|webhook]`
 * To push stable Docker images to registry: `$ make docker-push APP=[zabbix|webhook]`
 * To push unstable Docker images to registry: `$ make docker-push-unstable APP=[zabbix|webhook]`
+* To push latest Docker images to registry: `$ make docker-push-latest APP=[zabbix|webhook]`
+* To push staging Docker images to registry: `$ make docker-push-staging APP=[zabbix|webhook]`
 * To show the stable tags that will be generated: `$ make tags APP=[zabbix|webhook]`
 * To show the unstable tags that will be generated: `$ make tags-unstable APP=[zabbix|webhook]`
+* To show the latest tags that will be generated: `$ make tags-latest APP=[zabbix|webhook]`
+* To show the staging tags that will be generated: `$ make tags-staging APP=[zabbix|webhook]`
 * To show all project-related Docker images: `$ make docker-image APP=<anything>`
 * To remove all containers (related to the project or not): `$ make docker-container-rm APP=<anything>`
 * To remove all project-related Docker images: `$ make docker-rm APP=<anything>`

@@ -104,6 +104,10 @@ tags-unstable:
 	@echo "$(IMAGE_NAME):$(APP)-$(FULL_VERSION)"
 	@echo "$(IMAGE_NAME):$(APP)-$(REVISION)"
 
+.PHONY:tag-latest
+tag-latest:
+	@echo "$(IMAGE_NAME):$(APP)-latest"
+
 .PHONY:tag-staging
 tag-staging:
 	@echo "$(IMAGE_NAME):$(APP)-staging"
