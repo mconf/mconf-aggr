@@ -238,7 +238,7 @@ class ZabbixServer:
         It tries to connect to the API by performing a regular login.
         """
         self.logger.debug(f"Connecting to server {self}.")
-        self.connection = api.ZabbixAPI(self.url, validate_certs=True)
+        self.connection = api.ZabbixAPI(self.url, validate_certs=False) # Fix it.
 
         try:
             self.logger.debug(f"Login to server {self}.")
@@ -395,7 +395,7 @@ class ServerMetricTable(Base):
     __tablename__ = "server_metrics"
 
     id = sa.Column(sa.Integer, primary_key=True)
-    server_id = sa.Column(sa.Integer)
+    server_id = sa.Column(sa.Integer, sa.ForeignKey("servers.id"))
     zabbix_server = sa.Column(sa.String)
     name = sa.Column(sa.String)
     value = sa.Column(sa.String)
@@ -423,6 +423,7 @@ class ServerTable(Base):
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String)
+    server_metric = sa.orm.relationship("ServerMetricTable")
 
     def __repr__(self):
         return f"{self.__class__.__name__!s}(name={self.name})"
@@ -450,11 +451,7 @@ class ServerMetricDAO:
         self.logger = logger or logging.getLogger(__name__)
 
     def update(self, data):
-        """Update the server_metrics table with some new data.
-
-        Specifically, it updates a single metric of a single server host.
-        It queries the servers table to get server host's id by its name.
-        Then, it uses its name to update the metric in the server_metrics table.
+        """Upinsert the server_metrics table with some new data.
 
         It does not commit the update. It just add it to be commited.
 
@@ -466,60 +463,51 @@ class ServerMetricDAO:
             provided the data, the name of the metric being updated and its
             current value.
         """
-        server_name, server_id = data['server_name'], None
-        if server_name not in server_cache:
-            self.logger.debug(f"Server '{server_name}' not found in server cache.")
+        for metric in data:
+            server_name, metric_name = metric['server_name'], metric['metric']
 
-            # If server is not in cache, try to find it in the database.
-            server = (
-                self.session
-                .query(ServerTable)
-                .filter(ServerTable.name.like(f"%{server_name}%"))
-                .first()
-            )
-
-            if server:
-                # If the server was found in database, get its id and put in cache.
-                server_id = server.id
-                server_cache[server_name] = server_id
-        else:
-            self.logger.debug(f"Server '{server_name}' found in server cache.")
-            server_id = server_cache[server_name]
-
-        if server_id:
-            # If the server was found in cache or in the database, try to find
-            # the metric in the database.
-            metric = (
+            updated_rows = (
                 self.session
                 .query(ServerMetricTable)
-                .filter(ServerMetricTable.server_id == server_id,
-                        ServerMetricTable.name == data['metric'])
-                .first()
+                .filter(
+                    ServerTable.name.like(f"%{server_name}%"),
+                    ServerMetricTable.name == metric['metric'],
+                    ServerTable.id == ServerMetricTable.server_id
+                )
+                .update(
+                    values={ServerMetricTable.value: metric['value'],
+                    ServerMetricTable.zabbix_server: metric['zabbix_server'],
+                    ServerMetricTable.updated_at: metric['updated_at']},
+                    synchronize_session=False
+                )
             )
 
-            if metric:
-                # If the metric was found in database, just update it.
-                self.logger.debug(f"Updating server '{server_name}'.")
-                metric.value = data['value']
-                metric.zabbix_server = data['zabbix_server']
-                metric.updated_at = data['updated_at']
+            if updated_rows:
+                self.logger.debug(f"Updated metric '{metric_name}' of server '{server_name}'.")
             else:
-                self.logger.debug(f"Creating new row for server '{server_name}'.")
-
-                now = datetime.now()
-                metric = ServerMetricTable(
-                    server_id=server_id,
-                    zabbix_server=data['zabbix_server'],
-                    name=data['metric'],
-                    value=data['value'],
-                    created_at=now,
-                    updated_at=now
+                server_row = (
+                    self.session
+                    .query(ServerTable)
+                    .filter(ServerTable.name.like(f"%{server_name}%"))
+                    .first()
                 )
 
-            # Anyway, add the metric to the database.
-            self.session.add(metric)
-        else:
-            self.logger.debug(f"Server '{server_name}' not found in database.")
+                if server_row:
+                    now = datetime.now()
+                    new_metric_row = ServerMetricTable(
+                        server_id=server_row.id,
+                        zabbix_server=metric['zabbix_server'],
+                        name=metric['metric'],
+                        value=metric['value'],
+                        created_at=now,
+                        updated_at=now
+                    )
+
+                    self.session.add(new_metric_row)
+
+                    self.logger.debug(f"Added new metric '{metric_name}' to server '{server_name}'.")
+                else:
+                    self.logger.debug(f"Server '{server_name}' not found in database.")
 
 
 class PostgresConnector:
@@ -577,6 +565,7 @@ class PostgresConnector:
             with session_scope() as session:
                 with time_logger(self.logger.debug,
                                  "Database session took {elapsed}s."):
+                    self.logger.debug(f"Starting database session.")
                     ServerMetricDAO(session).update(data)
         except sa.exc.OperationalError as err:
             self.logger.error(err)
@@ -642,13 +631,12 @@ class ZabbixDataWriter(AggregatorCallback):
         data : dict
             The data may be compound of many metrics of different server hosts.
         """
-        for metric in data:
-            try:
-                self.connector.update(metric)
-            except sa.exc.OperationalError as err:
-                self.logger.error(f"Operational error on database.")
+        try:
+            self.connector.update(data)
+        except sa.exc.OperationalError as err:
+            self.logger.error(f"Operational error on database.")
 
-                raise CallbackError() from err
+            raise CallbackError() from err
 
     def __repr__(self):
         return f"{self.__class__.__name__!s}(connector={self.connector!r})"
