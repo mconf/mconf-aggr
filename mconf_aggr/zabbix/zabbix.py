@@ -395,7 +395,7 @@ class ServerMetricTable(Base):
     __tablename__ = "server_metrics"
 
     id = sa.Column(sa.Integer, primary_key=True)
-    server_id = sa.Column(sa.Integer)
+    server_id = sa.Column(sa.Integer, sa.ForeignKey("servers.id"))
     zabbix_server = sa.Column(sa.String)
     name = sa.Column(sa.String)
     value = sa.Column(sa.String)
@@ -423,6 +423,7 @@ class ServerTable(Base):
 
     id = sa.Column(sa.Integer, primary_key=True)
     name = sa.Column(sa.String)
+    server_metric = sa.orm.relationship("ServerMetricTable")
 
     def __repr__(self):
         return f"{self.__class__.__name__!s}(name={self.name})"
