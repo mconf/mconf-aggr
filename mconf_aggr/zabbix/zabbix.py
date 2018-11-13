@@ -238,7 +238,7 @@ class ZabbixServer:
         It tries to connect to the API by performing a regular login.
         """
         self.logger.debug(f"Connecting to server {self}.")
-        self.connection = api.ZabbixAPI(self.url, validate_certs=True)
+        self.connection = api.ZabbixAPI(self.url, validate_certs=False) # Fix it.
 
         try:
             self.logger.debug(f"Login to server {self}.")
