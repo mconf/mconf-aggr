@@ -20,16 +20,40 @@ The data is retrieved by `ZabbixDataReader` from Zabbix servers in the format::
     {
         "server_1":
         {
-            "host_1":
-            [
-                {"name": "item_1", "lastvalue": "lastvalue_1", ...},
-                {"name": "item_2", "lastvalue": "lastvalue_2", ...},
-                ...
-            ],
-            "host_2":
-            [
-                ...
-            ]
+            {
+                "itemid": "itemid_1",
+                "name": "item_1",
+                "hosts": [
+                    {
+                        "hostid": "hostid_1",
+                        "host": "host_1"
+                    }
+                ],
+                "lastvalue": "lastvalue_1"
+            },
+            {
+                "itemid": "itemid_2",
+                "name": "item_2",
+                "hosts": [
+                    {
+                        "hostid": "hostid_1",
+                        "host": "host_1"
+                    }
+                ],
+                "lastvalue": "lastvalue_2"
+            },
+            {
+                "itemid": "itemid_1",
+                "name": "item_1",
+                "hosts": [
+                    {
+                        "hostid": "hostid_2",
+                        "host": "host_2"
+                    }
+                ],
+                "lastvalue": "lastvalue_3"
+            },
+            ...
         },
         "server_2":
         {
@@ -70,6 +94,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import text
 from urllib.parse import urlsplit
 
 import cachetools
@@ -230,8 +255,6 @@ class ZabbixServer:
 
         self.name = urlsplit(self.url).netloc  # Extract just the domain.
 
-        self._item_names_map = {"CPU $2 time": "cpu", "Used memory in %": "mem"}
-
     def connect(self):
         """Connect to the Zabbix server.
 
@@ -268,7 +291,7 @@ class ZabbixServer:
         Parameters
         ----------
         parameters : dict
-            Options that should be passed to the `host.get()` function.
+            Options that should be passed to the `application.get()` function.
 
         Raises
         ------
@@ -301,7 +324,23 @@ class ZabbixServer:
         Returns
         -------
         dict
-            A dict in the format "{'this_server': {'host_1': {'item_1': 'value_1', ...}, ...}}"
+            A dict in the format "
+            {
+                'this_server': [
+                    {
+                        "itemid": "itemid_1",
+                        "name": "item_1",
+                        "hosts": [
+                            {
+                                "hostid": "hostid_1",
+                                "host": "host_1"
+                            }
+                        ],
+                        "lastvalue": "lastvalue_1"
+                    },
+                    ...
+                ]
+            }"
 
         Raises
         ------
@@ -310,39 +349,40 @@ class ZabbixServer:
             The host that caused the exception to be thrown is removed from the
             results.
         """
-        self.logger.debug(f"Fetching data from server {self}.")
         if self.connection is None:
             raise ZabbixNoConnectionError()
 
-        results = dict()
-        for hostid, host in self.hosts.items():
-            parameters['hostids'] = hostid
-            try:
-                with time_logger(self.logger.debug,
-                                 "Getting items from {host} took {elapsed}s.",
-                                 host=host):
-                    items = self.connection.item.get(parameters)
-                    items = self._convert_items_names(items)
-                    results[host] = items
+        try:
+            with time_logger(
+                self.logger.debug,
+                "Fetching data from server {server} took {elapsed}s.",
+                server=self
+            ):
+                self.logger.debug(f"Fetching data from server '{self}'.")
+                items = self.connection.item.get(
+                    {
+                        'monitored': True,
+                        'output': ['name', 'lastvalue'],
+                        'application': 'Load-balancing',
+                        'selectHosts': {'host': 'host'}
+                    }
+                )
+        except Exception as err:
+            # Suppress stack trace from this exception as it logs
+            # many not so useful information.
+            self.logger.error(f"Something went wrong while getting items from '{self}'.")
+            self.logger.debug(f"err: {err}")
 
-            except:
-                # Suppress stack trace from this exception as it logs
-                # many not so useful information.
-                self.logger.error(f"Something went wrong while getting items from {self}.")
+            items = {}
+            self._ok = False
 
-                # Remove the host from results.
-                # Returning None avoids it raising KeyError.
-                # Is it necessary?
-                results.pop(host, None)
-                self._ok = False
+            raise
+        else:
+            if not self._ok:
+                self.logger.info(f"Connection to server {self} restored.")
+                self._ok = True
 
-                raise
-            else:
-                if not self._ok:
-                    self.logger.info(f"Connection to server {self} restored.")
-                    self._ok = True
-
-        return {self.name: results}
+        return {self.name: items}
 
     @property
     def connected(self):
@@ -353,14 +393,6 @@ class ZabbixServer:
 
     def __str__(self):
         return self.name
-
-    def _convert_items_names(self, items):
-        for item in items:
-            old_item_name = item['name']
-            if old_item_name in self._item_names_map:
-                item['name'] = self._item_names_map[old_item_name]
-
-        return items
 
 
 Base = declarative_base()
@@ -435,7 +467,7 @@ server_cache = cachetools.TTLCache(maxsize=20, ttl=60)
 class ServerMetricDAO:
     """Data Access Object of server metrics.
 
-    It provides the main method to update rows in the server_metrics table.
+    It provides the main method to upsert rows in the server_metrics table.
     """
     def __init__(self, session, logger=None):
         """Constructor of the ServerMetricDAO.
@@ -450,64 +482,49 @@ class ServerMetricDAO:
         self.session = session
         self.logger = logger or logging.getLogger(__name__)
 
-    def update(self, data):
+    def upsert(self, data):
         """Upinsert the server_metrics table with some new data.
 
-        It does not commit the update. It just add it to be commited.
+        It does not commit the upsert. It just add it to be commited.
 
         Parameters
         ----------
         data : dict
-            The data to be updated in the server_metrics table.
+            The data to be updated or inserted in the server_metrics table.
             It must include the server host's name, the Zabbix server that
-            provided the data, the name of the metric being updated and its
-            current value.
+            provided the data, the name of the metric being updated or inserted
+            and its current value.
         """
+        now = datetime.now()
+        values_stmts = []
         for metric in data:
-            server_name, metric_name = metric['server_name'], metric['metric']
+            server_name, zabbix_server = metric['server_name'], metric['zabbix_server']
+            metric_name, metric_value = metric['metric'], metric['value']
+            server_name = f"https://{server_name}"
 
-            updated_rows = (
-                self.session
-                .query(ServerMetricTable)
-                .filter(
-                    ServerTable.name.like(f"%{server_name}%"),
-                    ServerMetricTable.name == metric['metric'],
-                    ServerTable.id == ServerMetricTable.server_id
-                )
-                .update(
-                    values={ServerMetricTable.value: metric['value'],
-                    ServerMetricTable.zabbix_server: metric['zabbix_server'],
-                    ServerMetricTable.updated_at: metric['updated_at']},
-                    synchronize_session=False
-                )
-            )
+            values_stmts.append(f"('{server_name}', '{zabbix_server}', '{metric_name}', '{metric_value}', NOW())")
 
-            if updated_rows:
-                self.logger.debug(f"Updated metric '{metric_name}' of server '{server_name}'.")
-            else:
-                server_row = (
-                    self.session
-                    .query(ServerTable)
-                    .filter(ServerTable.name.like(f"%{server_name}%"))
-                    .first()
-                )
+        values = ",".join(values_stmts)
 
-                if server_row:
-                    now = datetime.now()
-                    new_metric_row = ServerMetricTable(
-                        server_id=server_row.id,
-                        zabbix_server=metric['zabbix_server'],
-                        name=metric['metric'],
-                        value=metric['value'],
-                        created_at=now,
-                        updated_at=now
-                    )
+        upsert_stmt = text(
+            f"""
+            INSERT INTO server_metrics (server_id, zabbix_server, name, value, updated_at)
+            SELECT s.id, _zabbix_server, _name, _value, _updated_at
+            FROM (
+                VALUES {values}
+            ) x (server, _zabbix_server, _name, _value, _updated_at)
+            JOIN servers s ON x.server = s.name
+            ON CONFLICT (server_id, name) DO
+            UPDATE SET
+                zabbix_server = EXCLUDED.zabbix_server,
+                value = EXCLUDED.value,
+                updated_at = EXCLUDED.updated_at;
+            """
+        )
 
-                    self.session.add(new_metric_row)
+        self.logger.debug(upsert_stmt)
 
-                    self.logger.debug(f"Added new metric '{metric_name}' to server '{server_name}'.")
-                else:
-                    self.logger.debug(f"Server '{server_name}' not found in database.")
+        self.session.execute(upsert_stmt)
 
 
 class PostgresConnector:
@@ -566,7 +583,7 @@ class PostgresConnector:
                 with time_logger(self.logger.debug,
                                  "Database session took {elapsed}s."):
                     self.logger.debug(f"Starting database session.")
-                    ServerMetricDAO(session).update(data)
+                    ServerMetricDAO(session).upsert(data)
         except sa.exc.OperationalError as err:
             self.logger.error(err)
 
@@ -658,13 +675,20 @@ def make_data(data):
     now = datetime.now()
 
     return [{'zabbix_server': server,
-             'server_name': host,
-             'metric': item['name'],
+             'server_name': host['host'],
+             'metric': convert_items_names(item['name']),
              'value': item['lastvalue'],
              'updated_at': now}
-            for server, hosts in data.items()
-            for host, items in hosts.items()
-            for item in items]
+            for server, items in data.items()
+            for item in items
+            for host in item['hosts']]
+
+
+ITEM_NAMES_MAP = {"CPU $2 time": "cpu", "Used memory in %": "mem"}
+
+
+def convert_items_names(old_item_name):
+    return ITEM_NAMES_MAP.get(old_item_name, old_item_name)
 
 
 class ZabbixDataReader():
