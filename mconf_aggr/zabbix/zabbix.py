@@ -394,14 +394,6 @@ class ZabbixServer:
     def __str__(self):
         return self.name
 
-    def _convert_items_names(self, items):
-        for item in items:
-            old_item_name = item['name']
-            if old_item_name in self._item_names_map:
-                item['name'] = self._item_names_map[old_item_name]
-
-        return items
-
 
 Base = declarative_base()
 Session = sessionmaker()
