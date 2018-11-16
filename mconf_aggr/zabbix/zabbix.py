@@ -467,7 +467,7 @@ server_cache = cachetools.TTLCache(maxsize=20, ttl=60)
 class ServerMetricDAO:
     """Data Access Object of server metrics.
 
-    It provides the main method to upinsert rows in the server_metrics table.
+    It provides the main method to upsert rows in the server_metrics table.
     """
     def __init__(self, session, logger=None):
         """Constructor of the ServerMetricDAO.
@@ -482,10 +482,10 @@ class ServerMetricDAO:
         self.session = session
         self.logger = logger or logging.getLogger(__name__)
 
-    def upinsert(self, data):
+    def upsert(self, data):
         """Upinsert the server_metrics table with some new data.
 
-        It does not commit the upinsert. It just add it to be commited.
+        It does not commit the upsert. It just add it to be commited.
 
         Parameters
         ----------
@@ -583,7 +583,7 @@ class PostgresConnector:
                 with time_logger(self.logger.debug,
                                  "Database session took {elapsed}s."):
                     self.logger.debug(f"Starting database session.")
-                    ServerMetricDAO(session).upinsert(data)
+                    ServerMetricDAO(session).upsert(data)
         except sa.exc.OperationalError as err:
             self.logger.error(err)
 
