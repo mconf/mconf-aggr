@@ -522,8 +522,6 @@ class ServerMetricDAO:
             """
         )
 
-        self.logger.debug(upsert_stmt)
-
         self.session.execute(upsert_stmt)
 
 
