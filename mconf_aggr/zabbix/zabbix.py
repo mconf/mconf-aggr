@@ -94,6 +94,7 @@ from contextlib import contextmanager
 from datetime import datetime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.sql import text
 from urllib.parse import urlsplit
 
 import cachetools
@@ -502,51 +503,36 @@ class ServerMetricDAO:
             provided the data, the name of the metric being updated or inserted
             and its current value.
         """
+        now = datetime.now()
+        values_stmts = []
         for metric in data:
-            server_name, metric_name = metric['server_name'], metric['metric']
+            server_name, zabbix_server = metric['server_name'], metric['zabbix_server']
+            metric_name, metric_value = metric['metric'], metric['value']
+            server_name = f"https://{server_name}"
 
-            updated_rows = (
-                self.session
-                .query(ServerMetricTable)
-                .filter(
-                    ServerTable.name.like(f"%{server_name}%"),
-                    ServerMetricTable.name == metric['metric'],
-                    ServerTable.id == ServerMetricTable.server_id
-                )
-                .update(
-                    values={ServerMetricTable.value: metric['value'],
-                    ServerMetricTable.zabbix_server: metric['zabbix_server'],
-                    ServerMetricTable.updated_at: metric['updated_at']},
-                    synchronize_session=False
-                )
-            )
+            values_stmts.append(f"('{server_name}', '{zabbix_server}', '{metric_name}', '{metric_value}', NOW())")
 
-            if updated_rows:
-                self.logger.debug(f"Updated metric '{metric_name}' of server '{server_name}'.")
-            else:
-                server_row = (
-                    self.session
-                    .query(ServerTable)
-                    .filter(ServerTable.name.like(f"%{server_name}%"))
-                    .first()
-                )
+        values = ",".join(values_stmts)
 
-                if server_row:
-                    now = datetime.now()
-                    new_metric_row = ServerMetricTable(
-                        server_id=server_row.id,
-                        zabbix_server=metric['zabbix_server'],
-                        name=metric['metric'],
-                        value=metric['value'],
-                        created_at=now,
-                        updated_at=now
-                    )
+        upsert_stmt = text(
+            f"""
+            INSERT INTO server_metrics (server_id, zabbix_server, name, value, updated_at)
+            SELECT s.id, _zabbix_server, _name, _value, _updated_at
+            FROM (
+                VALUES {values}
+            ) x (server, _zabbix_server, _name, _value, _updated_at)
+            JOIN servers s ON x.server = s.name
+            ON CONFLICT (server_id, name) DO
+            UPDATE SET
+                zabbix_server = EXCLUDED.zabbix_server,
+                value = EXCLUDED.value,
+                updated_at = EXCLUDED.updated_at;
+            """
+        )
 
-                    self.session.add(new_metric_row)
+        self.logger.debug(upsert_stmt)
 
-                    self.logger.debug(f"Added new metric '{metric_name}' to server '{server_name}'.")
-                else:
-                    self.logger.debug(f"Server '{server_name}' not found in database.")
+        self.session.execute(upsert_stmt)
 
 
 class PostgresConnector:
