@@ -282,7 +282,7 @@ def _map_rap_publish_ended_event(event, event_type):
     """
     rap_event = RapPublishEndedEvent(
                     name=_get_nested(event, ["data", "attributes", "recording", "name"], ""),
-                    is_breakout=_get_nested(event, ["data", "attributes", "recording", "isBreakout"], ""),
+                    is_breakout=_get_nested(event, ["data", "attributes", "recording", "isBreakout"], False),
                     start_time=_get_nested(event, ["data", "attributes", "recording", "startTime"], 0),
                     end_time=_get_nested(event, ["data", "attributes", "recording", "endTime"], 0),
                     size=_get_nested(event, ["data", "attributes", "recording", "size"], ""),
