@@ -11,11 +11,6 @@ STAGE_VERSION?=$(shell cat .version | sed -n -r "s/[^-]*-(.+)$$/\1/p")
 REVISION?=$(shell git rev-parse --short HEAD)
 IMAGE_NAME?=$(DOCKER_USERNAME)/$(REPOSITORY)
 IMAGE_VERSION?=$(FULL_VERSION)-$(REVISION)
-LOCAL_TAG?=$(APP)-$(IMAGE_VERSION)
-
-ifndef APP
-$(error APP variable is not set)
-endif
 
 run:
 	AGGR_APP=$(APP) bash start.sh -c $(CONFIG_PATH)
@@ -36,8 +31,12 @@ stop:
 	docker-compose -f production.yml stop ${SERVICE}
 
 docker-build:
-	docker build -f Dockerfile.dockerize.$(APP) -t $(IMAGE_NAME):$(LOCAL_TAG) .
-	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-latest
+	docker build -f Dockerfile.dockerize.webhook -t $(IMAGE_NAME):webhook-$(IMAGE_VERSION) .
+	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-latest
+
+	docker build -f Dockerfile.dockerize.zabbix -t $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) .
+	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-latest
+
 	docker image rm `docker images -f dangling=true -a -q`
 
 docker-build-dev:
@@ -50,7 +49,7 @@ docker-run:
 	-v $(AGGR_PATH)/$(CONFIG_PATH):$(IMAGE_WORKDIR)/$(CONFIG_PATH) \
 	-v $(AGGR_PATH)/$(LOGGING_PATH):$(IMAGE_WORKDIR)/$(LOGGING_PATH) \
 	--env-file=envs/$(APP)-env-file.env \
-	-ti $(IMAGE_NAME):$(LOCAL_TAG)
+	-ti $(IMAGE_NAME):$(APP)-$(IMAGE_VERSION)
 
 docker-run-dev:
 	docker run --rm \
@@ -61,56 +60,56 @@ docker-run-dev:
 	--env AGGR_APP=$(APP) $(EXTRA_OPTS) -ti $(IMAGE_NAME):dev-latest
 
 docker-tag:
-	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-$(NUMBER_VERSION)
-	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-$(MAJOR_VERSION)
-	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-$(REVISION)
-	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-latest
+	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-$(NUMBER_VERSION)
+	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-$(MAJOR_VERSION)
+	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-$(REVISION)
+	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-latest
+
+	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-$(NUMBER_VERSION)
+	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-$(MAJOR_VERSION)
+	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-$(REVISION)
+	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-latest
 
 docker-push: docker-tag
-	docker push $(IMAGE_NAME):$(APP)-$(NUMBER_VERSION)
-	docker push $(IMAGE_NAME):$(APP)-$(MAJOR_VERSION)
-	docker push $(IMAGE_NAME):$(APP)-$(REVISION)
-	docker push $(IMAGE_NAME):$(APP)-latest
+	docker push $(IMAGE_NAME):webhook-$(NUMBER_VERSION)
+	docker push $(IMAGE_NAME):webhook-$(MAJOR_VERSION)
+	docker push $(IMAGE_NAME):webhook-$(REVISION)
+	docker push $(IMAGE_NAME):webhook-latest
+
+	docker push $(IMAGE_NAME):zabbix-$(NUMBER_VERSION)
+	docker push $(IMAGE_NAME):zabbix-$(MAJOR_VERSION)
+	docker push $(IMAGE_NAME):zabbix-$(REVISION)
+	docker push $(IMAGE_NAME):zabbix-latest
 
 docker-tag-unstable:
-	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-$(FULL_VERSION)
-	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-$(REVISION)
+	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-$(FULL_VERSION)
+	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-$(REVISION)
+
+	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-$(FULL_VERSION)
+	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-$(REVISION)
 
 docker-push-unstable: docker-tag-unstable
-	docker push $(IMAGE_NAME):$(APP)-$(FULL_VERSION)
-	docker push $(IMAGE_NAME):$(APP)-$(REVISION)
+	docker push $(IMAGE_NAME):webhook-$(FULL_VERSION)
+	docker push $(IMAGE_NAME):webhook-$(REVISION)
+
+	docker push $(IMAGE_NAME):zabbix-$(FULL_VERSION)
+	docker push $(IMAGE_NAME):zabbix-$(REVISION)
 
 docker-tag-latest:
-	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-latest
+	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-latest
+	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-latest
 
 docker-push-latest: docker-tag-latest
-	docker push $(IMAGE_NAME):$(APP)-latest
+	docker push $(IMAGE_NAME):webhook-latest
+	docker push $(IMAGE_NAME):zabbix-latest
 
 docker-tag-staging:
-	docker tag $(IMAGE_NAME):$(LOCAL_TAG) $(IMAGE_NAME):$(APP)-staging
+	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-staging
+	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-staging
 
 docker-push-staging: docker-tag-staging
-		docker push $(IMAGE_NAME):$(APP)-staging
-
-.PHONY:tags
-tags:
-	@echo "$(IMAGE_NAME):$(APP)-$(NUMBER_VERSION)"
-	@echo "$(IMAGE_NAME):$(APP)-$(MAJOR_VERSION)"
-	@echo "$(IMAGE_NAME):$(APP)-$(REVISION)"
-	@echo "$(IMAGE_NAME):$(APP)-latest"
-
-.PHONY:tags-unstable
-tags-unstable:
-	@echo "$(IMAGE_NAME):$(APP)-$(FULL_VERSION)"
-	@echo "$(IMAGE_NAME):$(APP)-$(REVISION)"
-
-.PHONY:tag-latest
-tag-latest:
-	@echo "$(IMAGE_NAME):$(APP)-latest"
-
-.PHONY:tag-staging
-tag-staging:
-	@echo "$(IMAGE_NAME):$(APP)-staging"
+	docker push $(IMAGE_NAME):webhook-staging
+	docker push $(IMAGE_NAME):zabbix-staging
 
 .PHONY:docker-image
 docker-image:
