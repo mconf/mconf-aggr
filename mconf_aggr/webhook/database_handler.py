@@ -483,17 +483,17 @@ class RapHandler(DatabaseEventHandler):
         if records_table:
             # Update status based on event.
             # Handle "unpublished" and "deleted" when webhooks are emitting those events.
-            if(event.current_step == "rap-process-started"):
-                records_table.status = "processing"
-            elif(event.current_step == "rap-process-ended"):
+            if(event.current_step == "rap-process-ended"):
                 records_table.status = "processed"
             elif(event.current_step == "rap-publish-ended"):
                 records_table.status = "published"
                 records_table.published = True
+            else:
+                records_table.status = "processing"
         else:
             # Create and initialize table recordings.
             records_table = Recordings(**event._asdict())
-            records_table.published = False
+            records_table.status = "processing"
             records_table.participants = (
                 int(
                     self.session.query(UsersEvents.id).
@@ -502,6 +502,31 @@ class RapHandler(DatabaseEventHandler):
                     count()
                 )
             )
+
+            meetings_events_table = (
+                self.session.query(MeetingsEvents).
+                filter(MeetingsEvents.internal_meeting_id == int_id).
+                first()
+            )
+
+            if meetings_events_table:
+                records_table.meeting_event_id = meetings_events_table.id
+                records_table.start_time = meetings_events_table.start_time
+                records_table.end_time = meetings_events_table.end_time
+
+                servers_table = (
+                    self.session.query(Servers).
+                    filter(Servers.guid == meetings_events_table.server_guid).
+                    first()
+                )
+
+                if servers_table:
+                    records_table.server_id = servers_table.id
+                else:
+                    self.logger.warn(f"No server found for recording '{event.record_id}'.")
+            else:
+                self.logger.warn(f"No meeting found for recording '{event.record_id}'.")
+
 
         records_table.current_step = event.current_step
 
