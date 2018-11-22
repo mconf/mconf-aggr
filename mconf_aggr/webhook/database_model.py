@@ -264,7 +264,7 @@ class Recordings(Base):
 
     Attributes
     ----------
-    id : Column of type Interger
+    id : Column of type Integer
         Primary key. Identifier of the recording.
     created_at : Column of type DateTime
         Datetime of the recording creation.
@@ -272,8 +272,10 @@ class Recordings(Base):
         Last datetime the recording was updated.
     record_id : Column of type String.
         Internal identifier of the recording.
+    meeting_event_id : Column of type Integer.
+        Identifier of the associated meetings_events table.
     server_id : Column of type Integer.
-        Identifier of the associated Servers table.
+        Identifier of the associated servers table.
     name : Column of type String
         Name of the recording.
     status : Column of type String
@@ -313,6 +315,7 @@ class Recordings(Base):
     updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     record_id = Column(String, unique=True)
+    meeting_event_id = Column(Integer)
     server_id = Column(Integer)
 
     name = Column(String)
