@@ -591,7 +591,7 @@ class DataProcessor:
         event : event_mapper.WebhookEvent
             An event to be handled and persisted into database.
         """
-        self.logger.info("Selecting event processor.")
+        self.logger.debug("Selecting event processor.")
 
         if(event_type == "meeting-created"):
             event_handler = MeetingCreatedHandler(self.session)
