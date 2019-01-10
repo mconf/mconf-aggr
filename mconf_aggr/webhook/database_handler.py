@@ -829,11 +829,11 @@ class WebhookServerHandler:
             try:
                 servers = session.query(Servers).all()
             except sqlalchemy.exc.OperationalError as err:
-                self.logger.error("Operational error on database while gathering Zabbix servers.")
+                self.logger.error("Operational error on database while gathering servers.")
 
                 raise DatabaseNotReadyError()
             except Exception as err:
-                self.logger.warn(f"Unknown error while gathering Zabbix servers: {err}")
+                self.logger.warn(f"Unknown error while gathering servers: {err}")
 
                 raise DatabaseNotReadyError()
             else:
