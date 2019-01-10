@@ -125,10 +125,6 @@ class Config:
 
         return config
 
-    @property
-    def zabbix(self):
-        return self['zabbix']
-
     def __getitem__(self, key):
         """Make accessing configurations easier."""
         try:

@@ -24,15 +24,6 @@
             ],
             "propagate": false
         },
-
-        "mconf_aggr.zabbix.zabbix": {
-            "level": "DEBUG",
-            "handlers": [
-                "console"
-            ],
-            "propagate": false
-        },
-
         "mconf_aggr.webhook.db_operations": {
             "level": "DEBUG",
             "handlers": [
@@ -40,7 +31,6 @@
             ],
             "propagate": false
         },
-
         "mconf_aggr.webhook.event_listener": {
             "level": "DEBUG",
             "handlers": [
@@ -48,11 +38,6 @@
             ],
             "propagate": false
         },
-
-        "zabbix_api": {
-            "propagate": false
-        },
-
         "sqlalchemy": {
             "propagate": false
         },

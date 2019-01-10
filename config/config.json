@@ -1,28 +1,4 @@
 {
-    "zabbix": {
-        "period": 5,
-        "application": "security",
-        "servers": [
-          {
-            "url": "https://mconf-zabbix-infra.inf.ufrgs.br",
-            "login": "Admin",
-            "password": "zabbix"
-          }
-        ],
-        "database": {
-            "host": "localhost",
-            "user": "mconf",
-            "password": "changeme",
-            "database": "zabbix",
-            "table": "server_metrics"
-        },
-        "setup_file": "config",
-        "debug": {
-            "enabled": false,
-            "read_delay": 1,
-            "write_delay": 1
-        }
-    },
     "webhook": {
         "callback_url": "my-callback-server.com",
         "should_register": true,

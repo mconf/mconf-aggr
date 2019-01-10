@@ -1,22 +1,4 @@
 {
-    "zabbix": {
-        "period": 30,
-        "application": "LB",
-        "servers": [],
-        "database": {
-            "host": "localhost",
-            "user": "mconf",
-            "password": "changeme",
-            "database": "zabbix",
-            "table": "server_metrics"
-        },
-        "setup_file": "config",
-        "debug": {
-            "enabled": true,
-            "read_delay": 1,
-            "write_delay": 1
-        }
-    },
     "webhook": {
         "database": {
             "user": "postgres",
