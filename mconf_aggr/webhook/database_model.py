@@ -453,6 +453,7 @@ class Servers(Base):
     name = Column(String)
     secret = Column(String)
     ip = Column(String)
+    enabled = Column(Boolean)
 
     def __repr__(self):
         return ("<Servers("
