@@ -179,12 +179,13 @@ class AuthMiddleware:
                     www_authentication
                 )
 
-    def _token_is_valid(self, host, token):
+    def _token_is_valid(self, host, token, handler=None):
         """Return True if it can find a token for the given host and
         the token found, when prefixed with an authentication preamble (Bearer),
         matches exactly the token received. Otherwise, it returns False.
         """
-        handler = AuthenticationHandler()
+        if not handler:
+            handler = AuthenticationHandler()
 
         secret = handler.secret(host)
 

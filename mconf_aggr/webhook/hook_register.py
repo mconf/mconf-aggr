@@ -174,6 +174,8 @@ class WebhookServer:
             # If it succeeds in getting a response.
             try:
                 parse_response(r)
+
+                return r
             except (WebhookCreateError, WebhookAlreadyExistsError) as err:
                 # Pass-through the known errors.
                 raise err

@@ -9,7 +9,8 @@ import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.webhook.event_listener import (WebhookEventListener,
                                                WebhookEventHandler,
                                                WebhookResponse,
-                                               AuthMiddleware)
+                                               AuthMiddleware,
+                                               _normalize_server_url)
 from mconf_aggr.webhook.exceptions import WebhookError, RequestProcessingError
 
 class TestListener(unittest.TestCase):
@@ -118,38 +119,34 @@ class TestAuthMiddleware(unittest.TestCase):
         with self.assertRaises(falcon.HTTPUnauthorized):
             self.auth_middleware.process_request(self.req_mock, self.resp_mock)
 
-        self.auth_middleware._token_is_valid.assert_called_with("my-server.com", "Bearer 123456")
+        self.auth_middleware._token_is_valid.assert_called_with("https://my-server.com", "Bearer 123456")
 
     def test_token_is_valid(self):
-        cfg.config = {
-            "webhook": {
-                "auth": {
-                    "tokens":
-                    {
-                        "host0": "123",
-                        "host1": "1234",
-                        "host2": "102030",
-                        "localhost": "123456"
-                    }
-                }
-            }
+        handler_database = {
+            "host0": "123",
+            "host1": "1234",
+            "host2": "102030",
+            "localhost": "123456"
         }
+
+        handler_mock = MagicMock()
+        handler_mock.secret = lambda h: handler_database[h]
 
         host = "localhost"
         token = "Bearer 123456"
-        self.assertTrue(self.auth_middleware._token_is_valid(host, token))
+        self.assertTrue(self.auth_middleware._token_is_valid(host, token, handler_mock))
 
         host = "host0"
         token = "Bearer 123"
-        self.assertTrue(self.auth_middleware._token_is_valid(host, token))
+        self.assertTrue(self.auth_middleware._token_is_valid(host, token, handler_mock))
 
         host = "host1"
         token = "Bearer 123456"
-        self.assertFalse(self.auth_middleware._token_is_valid(host, token))
+        self.assertFalse(self.auth_middleware._token_is_valid(host, token, handler_mock))
 
         host = "host2"
         token = "Bearer 123456"
-        self.assertFalse(self.auth_middleware._token_is_valid(host, token))
+        self.assertFalse(self.auth_middleware._token_is_valid(host, token, handler_mock))
 
 
 class TestWebhookEventHandler(unittest.TestCase):
@@ -196,13 +193,13 @@ class TestWebhookEventHandler(unittest.TestCase):
 
     def test_normalize_server_url(self):
         server_url = "my-server.com"
-        self.assertEqual(self.event_handler._normalize_server_url(server_url), "https://my-server.com")
+        self.assertEqual(_normalize_server_url(server_url), "https://my-server.com")
 
         server_url = "http://my-server.com"
-        self.assertEqual(self.event_handler._normalize_server_url(server_url), "http://my-server.com")
+        self.assertEqual(_normalize_server_url(server_url), "http://my-server.com")
 
         server_url = "https://my-server.com"
-        self.assertEqual(self.event_handler._normalize_server_url(server_url), "https://my-server.com")
+        self.assertEqual(_normalize_server_url(server_url), "https://my-server.com")
 
         server_url = "        my-server.com       "
-        self.assertEqual(self.event_handler._normalize_server_url(server_url), "https://my-server.com")
+        self.assertEqual(_normalize_server_url(server_url), "https://my-server.com")
