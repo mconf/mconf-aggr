@@ -115,7 +115,6 @@ $ pip install -r requirements.txt
 We are currently using the following third-party packages:
 
 * `psycopg2` version 2.7.3.1 or later ([official site](http://initd.org/psycopg/))
-* `zabbix-api` ([GitHub repository](https://github.com/gescheit/scripts/tree/master/zabbix))
 * `sphinx` version 1.6.3 or later ([official site](http://www.sphinx-doc.org/en/stable/))
 * `sqlalchemy` version 1.2.0b2 or later ([official site](https://www.sqlalchemy.org/))
 
@@ -123,7 +122,6 @@ They can be easily installed with:
 
 ```
 $ pip3 install psycopg2
-$ pip3 install zabbix-api
 $ pip3 install sphinx
 $ pip3 install sqlalchemy
 ```
@@ -133,7 +131,6 @@ To check if the installation ran successfuly, try to import them
 
 ```
 $ python -c "import psycopg2"
-$ python -c "import zabbix_api"
 $ python -c "import sphinx"
 $ python -c "import sqlalchemy"
 ```
@@ -303,22 +300,22 @@ Unstable releases receive tags:
 * `<app>-<full_version>`
 * `<app>-<revision>`
 
-For instance, if the zabbix app is at version 0.0.2-pre-alpha and current commit hash is 36fba5,
+For instance, if the webhook app is at version 0.0.2-pre-alpha and current commit hash is 36fba5,
 local tags we be built as:
 
-* `zabbix-0.0.2-pre-alpha-36fba5`
+* `webhook-0.0.2-pre-alpha-36fba5`
 
 The stable release will have tags:
 
-* `zabbix-0.0.2`
-* `zabbix-0`
-* `zabbix-36fba5`
-* `zabbix-latest`
+* `webhook-0.0.2`
+* `webhook-0`
+* `webhook-36fba5`
+* `webhook-latest`
 
 And the unstable release will have tags:
 
-* `zabbix-0.0.2-pre-alpha`
-* `zabbix-36fba5`
+* `webhook-0.0.2-pre-alpha`
+* `webhook-36fba5`
 
 There is also a `staging` tag that is intended for pre-release images.
 
@@ -326,7 +323,7 @@ There is also a `staging` tag that is intended for pre-release images.
 
 ### Developing with Docker
 
-You can also develop using a single Docker image for both webhook and zabbix applications.
+You can also develop using a single Docker image.
 The actual code run is replaced by the code residing in the current directory
 of the project.
 
@@ -346,22 +343,20 @@ $ docker tag mconf/mconf-aggr:dev mconf/mconf-aggr:dev-latest
 
 #### Makefike
 
-The easiest way however is to use the Makefile provided. In this case, `APP` also must be provided.
+The easiest way however is to use the Makefile provided.
 
-To build the development image using Docker (the value of `APP` is not important), run:
+To build the development image using Docker, run:
 
 ```
-$ make docker-build-dev APP=.
+$ make docker-build-dev
 ```
 
 To run this image passing some other options to `docker run` use the`EXTRA_OPTS`
 (for instance, for publishing ports), run:
 
 ```
-$ make docker-run-dev APP=webhook EXTRA_OPTS="-p 8000:8000"
+$ make docker-run-dev EXTRA_OPTS="-p 8000:8000"
 ```
-
-Note that `APP` is now important. It can be `webhook` or `zabbix`.
 
 ### Dockerize
 
@@ -392,41 +387,41 @@ build the final images from the dockerized base images.
 Some tasks can be done using the `make` utility. The most important ones are
 shown below:
 
-* To run an application (without Docker): `$ make run APP=[zabbix|webhook] CONFIG_PATH=path/to/app-config.json`
-* To run all applications with Docker Compose: `$ make up [IMAGE_VERSION=latest] APP=<anything>`
-* To start, restart or stop a single service: `$ make [start|restart|stop] SERVICE=[mconf-aggr-webhook|mconf-aggr-zabbix] APP=<anything>`
-* To build the Docker image: `$ make docker-build APP=[zabbix|webhook]`
-* To build the development Docker image: `$ make docker-build-dev APP=.`
-* To run the Docker image: `$ make docker-run APP=[zabbix|webhook] [CONFIG_PATH=path/to/app-config.json] [LOGGING_PATH=path/to/logging.json] [IMAGE_VERSION=latest]`
-* To run the Docker image of development: `$ make docker-run-dev APP=[webhook|zabbix] [CONFIG_PATH=path/to/webhook-config.json] [LOGGING_PATH=path/to/logging.json] [EXTRA_OPTS=""]`
-* To tag stable Docker images: `$ make docker-tag APP=[zabbix|webhook]`
-* To tag unstable Docker images: `$ make docker-tag-unstable APP=[zabbix|webhook]`
-* To tag latest Docker images: `$ make docker-tag-latest APP=[zabbix|webhook]`
-* To tag staging Docker images: `$ make docker-tag-staging APP=[zabbix|webhook]`
-* To push stable Docker images to registry: `$ make docker-push APP=[zabbix|webhook]`
-* To push unstable Docker images to registry: `$ make docker-push-unstable APP=[zabbix|webhook]`
-* To push latest Docker images to registry: `$ make docker-push-latest APP=[zabbix|webhook]`
-* To push staging Docker images to registry: `$ make docker-push-staging APP=[zabbix|webhook]`
-* To show the stable tags that will be generated: `$ make tags APP=[zabbix|webhook]`
-* To show the unstable tags that will be generated: `$ make tags-unstable APP=[zabbix|webhook]`
-* To show the latest tags that will be generated: `$ make tags-latest APP=[zabbix|webhook]`
-* To show the staging tags that will be generated: `$ make tags-staging APP=[zabbix|webhook]`
-* To show all project-related Docker images: `$ make docker-image APP=<anything>`
-* To remove all containers (related to the project or not): `$ make docker-container-rm APP=<anything>`
-* To remove all project-related Docker images: `$ make docker-rm APP=<anything>`
-* To remove all dangling project-related Docker images: `$ make docker-rm-dangling APP=<anything>`
-* To prune Docker system: `$ make docker-prune APP=<anything>`
-* To remove all dangling project-related Docker images and prune Docker syste: `$ make docker-clean APP=<anything>`
-* To run the tests: `$ make test APP=<anything>`
-* To install dependecies: `$ make dep APP=<anything>`
-* To build the HTML documentation: `$ make html APP=<anything>`
-* To run the linter: `$ make lint APP=<anything>`
-* To clean the project: `$ make clean APP=<anything>`
+* To run mconf-aggr (without Docker): `$ make run CONFIG_PATH=path/to/app-config.json`
+* To run mconf-aggr with Docker Compose: `$ make up [IMAGE_VERSION=latest]`
+* To start, restart or stop a single service: `$ make [start|restart|stop] SERVICE=[mconf-aggr-webhook]`
+* To build the Docker image: `$ make docker-build`
+* To build the development Docker image: `$ make docker-build-dev`
+* To run the Docker image: `$ make docker-run  [CONFIG_PATH=path/to/app-config.json] [LOGGING_PATH=path/to/logging.json] [IMAGE_VERSION=latest]`
+* To run the Docker image of development: `$ make docker-run-dev [CONFIG_PATH=path/to/webhook-config.json] [LOGGING_PATH=path/to/logging.json] [EXTRA_OPTS=""]`
+* To tag stable Docker images: `$ make docker-tag`
+* To tag unstable Docker images: `$ make docker-tag-unstable`
+* To tag latest Docker images: `$ make docker-tag-latest`
+* To tag staging Docker images: `$ make docker-tag-staging`
+* To push stable Docker images to registry: `$ make docker-push`
+* To push unstable Docker images to registry: `$ make docker-push-unstable`
+* To push latest Docker images to registry: `$ make docker-push-latest`
+* To push staging Docker images to registry: `$ make docker-push-staging`
+* To show the stable tags that will be generated: `$ make tags`
+* To show the unstable tags that will be generated: `$ make tags-unstable`
+* To show the latest tags that will be generated: `$ make tags-latest`
+* To show the staging tags that will be generated: `$ make tags-staging`
+* To show all project-related Docker images: `$ make docker-image`
+* To remove all containers (related to the project or not): `$ make docker-container-rm`
+* To remove all project-related Docker images: `$ make docker-rm`
+* To remove all dangling project-related Docker images: `$ make docker-rm-dangling`
+* To prune Docker system: `$ make docker-prune`
+* To remove all dangling project-related Docker images and prune Docker syste: `$ make docker-clean`
+* To run the tests: `$ make test`
+* To install dependecies: `$ make dep`
+* To build the HTML documentation: `$ make html`
+* To run the linter: `$ make lint`
+* To clean the project: `$ make clean`
 
 You can also overwrite some parameters used in Makefile. For instance, if you
-want to run a different revision of the zabbix app, you can run:
+want to run a different revision, you can run:
 
-`$ make docker-run APP=zabbix REVISION=<revision>`
+`$ make docker-run REVISION=<revision>`
 
 The `Makefile` also provides sensitive defaults:
 
@@ -437,5 +432,3 @@ LOGGING_PATH=<current_directory/config/logging.json
 DOCKER_USERNAME=mconf
 REPOSITORY=mconf-aggr
 ```
-
-> The `APP` parameter is mandatory even if the command does not require it. Failing to supply it will cause the command to fail.

@@ -23,8 +23,7 @@ setup(
                       "falcon",
                       "psycopg2",
                       "sphinx",
-                      "sqlalchemy",
-                      "zabbix-api",
+                      "sqlalchemy"
                       ],
     test_suite="tests"
 )

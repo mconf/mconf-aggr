@@ -1,7 +1,0 @@
-cachetools==2.0.1
-certifi==2017.7.27.1
-requests==2.18.4
-psycopg2==2.7.3.1
-SQLAlchemy==1.2.0b2
-urllib3==1.22
-zabbix-api==0.5.3

@@ -7,8 +7,6 @@
                        "callback_test",
                        "channel_test",
                        "thread_test"],
-        "zabbix": ["zabbix_server_test",
-                   "zabbix_servers_pool_test"],
         "webhook": [
             "database_handler_test",
             "event_listener_test",

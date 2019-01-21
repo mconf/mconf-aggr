@@ -13,12 +13,11 @@ IMAGE_NAME?=$(DOCKER_USERNAME)/$(REPOSITORY)
 IMAGE_VERSION?=$(FULL_VERSION)-$(REVISION)
 
 run:
-	AGGR_APP=$(APP) bash start.sh -c $(CONFIG_PATH)
+	gunicorn main_webhook:app --bind=0.0.0.0:8000 --worker-class gevent
 
 up:
 	IMAGE_NAME=$(IMAGE_NAME) \
 	MCONF_AGGR_WEBHOOK_IMAGE_VERSION=webhook-$(IMAGE_VERSION) \
-	MCONF_AGGR_ZABBIX_IMAGE_VERSION=zabbix-$(IMAGE_VERSION) \
 	docker-compose -f production.yml up
 
 start:
@@ -34,9 +33,6 @@ docker-build:
 	docker build -f Dockerfile.dockerize.webhook -t $(IMAGE_NAME):webhook-$(IMAGE_VERSION) .
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-latest
 
-	docker build -f Dockerfile.dockerize.zabbix -t $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) .
-	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-latest
-
 	docker image rm `docker images -f dangling=true -a -q`
 
 docker-build-dev:
@@ -49,8 +45,8 @@ docker-run:
 	-v $(AGGR_PATH)/$(CONFIG_PATH):$(IMAGE_WORKDIR)/$(CONFIG_PATH) \
 	-v $(AGGR_PATH)/$(LOGGING_PATH):$(IMAGE_WORKDIR)/$(LOGGING_PATH) \
 	-p 8000:8000 \
-	--env-file=envs/$(APP)-env-file.env \
-	-ti $(IMAGE_NAME):$(APP)-$(IMAGE_VERSION)
+	--env-file=envs/webhook-env-file.env \
+	-ti $(IMAGE_NAME):webhook-$(IMAGE_VERSION)
 
 docker-run-dev:
 	docker run --rm \
@@ -58,7 +54,7 @@ docker-run-dev:
 	-v $(AGGR_PATH)/$(LOGGING_PATH):$(IMAGE_WORKDIR)/$(LOGGING_PATH) \
 	-v $(AGGR_PATH):$(IMAGE_WORKDIR)/ \
 	-p 8000:8000 \
-	--env AGGR_APP=$(APP) $(EXTRA_OPTS) -ti $(IMAGE_NAME):dev-latest
+	--env $(EXTRA_OPTS) -ti $(IMAGE_NAME):dev-latest
 
 docker-tag:
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-$(NUMBER_VERSION)
@@ -66,51 +62,30 @@ docker-tag:
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-$(REVISION)
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-latest
 
-	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-$(NUMBER_VERSION)
-	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-$(MAJOR_VERSION)
-	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-$(REVISION)
-	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-latest
-
 docker-push: docker-tag
 	docker push $(IMAGE_NAME):webhook-$(NUMBER_VERSION)
 	docker push $(IMAGE_NAME):webhook-$(MAJOR_VERSION)
 	docker push $(IMAGE_NAME):webhook-$(REVISION)
 	docker push $(IMAGE_NAME):webhook-latest
 
-	docker push $(IMAGE_NAME):zabbix-$(NUMBER_VERSION)
-	docker push $(IMAGE_NAME):zabbix-$(MAJOR_VERSION)
-	docker push $(IMAGE_NAME):zabbix-$(REVISION)
-	docker push $(IMAGE_NAME):zabbix-latest
-
 docker-tag-unstable:
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-$(FULL_VERSION)
-	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-$(REVISION)
-
-	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-$(FULL_VERSION)
-	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-$(REVISION)
 
 docker-push-unstable: docker-tag-unstable
 	docker push $(IMAGE_NAME):webhook-$(FULL_VERSION)
 	docker push $(IMAGE_NAME):webhook-$(REVISION)
 
-	docker push $(IMAGE_NAME):zabbix-$(FULL_VERSION)
-	docker push $(IMAGE_NAME):zabbix-$(REVISION)
-
 docker-tag-latest:
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-latest
-	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-latest
 
 docker-push-latest: docker-tag-latest
 	docker push $(IMAGE_NAME):webhook-latest
-	docker push $(IMAGE_NAME):zabbix-latest
 
 docker-tag-staging:
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-staging
-	docker tag $(IMAGE_NAME):zabbix-$(IMAGE_VERSION) $(IMAGE_NAME):zabbix-staging
 
 docker-push-staging: docker-tag-staging
 	docker push $(IMAGE_NAME):webhook-staging
-	docker push $(IMAGE_NAME):zabbix-staging
 
 .PHONY:docker-image
 docker-image:
@@ -141,7 +116,6 @@ test:
 
 dep:
 	@pip install -r requirements_webhook.txt
-	@pip install -r requirements_zabbix.txt
 
 html:
 	@make -C docs/ html
