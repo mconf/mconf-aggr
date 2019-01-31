@@ -30,7 +30,7 @@ stop:
 	docker-compose -f production.yml stop ${SERVICE}
 
 docker-build:
-	docker build -f Dockerfile.dockerize.webhook -t $(IMAGE_NAME):webhook-$(IMAGE_VERSION) .
+	docker build -f Dockerfile.dockerize -t $(IMAGE_NAME):webhook-$(IMAGE_VERSION) .
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-latest
 
 	docker image rm `docker images -f dangling=true -a -q`

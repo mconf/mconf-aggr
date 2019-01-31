@@ -30,7 +30,7 @@ COPY ./main.py /usr/src/mconf-aggr/main.py
 
 WORKDIR /usr/src/mconf-aggr/
 
-COPY ./config/config_webhook.json.tmpl ./config/config_webhook.json.tmpl
+COPY ./config/config.json.tmpl ./config/config.json.tmpl
 
 RUN apk add --no-cache openssl
 

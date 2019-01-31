@@ -6,7 +6,7 @@ RUN mkdir /install
 
 WORKDIR /install
 
-COPY ./requirements_webhook.txt /requirements.txt
+COPY ./requirements.txt /requirements.txt
 
 RUN apk update && \
     apk add postgresql-libs && \
@@ -27,12 +27,12 @@ COPY ./config/logging.json /usr/src/mconf-aggr/config/logging.json
 COPY ./mconf_aggr/__init__.py /usr/src/mconf-aggr/mconf_aggr/__init__.py
 COPY ./mconf_aggr/aggregator/ /usr/src/mconf-aggr/mconf_aggr/aggregator/
 COPY ./mconf_aggr/webhook/ /usr/src/mconf-aggr/mconf_aggr/webhook/
-COPY ./main_webhook.py /usr/src/mconf-aggr/main_webhook.py
+COPY ./main.py /usr/src/mconf-aggr/main.py
 
 WORKDIR /usr/src/mconf-aggr/
 
-COPY ./config/config_webhook.json.tmpl ./config/config_webhook.json.tmpl
+COPY ./config/config.json.tmpl ./config/config.json.tmpl
 
 EXPOSE 8000
 
-CMD dockerize -template ./config/config_webhook.json.tmpl:./config/config.json gunicorn main_webhook:app --bind=0.0.0.0:8000
+CMD dockerize -template ./config/config.json.tmpl:./config/config.json gunicorn main:app --bind=0.0.0.0:8000
