@@ -5,6 +5,16 @@ It will receive, validate, parse and send the parsed data to be processed.
 import logging
 
 import falcon
+import sqlalchemy
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
+from mconf_aggr.aggregator.utils import create_session_scope
+from mconf_aggr.webhook.exceptions import DatabaseNotReadyError
+
+Session = sessionmaker()
+
+session_scope = create_session_scope(Session)
 
 
 """Falcon follows the REST architectural style, meaning (among
@@ -27,6 +37,8 @@ class ProbeListener:
             If not supplied, it will instantiate a new logger from __name__.
         """
         self.logger = logger or logging.getLogger(__name__)
+
+        _init()
 
     def on_get(self, req, resp):
         """Handle GET requests.
@@ -63,6 +75,13 @@ class LivenessProbeListener(ProbeListener):
         -------
         bool : True if the application is running correctly. False otherwise.
         """
+        try:
+            _ping_database()
+        except DatabaseNotReadyError as err:
+            self.logger.warn(str(err))
+
+            return False
+
         return True
 
 
@@ -78,4 +97,26 @@ class ReadinessProbeListener(ProbeListener):
         bool : True if the service is ready to handle requests adequately.
         False otherwise.
         """
+        try:
+            _ping_database()
+        except DatabaseNotReadyError as err:
+            self.logger.warn(str(err))
+
+            return False
+
         return True
+
+
+def _init():
+    engine = create_engine("postgresql://mconf:postgres@localhost/mconf", echo=False)
+    Session.configure(bind=engine)
+
+
+def _ping_database():
+    with session_scope() as session:
+        try:
+            session.execute("SELECT 1")
+        except sqlalchemy.exc.OperationalError as err:
+            raise DatabaseNotReadyError(f"Operational error on database during ping.")
+        except Exception as err:
+            raise DatabaseNotReadyError(f"Unknown error during ping: {err}")
