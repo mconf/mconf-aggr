@@ -9,18 +9,17 @@ import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from mconf_aggr.aggregator.utils import create_session_scope
+from mconf_aggr.webhook.database import DatabaseConnector
 from mconf_aggr.webhook.exceptions import DatabaseNotReadyError
-
-Session = sessionmaker()
-
-session_scope = create_session_scope(Session)
 
 
 """Falcon follows the REST architectural style, meaning (among
 other things) that you think in terms of resources and state
 transitions, which map to HTTP verbs.
 """
+
+session_scope = DatabaseConnector.get_session_scope()
+
 
 class ProbeListener:
     """Listener for Kubernetes probes.
@@ -38,7 +37,7 @@ class ProbeListener:
         """
         self.logger = logger or logging.getLogger(__name__)
 
-        _init()
+        #_init()
 
     def on_get(self, req, resp):
         """Handle GET requests.
@@ -105,11 +104,6 @@ class ReadinessProbeListener(ProbeListener):
             return False
 
         return True
-
-
-def _init():
-    engine = create_engine("postgresql://mconf:postgres@localhost/mconf", echo=False)
-    Session.configure(bind=engine)
 
 
 def _ping_database():

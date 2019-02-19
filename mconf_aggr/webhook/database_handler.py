@@ -15,14 +15,12 @@ from sqlalchemy.orm.attributes import flag_modified
 from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger, create_session_scope
+from mconf_aggr.webhook.database import DatabaseConnector
 from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents, Servers, SharedSecrets
 from mconf_aggr.webhook.exceptions import DatabaseNotReadyError, InvalidWebhookEventError, WebhookDatabaseError
 
 
-Session = sessionmaker()
-
-session_scope = create_session_scope(Session)
-
+session_scope = DatabaseConnector.get_session_scope()
 
 class DatabaseEventHandler:
     """This is an abstract class that handles webhook events.
@@ -644,78 +642,6 @@ class DataProcessor:
         return event_handler
 
 
-class PostgresConnector:
-    """Wrapper of PostgreSQL connection.
-
-    It encapsulates the inner workings of the SQLAlchemy connection process.
-
-    Before using it, one must call once its method `connect()` to configure and
-    create a connection to the database. Then, the `update()` method can be
-    called for each metric whenever it is necessary to update the database.
-    When finished, one must call `close()` to definitely close the connection
-    to the database (currently it does nothing).
-    """
-    def __init__(self, database_uri=None, logger=None):
-        """Constructor of the PostgresConnector.
-
-        Parameters
-        ----------
-        database_uri : str
-            URI of the PostgreSQL database instance either local or remote.
-        """
-        self.config = cfg.config['webhook']['database']
-        self.database_uri = database_uri or self._build_uri()
-        self.logger = logger or logging.getLogger(__name__)
-
-    def connect(self):
-        """Configure and connect the database.
-
-        It is responsible for creating an engine for the URI provided and
-        configure the session.
-        """
-        self.logger.debug("Creating new database session.")
-        engine = create_engine(self.database_uri, echo=False)
-        Session.configure(bind=engine)
-
-    def close(self):
-        """Close the connection to the database.
-
-        It currently does nothing.
-        """
-        self.logger.info("Closing connection to PostgreSQL. Nothing to do.")
-        pass
-
-    def update(self, data):
-        """Update the database with new data.
-
-        Parameters
-        ----------
-        data : dict
-            The data to be updated in the database.
-
-        Raises
-        ------
-        sqlalchemy.exc.OperationalError
-            If an error occur while persisting data into database.
-        """
-        try:
-            with time_logger(self.logger.debug,
-                             "Processing information to database took {elapsed}s."):
-                with session_scope() as session:
-                    DataProcessor(session).update(data)
-        except Exception as err:
-            self.logger.error(err)
-            raise
-
-    def _build_uri(self):
-        user = self.config['user']
-        password = self.config['password']
-        host = self.config['host']
-        database = self.config['database']
-
-        return f"postgresql://{user}:{password}@{host}/{database}"
-
-
 class WebhookDataWriter(AggregatorCallback):
     """Writer of data retrieved from webhooks.
 
@@ -736,20 +662,17 @@ class WebhookDataWriter(AggregatorCallback):
         connector : Database connector (driver).
             If not supplied, it will instantiate a new `PostgresConnector`.
         """
-        self.connector = connector or PostgresConnector()
         self.logger = logger or logging.getLogger(__name__)
 
     def setup(self):
         """Setup any resources needed to iteract with the database.
         """
         self.logger.info("Setting up WebhookDataWriter")
-        self.connector.connect()
 
     def teardown(self):
         """Release any resources used to iteract with the database.
         """
         self.logger.info("Tearing down WebhookDataWriter")
-        self.connector.close()
 
     def run(self, data):
         """Run main logic of the writer.
@@ -766,7 +689,10 @@ class WebhookDataWriter(AggregatorCallback):
             If any error occur while persisting event into database.
         """
         try:
-            self.connector.update(data)
+            with time_logger(self.logger.debug,
+                             "Processing information to database took {elapsed}s."):
+                with session_scope() as session:
+                    DataProcessor(session).update(data)
         except sqlalchemy.exc.OperationalError as err:
             self.logger.error("Operational error on database. Not persisting data.")
             self.logger.debug(err)

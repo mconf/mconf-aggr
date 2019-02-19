@@ -9,6 +9,7 @@ from urllib.parse import unquote
 import falcon
 
 import mconf_aggr.aggregator.cfg as cfg
+from mconf_aggr.webhook.database import DatabaseConnector
 from mconf_aggr.webhook.database_handler import WebhookDataWriter
 from mconf_aggr.webhook.event_listener import WebhookEventHandler, WebhookEventListener, AuthMiddleware
 from mconf_aggr.webhook.probe_listener import LivenessProbeListener, ReadinessProbeListener
@@ -33,6 +34,10 @@ logger = logging.getLogger(__name__)
 channel = "webhooks"
 webhook_writer = WebhookDataWriter()
 aggregator = Aggregator()
+
+database = DatabaseConnector()
+
+database.connect()
 
 aggregator.register_callback(webhook_writer, channel=channel)
 
@@ -59,3 +64,5 @@ if should_register:
     webhook_register.create_hooks()
 
 aggregator.start()
+
+database.close()
