@@ -9,14 +9,17 @@ from urllib.parse import unquote
 import falcon
 
 import mconf_aggr.aggregator.cfg as cfg
+from mconf_aggr.webhook.database import DatabaseConnector
 from mconf_aggr.webhook.database_handler import WebhookDataWriter
 from mconf_aggr.webhook.event_listener import WebhookEventHandler, WebhookEventListener, AuthMiddleware
+from mconf_aggr.webhook.probe_listener import LivenessProbeListener, ReadinessProbeListener
 from mconf_aggr.webhook.hook_register import WebhookRegister
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
 
 
 # falcon.API instances are callable WSGI apps.
-app = falcon.API(middleware=AuthMiddleware())
+#app = falcon.API(middleware=AuthMiddleware())
+app = falcon.API()
 
 # Consume and merge request's contents into params.
 req_opt = app.req_options
@@ -32,6 +35,10 @@ channel = "webhooks"
 webhook_writer = WebhookDataWriter()
 aggregator = Aggregator()
 
+database = DatabaseConnector()
+
+database.connect()
+
 aggregator.register_callback(webhook_writer, channel=channel)
 
 try:
@@ -45,6 +52,8 @@ event_handler = WebhookEventHandler(publisher, channel)
 hook = WebhookEventListener(event_handler)
 
 app.add_route(route, hook)
+app.add_route("/health", LivenessProbeListener())
+app.add_route("/ready", ReadinessProbeListener())
 
 should_register = cfg.config['webhook']['should_register']
 if should_register:
@@ -55,3 +64,5 @@ if should_register:
     webhook_register.create_hooks()
 
 aggregator.start()
+
+database.close()

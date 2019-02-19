@@ -22,98 +22,21 @@ other things) that you think in terms of resources and state
 transitions, which map to HTTP verbs.
 """
 
-class WebhookEventListener:
-    """Listener for webhooks.
-
-    This class is passed to falcon.API to handle requests made to itself.
-    This class might have more methods if needed, on the format on_*.
-    It could handle POST, GET, PUT and DELETE requests as well.
-    """
-    def __init__(self, event_handler, logger=None):
-        """Constructor of the WebhookEventListener.
-
-        Parameters
-        ----------
-        event_handler : WebhookEventHandler.
-        logger : logging.Logger
-            If not supplied, it will instantiate a new logger from __name__.
-        """
-        self.event_handler = event_handler
-        self.logger = logger or logging.getLogger(__name__)
-
-    def on_post(self, req, resp):
-        """Handle POST requests.
-
-        After receiving a POST call the event_handler to handle the received message.
-
-        Parameters
-        ----------
-        req : falcon.Request
-        resp : falcon.Response
-        """
-        with time_logger(self.logger.debug,
-                         "Processing webhook event took {elapsed}s."):
-            server_url = req.get_param("domain")
-            event = req.get_param("event")
-
-            self.logger.info("Webhook event received from '{}' (last hop: '{}').".format(server_url, req.host))
-
-            # Always responds with HTTP status code 200 in order to prevent
-            # the sending webhook endpoint from stopping requesting.
-            try:
-                self.event_handler.process_event(server_url, event)
-            except WebhookError as err:
-                self.logger.error("An error occurred while processing event.")
-                response = WebhookResponse(str(err))
-                resp.body = json.dumps(response.error)
-                resp.status = falcon.HTTP_200
-            except Exception as err:
-                self.logger.error("An unexpected error occurred while processing event.")
-                response = WebhookResponse(str(err))
-                resp.body = json.dumps(response.error)
-                resp.status = falcon.HTTP_200
-            else:
-                response = WebhookResponse("Event processed successfully")
-                resp.body = json.dumps(response.success)
-                resp.status = falcon.HTTP_200
-
-
-class WebhookResponse:
-    """Basic response.
-
-    This class represents the basic format of a response provided by the
-    webhook listener. It can be extended to fullfil future needs and extensions
-    of the webhook listener API.
-    """
-    def __init__(self, message):
-        """Constructor of the WebhookResponse.
-
-        Parameters
-        ----------
-        message : str
-            Message to be sent back to the requester.
-        """
-        self.message = message
-
-    @property
-    def success(self):
-        return self._response("Success")
-
-
-    @property
-    def error(self):
-        return self._response("Error")
-
-
-    def _response(self, status):
-        return {"status": status, "message": self.message}
-
 class AuthMiddleware:
     """Middleware used for authentication.
 
     This class is used directly by Falcon to authenticate incoming events.
     It is used before the request is handled.
     """
+
+    def __call__(self, req, resp, resource, params):
+        """Make this class callable.
+
+        It enables the class to be set in falcon.before and be used
+        like a middleware. It currently drops the resource and params arguments.
+        """
+        self.process_request(req, resp)
+
     def process_request(self, req, resp):
         """Process the request before routing it.
 
@@ -196,6 +119,94 @@ class AuthMiddleware:
                 return True
 
         return False
+
+class WebhookEventListener:
+    """Listener for webhooks.
+
+    This class is passed to falcon.API to handle requests made to itself.
+    This class might have more methods if needed, on the format on_*.
+    It could handle POST, GET, PUT and DELETE requests as well.
+    """
+    def __init__(self, event_handler, logger=None):
+        """Constructor of the WebhookEventListener.
+
+        Parameters
+        ----------
+        event_handler : WebhookEventHandler.
+        logger : logging.Logger
+            If not supplied, it will instantiate a new logger from __name__.
+        """
+        self.event_handler = event_handler
+        self.logger = logger or logging.getLogger(__name__)
+
+    @falcon.before(AuthMiddleware())
+    def on_post(self, req, resp):
+        """Handle POST requests.
+
+        After receiving a POST call the event_handler to handle the received message.
+
+        Parameters
+        ----------
+        req : falcon.Request
+        resp : falcon.Response
+        """
+        self.logger.info("received")
+        with time_logger(self.logger.debug,
+                         "Processing webhook event took {elapsed}s."):
+            server_url = req.get_param("domain")
+            event = req.get_param("event")
+
+            self.logger.info("Webhook event received from '{}' (last hop: '{}').".format(server_url, req.host))
+
+            # Always responds with HTTP status code 200 in order to prevent
+            # the sending webhook endpoint from stopping requesting.
+            try:
+                self.event_handler.process_event(server_url, event)
+            except WebhookError as err:
+                self.logger.error("An error occurred while processing event.")
+                response = WebhookResponse(str(err))
+                resp.body = json.dumps(response.error)
+                resp.status = falcon.HTTP_200
+            except Exception as err:
+                self.logger.error("An unexpected error occurred while processing event.")
+                response = WebhookResponse(str(err))
+                resp.body = json.dumps(response.error)
+                resp.status = falcon.HTTP_200
+            else:
+                response = WebhookResponse("Event processed successfully")
+                resp.body = json.dumps(response.success)
+                resp.status = falcon.HTTP_200
+
+
+class WebhookResponse:
+    """Basic response.
+
+    This class represents the basic format of a response provided by the
+    webhook listener. It can be extended to fullfil future needs and extensions
+    of the webhook listener API.
+    """
+    def __init__(self, message):
+        """Constructor of the WebhookResponse.
+
+        Parameters
+        ----------
+        message : str
+            Message to be sent back to the requester.
+        """
+        self.message = message
+
+    @property
+    def success(self):
+        return self._response("Success")
+
+
+    @property
+    def error(self):
+        return self._response("Error")
+
+
+    def _response(self, status):
+        return {"status": status, "message": self.message}
 
 
 class WebhookEventHandler:
