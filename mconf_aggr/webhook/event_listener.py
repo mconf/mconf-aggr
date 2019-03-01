@@ -150,7 +150,6 @@ class WebhookEventListener:
         req : falcon.Request
         resp : falcon.Response
         """
-        self.logger.info("received")
         with time_logger(self.logger.debug,
                          "Processing webhook event took {elapsed}s."):
             server_url = req.get_param("domain")
