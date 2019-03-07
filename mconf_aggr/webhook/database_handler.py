@@ -481,17 +481,17 @@ class RapHandler(DatabaseEventHandler):
         if records_table:
             # Update status based on event.
             # Handle "unpublished" and "deleted" when webhooks are emitting those events.
-            if(event.current_step == "rap-process-ended"):
+            current_status = records_table.status
+            if(event.current_step == "rap-process-ended" and current_status == "processing"):
                 records_table.status = "processed"
-            elif(event.current_step == "rap-publish-ended"):
+            elif(event.current_step == "rap-publish-ended" and current_status == "processed"):
                 records_table.status = "published"
                 records_table.published = True
-            else:
-                records_table.status = "processing"
         else:
             # Create and initialize table recordings.
             records_table = Recordings(**event._asdict())
             records_table.status = "processing"
+            records_table.playback = []
             records_table.participants = (
                 int(
                     self.session.query(UsersEvents.id).
@@ -542,9 +542,11 @@ class RapHandler(DatabaseEventHandler):
             records_table.size = event.size
             records_table.raw_size = event.raw_size
             records_table.meta_data = event.meta_data
-            records_table.playback = event.playback
             records_table.download = event.download
             records_table.current_step = event.current_step
+            records_table.playback.append(event.playback)
+
+            self.logger.info(f"records_table.playback = {records_table.playback}")
 
         self.session.add(records_table)
 
