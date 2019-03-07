@@ -491,6 +491,7 @@ class RapHandler(DatabaseEventHandler):
             # Create and initialize table recordings.
             records_table = Recordings(**event._asdict())
             records_table.status = "processing"
+            records_table.playback = []
             records_table.participants = (
                 int(
                     self.session.query(UsersEvents.id).
@@ -541,9 +542,11 @@ class RapHandler(DatabaseEventHandler):
             records_table.size = event.size
             records_table.raw_size = event.raw_size
             records_table.meta_data = event.meta_data
-            records_table.playback = event.playback
             records_table.download = event.download
             records_table.current_step = event.current_step
+            records_table.playback.append(event.playback)
+
+            self.logger.info(f"records_table.playback = {records_table.playback}")
 
         self.session.add(records_table)
 
