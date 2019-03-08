@@ -81,6 +81,14 @@ class MeetingCreatedHandler(DatabaseEventHandler):
         self.logger.info(f"Processing meeting-created event for internal-meeting-id: '{event.internal_meeting_id}'.")
 
         # Create tables meetings_events and meetings.
+        if (
+            self.session.query(MeetingsEvents)
+            .filter(MeetingsEvents.internal_meeting_id == event.internal_meeting_id)
+            .first()
+        ):
+            self.logger.warn(f"Meeting with internal-meeting-id '{event.internal_meeting_id}' already exists.")
+            return
+
         new_meetings_events = MeetingsEvents(**event._asdict())
         new_meetings_events.has_forcibly_ended = False
         new_meetings_events.unique_users = 0
