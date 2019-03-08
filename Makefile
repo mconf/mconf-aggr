@@ -13,7 +13,7 @@ IMAGE_NAME?=$(DOCKER_USERNAME)/$(REPOSITORY)
 IMAGE_VERSION?=$(FULL_VERSION)-$(REVISION)
 
 run:
-	gunicorn main_webhook:app --bind=0.0.0.0:8000 --worker-class gevent
+	gunicorn main:app --bind=0.0.0.0:8000 --worker-class gevent
 
 up:
 	IMAGE_NAME=$(IMAGE_NAME) \
