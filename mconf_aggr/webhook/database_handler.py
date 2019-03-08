@@ -544,9 +544,7 @@ class RapHandler(DatabaseEventHandler):
             records_table.meta_data = event.meta_data
             records_table.download = event.download
             records_table.current_step = event.current_step
-            records_table.playback.append(event.playback)
-
-            self.logger.info(f"records_table.playback = {records_table.playback}")
+            records_table.playback = _upsert_playback(records_table, event.playback)
 
         self.session.add(records_table)
 
@@ -560,6 +558,27 @@ def _update_meeting(meetings_table):
     meetings_table.listener_count = sum(1 for attendee in meetings_table.attendees if attendee["is_listening_only"])
     meetings_table.voice_participant_count = sum(1 for attendee in meetings_table.attendees if attendee["has_joined_voice"])
     meetings_table.video_count = sum(1 for a in meetings_table.attendees if a["has_video"])
+
+
+def _upsert_playback(records_table, event_playback):
+    playbacks = records_table.playback[:]
+
+    for i, playback in enumerate(playbacks):
+        if _has_same_playback_format(playback, event_playback):
+            playbacks[i] = event_playback
+            break
+    else:
+        playbacks.append(event_playback)
+
+    return playbacks
+
+
+def _has_same_playback_format(playback1, playback2):
+    if "format" in playback1 and "format" in playback2:
+        if playback1["format"] == playback2["format"]:
+            return True
+
+    return False
 
 
 class DataProcessor:
