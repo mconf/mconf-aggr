@@ -92,6 +92,7 @@ class MeetingCreatedHandler(DatabaseEventHandler):
         new_meetings_events = MeetingsEvents(**event._asdict())
         new_meetings_events.has_forcibly_ended = False
         new_meetings_events.unique_users = 0
+        new_meetings_events.start_time = event.create_time
 
         metadata = self.MeetingCreatedMetadata(event.meta_data, None, self.logger)
         new_meetings_events.shared_secret_guid = metadata.mconf_shared_secret_guid
