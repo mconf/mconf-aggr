@@ -335,6 +335,7 @@ class Recordings(Base):
     meta_data = Column("metadata", JSON) # Name metadata is used by Base class.
     playback = Column(JSON)
     download = Column(JSON)
+    workflow = Column(JSON)
 
     def __repr__(self):
      return ("<Recordings("
