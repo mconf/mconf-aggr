@@ -491,6 +491,7 @@ class RapHandler(DatabaseEventHandler):
             records_table = Recordings(**event._asdict())
             records_table.status = "processing"
             records_table.playback = []
+            records_table.workflow = {}
             records_table.participants = (
                 int(
                     self.session.query(UsersEvents.id).
@@ -560,8 +561,10 @@ class RapProcessHandler(DatabaseEventHandler):
             if(event.current_step == "rap-process-started" and current_status == "processing"):
                 records_table.status = "processing"
                 records_table.current_step = event.current_step
+                records_table.workflow = _update_workflow(records_table, event.workflow, "processing")
                 self.session.add(records_table)
             elif(event.current_step == "rap-process-ended" and current_status == "processing"):
+                records_table.workflow = _update_workflow(records_table, event.workflow, "processed")
                 records_table.status = "processed"
                 records_table.current_step = event.current_step
                 self.session.add(records_table)
@@ -624,15 +627,16 @@ class RapPublishHandler(DatabaseEventHandler):
                 records_table.download = event.download
                 records_table.current_step = event.current_step
                 records_table.playback = _upsert_playback(records_table, event.playback)
+                records_table.workflow = _update_workflow(records_table, event.workflow, "published")
                 records_table.current_step = event.current_step
 
                 self.session.add(records_table)
             else:
                 self.logger.warn(f"Invalid event '{event.current_step}' from "
-                    f" current status '{current_status}' for recording '{event.record_id}'."
+                    f" current status '{current_status}' for meeting '{int_id}'."
                 )
         else:
-            self.logger.warn(f"No recording found with id '{event.record_id}'.")
+            self.logger.warn(f"No recording found with meeting id '{int_id}'.")
 
 
 def _update_meeting(meetings_table):
@@ -651,13 +655,23 @@ def _upsert_playback(records_table, event_playback):
 
     for i, playback in enumerate(playbacks):
         if _has_same_playback_format(playback, event_playback):
-            playbacks[i] = event_playback
+            old_playback = playbacks[i]
+            old_playback.update(event_playback)
+            playbacks[i] = old_playback
+
             break
-    else:
+    else: # In the case the for loop completes fully.
         playbacks.append(event_playback)
 
     return playbacks
 
+def _update_workflow(records_table, event_workflow, new_status):
+    workflows = records_table.workflow.copy()
+
+    if event_workflow:
+        workflows.update({event_workflow: new_status})
+
+    return workflows
 
 def _has_same_playback_format(playback1, playback2):
     if "format" in playback1 and "format" in playback2:
