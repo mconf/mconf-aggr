@@ -558,15 +558,21 @@ class RapProcessHandler(DatabaseEventHandler):
         if records_table:
             # Update status based on event.
             current_status = records_table.status
-            if(event.current_step == "rap-process-started" and current_status == "processing"):
-                records_table.status = "processing"
-                records_table.current_step = event.current_step
-                records_table.workflow = _update_workflow(records_table, event.workflow, "processing")
+            workflow_status = records_table.workflow.get(event.workflow, None)
+            if event.current_step == "rap-process-started":
+                if not workflow_status:
+                    records_table.workflow = _update_workflow(records_table, event.workflow, "processing")
+                if current_status == "processing":
+                    records_table.current_step = event.current_step
+
                 self.session.add(records_table)
-            elif(event.current_step == "rap-process-ended" and current_status == "processing"):
-                records_table.workflow = _update_workflow(records_table, event.workflow, "processed")
-                records_table.status = "processed"
-                records_table.current_step = event.current_step
+            elif event.current_step == "rap-process-ended":
+                if workflow_status == "processing":
+                    records_table.workflow = _update_workflow(records_table, event.workflow, "processed")
+                if current_status == "processing":
+                    records_table.status = "processed"
+                    records_table.current_step = event.current_step
+
                 self.session.add(records_table)
             else:
                 self.logger.warn(f"Invalid event '{event.current_step}' from "
@@ -604,31 +610,36 @@ class RapPublishHandler(DatabaseEventHandler):
         if records_table:
             # Update status based on event.
             current_status = records_table.status
-            if(event.current_step == "rap-publish-started" and current_status == "processed"):
-                records_table.current_step = event.current_step
+            workflow_status = records_table.workflow.get(event.workflow, None)
+            if event.current_step == "rap-publish-started":
+                if current_status == "processed":
+                    records_table.current_step = event.current_step
 
                 self.session.add(records_table)
-            if(event.current_step == "rap-publish-ended" and current_status == "processed"):
-                times = (
-                    self.session.query(MeetingsEvents.start_time, MeetingsEvents.end_time).
-                    filter(MeetingsEvents.internal_meeting_id == int_id).first()
-                )
-                start_time, end_time = times
+            elif event.current_step == "rap-publish-ended":
+                if workflow_status == "processed":
+                    records_table.workflow = _update_workflow(records_table, event.workflow, "published")
+                if current_status == "processed":
+                    times = (
+                        self.session.query(MeetingsEvents.start_time, MeetingsEvents.end_time).
+                        filter(MeetingsEvents.internal_meeting_id == int_id).first()
+                    )
+                    start_time, end_time = times
 
-                records_table.status = "published"
-                records_table.published = True
-                records_table.name = event.name
-                records_table.is_breakout = event.is_breakout
-                records_table.start_time = start_time
-                records_table.end_time = end_time
-                records_table.size = event.size
-                records_table.raw_size = event.raw_size
-                records_table.meta_data = event.meta_data
-                records_table.download = event.download
-                records_table.current_step = event.current_step
-                records_table.playback = _upsert_playback(records_table, event.playback)
-                records_table.workflow = _update_workflow(records_table, event.workflow, "published")
-                records_table.current_step = event.current_step
+                    records_table.status = "published"
+                    records_table.published = True
+                    records_table.name = event.name
+                    records_table.is_breakout = event.is_breakout
+                    records_table.start_time = start_time
+                    records_table.end_time = end_time
+                    records_table.size = event.size
+                    records_table.raw_size = event.raw_size
+                    records_table.meta_data = event.meta_data
+                    records_table.download = event.download
+                    records_table.current_step = event.current_step
+                    records_table.playback = _upsert_playback(records_table, event.playback)
+                    records_table.workflow = _update_workflow(records_table, event.workflow, "published")
+                    records_table.current_step = event.current_step
 
                 self.session.add(records_table)
             else:
