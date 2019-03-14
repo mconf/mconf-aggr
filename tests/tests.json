@@ -1,0 +1,20 @@
+{
+    "verbosity": 3,
+    "logging": false,
+    "test_suites": {
+        "aggregator": ["aggregator_test",
+                       "publisher_test",
+                       "callback_test",
+                       "channel_test",
+                       "thread_test"],
+        "webhook": [
+            "database_handler_test",
+            "event_listener_test",
+            "event_mapper_test"
+        ],
+        "integration": [
+            "integration_use_cases_test",
+            "integration_recordings_test"
+        ]
+    }
+}
