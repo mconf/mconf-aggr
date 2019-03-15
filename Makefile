@@ -1,7 +1,6 @@
 AGGR_PATH=$(shell pwd)
 IMAGE_WORKDIR=/usr/src/mconf-aggr
-CONFIG_PATH?=config/config.json
-LOGGING_PATH?=config/logging.json
+LOGGING_PATH?=mconf_aggr/logging.json
 DOCKER_USERNAME?=mconf
 REPOSITORY?=mconf-aggr
 FULL_VERSION?=$(shell cat .version)
@@ -13,7 +12,7 @@ IMAGE_NAME?=$(DOCKER_USERNAME)/$(REPOSITORY)
 IMAGE_VERSION?=$(FULL_VERSION)-$(REVISION)
 
 run:
-	gunicorn main_webhook:app --bind=0.0.0.0:8000 --worker-class gevent
+	gunicorn main:app --bind=0.0.0.0:8000 --worker-class gevent
 
 up:
 	IMAGE_NAME=$(IMAGE_NAME) \
@@ -30,7 +29,7 @@ stop:
 	docker-compose -f production.yml stop ${SERVICE}
 
 docker-build:
-	docker build -f Dockerfile.dockerize -t $(IMAGE_NAME):webhook-$(IMAGE_VERSION) .
+	docker build -f Dockerfile -t $(IMAGE_NAME):webhook-$(IMAGE_VERSION) .
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-latest
 
 	docker image rm `docker images -f dangling=true -a -q`
@@ -42,7 +41,6 @@ docker-build-dev:
 
 docker-run:
 	docker run --rm \
-	-v $(AGGR_PATH)/$(CONFIG_PATH):$(IMAGE_WORKDIR)/$(CONFIG_PATH) \
 	-v $(AGGR_PATH)/$(LOGGING_PATH):$(IMAGE_WORKDIR)/$(LOGGING_PATH) \
 	-p 8000:8000 \
 	--env-file=envs/webhook-env-file.env \
@@ -50,7 +48,6 @@ docker-run:
 
 docker-run-dev:
 	docker run --rm \
-	-v $(AGGR_PATH)/$(CONFIG_PATH):$(IMAGE_WORKDIR)/$(CONFIG_PATH) \
 	-v $(AGGR_PATH)/$(LOGGING_PATH):$(IMAGE_WORKDIR)/$(LOGGING_PATH) \
 	-v $(AGGR_PATH):$(IMAGE_WORKDIR)/ \
 	-p 8000:8000 \

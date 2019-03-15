@@ -1,6 +1,6 @@
 # Mconf-Aggregator
 
-* **Current version**: `0.0.3`
+* **Current version**: `0.0.5`
 
 ## Python version
 

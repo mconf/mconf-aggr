@@ -62,10 +62,9 @@ class DatabaseConnector:
 
     @classmethod
     def _build_uri(cls):
-        config = cfg.config['webhook']['database']
-        user = config['user']
-        password = config['password']
-        host = config['host']
-        database = config['database']
+        user = cfg.config["MCONF_WEBHOOK_DATABASE_USER"]
+        password = cfg.config["MCONF_WEBHOOK_DATABASE_PASSWORD"]
+        host = cfg.config["MCONF_WEBHOOK_DATABASE_HOST"]
+        database = cfg.config["MCONF_WEBHOOK_DATABASE_DATABASE"]
 
         return f"postgresql://{user}:{password}@{host}/{database}"

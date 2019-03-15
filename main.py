@@ -17,6 +17,8 @@ from mconf_aggr.webhook.hook_register import WebhookRegister
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
 
 
+logger = logging.getLogger(__name__)
+
 # falcon.API instances are callable WSGI apps.
 #app = falcon.API(middleware=AuthMiddleware())
 app = falcon.API()
@@ -25,11 +27,8 @@ app = falcon.API()
 req_opt = app.req_options
 req_opt.auto_parse_form_urlencoded = True
 
-cfg.config.setup_config("config/config.json")
-cfg.config.setup_logging()
 
-route = cfg.config['webhook']['route']
-logger = logging.getLogger(__name__)
+route = cfg.config["MCONF_WEBHOOK_ROUTE"]
 
 channel = "webhooks"
 webhook_writer = WebhookDataWriter()
@@ -55,11 +54,11 @@ app.add_route(route, hook)
 app.add_route("/health", LivenessProbeListener())
 app.add_route("/ready", ReadinessProbeListener())
 
-should_register = cfg.config['webhook']['should_register']
+should_register = cfg.config["MCONF_WEBHOOK_SHOULD_REGISTER"]
 if should_register:
     # Auto-register webhook callback to servers.
     webhook_register = WebhookRegister(
-        callback_url=cfg.config['webhook']['callback_url']
+        callback_url=cfg.config["MCONF_WEBHOOK_CALLBACK_URL"]
     )
     webhook_register.create_hooks()
 

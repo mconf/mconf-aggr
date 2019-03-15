@@ -7,123 +7,34 @@ the aggregator, we provide a ``Config`` class. This class encapsulates all
 external information we need to adjust the aggregator functioning.
 A global object `config` is available for use in other modules.
 """
-
+import configparser
+import distutils.util
 import json
 import logging
 import logging.config
 import os
 
 
-def get_config_path(config_file):
-    module_path = os.path.dirname(__file__)
-    config_dir = os.path.join(module_path, os.pardir, os.pardir, "config")
-
-    return os.path.join(config_dir, config_file)
-
-
-class Config:
-    """Configuration for aggregator functioning and logging settings.
-
-    This class is not intended to be instantiated outside here. Instead, one
-    should use the module-level object `config` as a singleton for this class.
-    """
-    def __init__(self, custom_config=None):
-        """Initialize a `Config` object.
-
-        Parameters
-        ----------
-        custom_config : str
-            Path to the custom JSON configuration file.
-        """
-        self.custom_config = custom_config
+class EnvConfig:
+    def __init__(self):
         self._config = {}
 
-        # Load default configurations.
-        self.setup_config()
-        # Load custom configurations if a config file was provided.
-        if custom_config:
-            self.setup_config(self.custom_config)
+    def load(self):
+        self._load_env()
 
-    def setup_config(self, config_file=None):
-        """Load general configuration from JSON file.
+        return self
 
-        It updates the set of configurations with those from the
-        `config_file`. Conflicting settings are replaced by new ones.
-
-        Parameters
-        ----------
-        config_file : str
-            Path to the custom JSON configuration file.
-            If missing, it defaults to "config/default.json".
-        """
-        config_file = config_file or get_config_path("default.json")
-        config = self.read_config(config_file)
-        if self._config is None:
-            self._config = config
-        else:
-            self._config.update(config)
-
-    def setup_logging(self, logging_config_file=None,
-                      default_level=logging.INFO, env_key="LOG_CFG"):
-        """Load logging configuration from JSON file.
-
-        It loads configurations to be used by the `logging` module.
-
-        Parameters
-        ----------
-        default_path : str
-            Path to the logging JSON configuration file.
-            If missing, it defaults to "config/logging.json"
-        default_level : int
-            Log level required. Defaults to `logging.INFO`.
-        env_key : str
-            Environment variable used by `logging` module.
-            Defaults to "LOG_CFG".
-
-        References
-        ----------
-        Logging documentation for Python 3.
-
-        `Logging library
-        <https://docs.python.org/3/library/logging.html>`_
-
-        `Logging basic tutorial
-        <lhttps://docs.python.org/3/howto/logging.html#logging-basic-tutorial>`_
-
-        `Logging advanced tutorial
-        <https://docs.python.org/3/howto/logging.html#logging-advanced-tutorial>`_
-
-        `Logging cookbook
-        <https://docs.python.org/3/howto/logging-cookbook.html#logging-cookbook>`_
-        """
-        path = logging_config_file or get_config_path("logging.json")
-        value = os.getenv(env_key, None)
-        if value:
-            path = value
-        if os.path.exists(path):
-            with open(path, 'rt') as f:
-                config = json.load(f)
-            logging.config.dictConfig(config)
-        else:
-            logging.basicConfig(level=default_level)
-
-    def read_config(self, config_file):
-        """Read json file and populate dict.
-
-        Parameters
-        ----------
-        config_file : str
-            Path to the JSON configuration file.
-
-        Returns
-        -------
-        config : dict
-            Dictionary with configurations read from `config_file`.
-        """
-        with open(config_file, 'r') as f:
-            config = json.load(f)
-
-        return config
+    def _load_env(self):
+        # Default values.
+        self._config["MCONF_WEBHOOK_CALLBACK_URL"] = os.getenv("MCONF_WEBHOOK_CALLBACK_URL")
+        self._config["MCONF_WEBHOOK_SHOULD_REGISTER"] = to_bool(os.getenv("MCONF_WEBHOOK_SHOULD_REGISTER", "True"))
+        self._config["MCONF_WEBHOOK_DATABASE_HOST"] = os.getenv("MCONF_WEBHOOK_DATABASE_HOST")
+        self._config["MCONF_WEBHOOK_DATABASE_USER"] = os.getenv("MCONF_WEBHOOK_DATABASE_USER")
+        self._config["MCONF_WEBHOOK_DATABASE_PASSWORD"] = os.getenv("MCONF_WEBHOOK_DATABASE_PASSWORD")
+        self._config["MCONF_WEBHOOK_DATABASE_DATABASE"] = os.getenv("MCONF_WEBHOOK_DATABASE_DATABASE")
+        self._config["MCONF_WEBHOOK_ROUTE"] = os.getenv("MCONF_WEBHOOK_ROUTE") or "/"
+        self._config["MCONF_WEBHOOK_AUTH_REQUIRED"] = to_bool(os.getenv("MCONF_WEBHOOK_AUTH_REQUIRED", "True"))
+        self._config["MCONF_WEBHOOK_LOG_LEVEL"] = os.getenv("MCONF_WEBHOOK_LOG_LEVEL")
 
     def __getitem__(self, key):
         """Make accessing configurations easier."""
@@ -136,5 +47,59 @@ class Config:
             return value
 
 
+def setup_logging(log_level, logging_config_file=None):
+    """Load logging configuration from JSON file.
+
+    It loads configurations to be used by the `logging` module.
+
+    Parameters
+    ----------
+    log_level : str
+        Log level required ("DEBUG", "INFO", "WARN", "ERROR", "CRITICAL").
+    logging_config_file: str
+        Path to the logging JSON configuration file.
+
+    References
+    ----------
+    Logging documentation for Python 3.
+
+    `Logging library
+    <https://docs.python.org/3/library/logging.html>`_
+
+    `Logging basic tutorial
+    <lhttps://docs.python.org/3/howto/logging.html#logging-basic-tutorial>`_
+
+    `Logging advanced tutorial
+    <https://docs.python.org/3/howto/logging.html#logging-advanced-tutorial>`_
+
+    `Logging cookbook
+    <https://docs.python.org/3/howto/logging-cookbook.html#logging-cookbook>`_
+    """
+    path = logging_config_file or _get_config_path("logging.json")
+    if os.path.exists(path):
+        with open(path, 'rt') as f:
+            log_config = json.load(f)
+
+        if log_level: log_config["root"]["level"] = log_level.upper()
+        logging.config.dictConfig(log_config)
+    else:
+        print(f"WARN: Check the logging filepath: {path}")
+        logging.basicConfig(level=logging.INFO)
+
+
+def _get_config_path(config_file):
+    module_path = os.path.dirname(__file__)
+    config_dir = os.path.join(module_path, os.pardir)
+
+    return os.path.join(config_dir, config_file)
+
+
+def to_bool(s):
+    return bool(distutils.util.strtobool(s))
+
+
 """Singleton ``Config`` instance. Intended to be used outside this module."""
-config = Config()
+config = EnvConfig().load()
+
+# Load logging settings.
+setup_logging(log_level=config["MCONF_WEBHOOK_LOG_LEVEL"])

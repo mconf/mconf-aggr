@@ -63,7 +63,7 @@ class AuthMiddleware:
         """
         self.logger = logging.getLogger(__name__)
 
-        auth_required = cfg.config['webhook']['auth']['required']
+        auth_required = cfg.config["MCONF_WEBHOOK_AUTH_REQUIRED"]
 
         if auth_required:
             server_url = req.get_param("domain")
@@ -150,7 +150,6 @@ class WebhookEventListener:
         req : falcon.Request
         resp : falcon.Response
         """
-        self.logger.info("received")
         with time_logger(self.logger.debug,
                          "Processing webhook event took {elapsed}s."):
             server_url = req.get_param("domain")
@@ -166,12 +165,12 @@ class WebhookEventListener:
                 self.logger.error("An error occurred while processing event.")
                 response = WebhookResponse(str(err))
                 resp.body = json.dumps(response.error)
-                resp.status = falcon.HTTP_200
+                resp.status = falcon.HTTP_500
             except Exception as err:
                 self.logger.error("An unexpected error occurred while processing event.")
                 response = WebhookResponse(str(err))
                 resp.body = json.dumps(response.error)
-                resp.status = falcon.HTTP_200
+                resp.status = falcon.HTTP_500
             else:
                 response = WebhookResponse("Event processed successfully")
                 resp.body = json.dumps(response.success)
