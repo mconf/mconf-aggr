@@ -21,4 +21,4 @@ COPY ./main.py /usr/src/mconf-aggr/main.py
 
 EXPOSE 8000
 
-CMD ["./start.sh", "-c", "/usr/src/mconf-aggr/config/config.json"]
+CMD ["./start.sh"]

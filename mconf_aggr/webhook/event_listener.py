@@ -63,7 +63,7 @@ class AuthMiddleware:
         """
         self.logger = logging.getLogger(__name__)
 
-        auth_required = cfg.config['webhook']['auth']['required']
+        auth_required = cfg.config["MCONF_WEBHOOK_AUTH_REQUIRED"]
 
         if auth_required:
             server_url = req.get_param("domain")

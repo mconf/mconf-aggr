@@ -13,7 +13,7 @@ suite\tA suite in 'test_suites' of config_tests.json.
 If no suite is supplied, all is implied.""")
 
 
-CONFIG_DIR = "config"
+CONFIG_DIR = "tests"
 TESTS_DIR = "tests"
 TEST_FILE_RE = re.compile(r'\w+\_test\.py$')
 INTEGRATION_TEST_FILE_RE = re.compile(r'integration\_\w+\_test\.py$')
