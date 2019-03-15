@@ -165,12 +165,12 @@ class WebhookEventListener:
                 self.logger.error("An error occurred while processing event.")
                 response = WebhookResponse(str(err))
                 resp.body = json.dumps(response.error)
-                resp.status = falcon.HTTP_200
+                resp.status = falcon.HTTP_500
             except Exception as err:
                 self.logger.error("An unexpected error occurred while processing event.")
                 response = WebhookResponse(str(err))
                 resp.body = json.dumps(response.error)
-                resp.status = falcon.HTTP_200
+                resp.status = falcon.HTTP_500
             else:
                 response = WebhookResponse("Event processed successfully")
                 resp.body = json.dumps(response.success)
