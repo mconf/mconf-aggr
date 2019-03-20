@@ -6,14 +6,13 @@ COPY ./requirements.txt /requirements.txt
 
 RUN apk update && \
     apk add postgresql-libs && \
-	 apk add libpq && \
+	apk add libpq && \
+    apk add --no-cache openssl && \
     apk add --virtual .build-deps gcc musl-dev postgresql-dev 
 
-RUN pip install --install-option="--prefix=/install" -r /requirements.txt
+RUN pip install --install-option="--prefix=/usr/local" -r /requirements.txt
 
 RUN apk --purge del .build-deps
-
-RUN apk add --no-cache openssl
 
 COPY ./mconf_aggr/__init__.py /usr/src/mconf-aggr/mconf_aggr/__init__.py
 COPY ./mconf_aggr/aggregator/ /usr/src/mconf-aggr/mconf_aggr/aggregator/
