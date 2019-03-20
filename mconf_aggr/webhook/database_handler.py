@@ -926,7 +926,7 @@ class WebhookServerHandler:
             try:
                 servers = session.query(Servers).all()
             except sqlalchemy.exc.OperationalError as err:
-                self.logger.error("Operational error on database while gathering servers.")
+                self.logger.error(f"Operational error on database while gathering servers: {err}")
 
                 raise DatabaseNotReadyError()
             except Exception as err:
