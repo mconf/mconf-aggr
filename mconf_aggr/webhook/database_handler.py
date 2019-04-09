@@ -591,8 +591,8 @@ class RapProcessHandler(DatabaseEventHandler):
             self.logger.warn(f"No recording found with id '{event.record_id}'.")
 
 
-class RapUnpublishHandler(DatabaseEventHandler):
-    """This class handles unpublishing recording events.
+class RapPublishUnpublishHandler(DatabaseEventHandler):
+    """This class handles publishing and unpublishing recording events.
     """
 
     def handle(self, event):
@@ -616,11 +616,20 @@ class RapUnpublishHandler(DatabaseEventHandler):
         )
 
         if records_table:
-            if records_table.status == Status.PUBLISHED:
-                records_table.status = Status.UNPUBLISHED
-                self.session.add(records_table)
-            else:
-                self.logger.warn(f"Tried to unpublish a recording with id '{int_id}' that is not yet published.")
+            if event_type == 'rap-unpublished':
+                if records_table.status == Status.PUBLISHED:
+                    records_table.status = Status.UNPUBLISHED
+                    records_table.published = False
+                    self.session.add(records_table)
+                else:
+                    self.logger.warn(f"Tried to unpublish a recording with id '{int_id}' that is not yet published.")
+            elif event_type == 'rap-published':
+                if records_table.status == Status.UNPUBLISHED:
+                    records_table.status = Status.PUBLISHED
+                    records_table.published = True
+                    self.session.add(records_table)
+                else:
+                    self.logger.warn(f"Tried to publish a recording with id '{int_id}' that is not already published.")
         else:
             self.logger.warn(f"No recording found with meeting id '{int_id}'.")
 
@@ -844,8 +853,8 @@ class DataProcessor:
         elif(event_type in ["rap-publish-started", "rap-publish-ended"]):
             event_handler = RapPublishHandler(self.session)
 
-        elif(event_type == 'rap-unpublished'):
-            event_handler = RapUnpublishHandler(self.session)
+        elif(event_type in ['rap-unpublished', "rap-published"]):
+            event_handler = RapPublishUnpublishHandler(self.session)
 
         elif(event_type == 'rap-deleted'):
             event_handler = RapDeleteHandler(self.session)

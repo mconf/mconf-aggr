@@ -121,7 +121,7 @@ RapPublishEndedEvent = collections.namedtuple('RapPublishEndedEvent',
                                                 'current_step'
                                               ])
 
-RapUnpublishEvent = collections.namedtuple('RapUnblishEvent',
+RapPublishUnpublishHandler = collections.namedtuple('RapPublishUnpublishHandler',
                                             [
                                                 'internal_meeting_id',
                                                 'external_meeting_id',
@@ -203,8 +203,8 @@ def map_webhook_event(event):
                 "rap-post-archive-started", "rap-post-archive-ended"]):
         mapped_event = _map_rap_event(event, event_type)
 
-    elif(event_type == "rap-unpublished"):
-        mapped_event = _map_rap_unpublished_event(event, event_type)
+    elif(event_type in ["rap-unpublished", "rap-published"]):
+        mapped_event = _map_rap_published_unpublished_event(event, event_type)
 
     elif(event_type == "rap-deleted"):
         mapped_event = _map_rap_deleted_event(event, event_type)
@@ -251,10 +251,10 @@ def _map_rap_deleted_event(event, event_type):
 
     return webhook_event
 
-def _map_rap_unpublished_event(event, event_type):
+def _map_rap_published_unpublished_event(event, event_type):
     """Map `rap-unpublished` event to internal representation.
     """
-    end_event = RapUnpublishEvent(
+    end_event = RapPublishUnpublishHandler(
                     external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                     internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""))
 
