@@ -591,6 +591,69 @@ class RapProcessHandler(DatabaseEventHandler):
             self.logger.warn(f"No recording found with id '{event.record_id}'.")
 
 
+class RapUnpublishHandler(DatabaseEventHandler):
+    """This class handles unpublishing recording events.
+    """
+
+    def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
+        event_type = event.event_type
+        event = event.event
+
+        int_id = event.internal_meeting_id
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+
+        records_table = (
+            self.session.query(Recordings).
+            filter(Recordings.internal_meeting_id == int_id).
+            first()
+        )
+
+        if records_table:
+            if records_table.status == Status.PUBLISHED:
+                records_table.status = Status.UNPUBLISHED
+                self.session.add(records_table)
+            else:
+                self.logger.warn(f"Tried to unpublish a recording with id '{int_id}' that is not yet published.")
+        else:
+            self.logger.warn(f"No recording found with meeting id '{int_id}'.")
+
+class RapDeleteHandler(DatabaseEventHandler):
+    """This class handles deleting recording events.
+    """
+
+    def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
+        event_type = event.event_type
+        event = event.event
+
+        int_id = event.internal_meeting_id
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+
+        records_table = (
+            self.session.query(Recordings).
+            filter(Recordings.internal_meeting_id == int_id).
+            first()
+        )
+
+        if records_table:
+            records_table.status = Status.DELETED
+            self.session.add(records_table)
+        else:
+            self.logger.warn(f"No recording found with meeting id '{int_id}'.")
+
 class RapPublishHandler(DatabaseEventHandler):
     """This class handles publishing recording events.
     """
@@ -780,6 +843,12 @@ class DataProcessor:
 
         elif(event_type in ["rap-publish-started", "rap-publish-ended"]):
             event_handler = RapPublishHandler(self.session)
+
+        elif(event_type == 'rap-unpublished'):
+            event_handler = RapUnpublishHandler(self.session)
+
+        elif(event_type == 'rap-deleted'):
+            event_handler = RapDeleteHandler(self.session)
 
         else:
             self.logger.warn(f"Unknown event type '{event_type}'.")

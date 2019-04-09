@@ -1,24 +1,26 @@
 FROM python:3.6-alpine
 
+WORKDIR /usr/local
+
+COPY ./requirements_dev.txt /requirements_dev.txt
+
 RUN apk update && \
     apk add postgresql-libs && \
-    apk add --virtual .build-deps gcc musl-dev postgresql-dev
+	apk add libpq && \
+    apk add --no-cache openssl && \
+    apk add --virtual .build-deps gcc musl-dev postgresql-dev 
 
-WORKDIR /usr/src/mconf-aggr/
+RUN pip install --install-option="--prefix=/usr/local" -r /requirements_dev.txt
 
-COPY ./requirements_webhook.txt /usr/src/mconf-aggr/requirements_webhook.txt
-RUN pip install -r /usr/src/mconf-aggr/requirements_webhook.txt --default-timeout=100
+RUN apk --purge del .build-deps
 
-RUN chmod 0544 /usr/src/mconf-aggr/start.sh
-
-COPY ./config/default.json /usr/src/mconf-aggr/config/default.json
-COPY ./config/config.json /usr/src/mconf-aggr/config/config.json
-COPY ./config/logging.json /usr/src/mconf-aggr/config/logging.json
 COPY ./mconf_aggr/__init__.py /usr/src/mconf-aggr/mconf_aggr/__init__.py
 COPY ./mconf_aggr/aggregator/ /usr/src/mconf-aggr/mconf_aggr/aggregator/
 COPY ./mconf_aggr/webhook/ /usr/src/mconf-aggr/mconf_aggr/webhook/
 COPY ./main.py /usr/src/mconf-aggr/main.py
 
+WORKDIR /usr/src/mconf-aggr/
+
 EXPOSE 8000
 
-CMD ["./start.sh"]
+CMD gunicorn main:app --bind=0.0.0.0:8000 --worker-class gevent

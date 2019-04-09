@@ -269,7 +269,7 @@ class WebhookEventHandler:
                 webhook_event = map_webhook_event(webhook_event)
             except Exception as err:
                 webhook_event = None
-
+                
             if webhook_event:
                 try:
                     self.publisher.publish(webhook_event, channel=self.channel)
