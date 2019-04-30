@@ -105,12 +105,12 @@ class MeetingCreatedHandler(DatabaseEventHandler):
 
         metadata = self.MeetingCreatedMetadata(event.meta_data, None, self.logger)
         new_meetings_events.shared_secret_guid = metadata.mconf_shared_secret_guid
-        new_meetings_events.shared_secret_name = metadata.mconf_shared_secret_name
+        new_meetings_events.shared_secret_name = metadata.mconf_secret_name
         new_meetings_events.server_guid = metadata.mconf_server_guid
         new_meetings_events.server_url = metadata.mconf_server_url
         new_meetings_events.institution_guid = metadata.mconf_institution_guid
 
-        if metadata.mconf_shared_secret_guid and not metadata.mconf_shared_secret_name:
+        if metadata.mconf_shared_secret_guid and not metadata.mconf_secret_name:
             new_meetings_events.shared_secret_name = (
                 self.session.query(SharedSecrets)
                 .filter(SharedSecrets.guid == metadata.mconf_shared_secret_guid)
@@ -510,6 +510,9 @@ class RapHandler(DatabaseEventHandler):
                 )
             )
 
+        if records_table.status == Status.DELETED:
+            records_table.status = Status.PROCESSING
+
         meetings_events_table = (
             self.session.query(MeetingsEvents).
             filter(MeetingsEvents.internal_meeting_id == int_id).
@@ -705,6 +708,7 @@ class RapPublishHandler(DatabaseEventHandler):
                         self.session.query(MeetingsEvents.start_time, MeetingsEvents.end_time).
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
                     )
+
                     start_time, end_time = times
 
                     records_table.status = Status.PUBLISHED
