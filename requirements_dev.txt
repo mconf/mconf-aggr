@@ -21,3 +21,4 @@ Sphinx==1.6.4
 sphinxcontrib-websupport==1.0.1
 SQLAlchemy==1.2.0b2
 urllib3==1.22
+gevent

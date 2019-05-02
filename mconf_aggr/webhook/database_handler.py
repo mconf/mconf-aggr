@@ -105,12 +105,12 @@ class MeetingCreatedHandler(DatabaseEventHandler):
 
         metadata = self.MeetingCreatedMetadata(event.meta_data, None, self.logger)
         new_meetings_events.shared_secret_guid = metadata.mconf_shared_secret_guid
-        new_meetings_events.shared_secret_name = metadata.mconf_shared_secret_name
+        new_meetings_events.shared_secret_name = metadata.mconf_secret_name
         new_meetings_events.server_guid = metadata.mconf_server_guid
         new_meetings_events.server_url = metadata.mconf_server_url
         new_meetings_events.institution_guid = metadata.mconf_institution_guid
 
-        if metadata.mconf_shared_secret_guid and not metadata.mconf_shared_secret_name:
+        if metadata.mconf_shared_secret_guid and not metadata.mconf_secret_name:
             new_meetings_events.shared_secret_name = (
                 self.session.query(SharedSecrets)
                 .filter(SharedSecrets.guid == metadata.mconf_shared_secret_guid)
@@ -510,6 +510,9 @@ class RapHandler(DatabaseEventHandler):
                 )
             )
 
+        if records_table.status == Status.DELETED:
+            records_table.status = Status.PROCESSING
+
         meetings_events_table = (
             self.session.query(MeetingsEvents).
             filter(MeetingsEvents.internal_meeting_id == int_id).
@@ -591,6 +594,78 @@ class RapProcessHandler(DatabaseEventHandler):
             self.logger.warn(f"No recording found with id '{event.record_id}'.")
 
 
+class RapPublishUnpublishHandler(DatabaseEventHandler):
+    """This class handles publishing and unpublishing recording events.
+    """
+
+    def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
+        event_type = event.event_type
+        event = event.event
+
+        int_id = event.internal_meeting_id
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+
+        records_table = (
+            self.session.query(Recordings).
+            filter(Recordings.internal_meeting_id == int_id).
+            first()
+        )
+
+        if records_table:
+            if event_type == 'rap-unpublished':
+                if records_table.status == Status.PUBLISHED:
+                    records_table.status = Status.UNPUBLISHED
+                    records_table.published = False
+                    self.session.add(records_table)
+                else:
+                    self.logger.warn(f"Tried to unpublish a recording with id '{int_id}' that is not yet published.")
+            elif event_type == 'rap-published':
+                if records_table.status == Status.UNPUBLISHED:
+                    records_table.status = Status.PUBLISHED
+                    records_table.published = True
+                    self.session.add(records_table)
+                else:
+                    self.logger.warn(f"Tried to publish a recording with id '{int_id}' that is not already published.")
+        else:
+            self.logger.warn(f"No recording found with meeting id '{int_id}'.")
+
+class RapDeleteHandler(DatabaseEventHandler):
+    """This class handles deleting recording events.
+    """
+
+    def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
+        event_type = event.event_type
+        event = event.event
+
+        int_id = event.internal_meeting_id
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+
+        records_table = (
+            self.session.query(Recordings).
+            filter(Recordings.internal_meeting_id == int_id).
+            first()
+        )
+
+        if records_table:
+            records_table.status = Status.DELETED
+            self.session.add(records_table)
+        else:
+            self.logger.warn(f"No recording found with meeting id '{int_id}'.")
+
 class RapPublishHandler(DatabaseEventHandler):
     """This class handles publishing recording events.
     """
@@ -633,6 +708,7 @@ class RapPublishHandler(DatabaseEventHandler):
                         self.session.query(MeetingsEvents.start_time, MeetingsEvents.end_time).
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
                     )
+
                     start_time, end_time = times
 
                     records_table.status = Status.PUBLISHED
@@ -641,7 +717,7 @@ class RapPublishHandler(DatabaseEventHandler):
                     records_table.is_breakout = event.is_breakout
                     records_table.start_time = start_time
                     records_table.end_time = end_time
-                    records_table.size = event.size
+                    records_table.size = event.size or 0
                     records_table.raw_size = event.raw_size
                     records_table.meta_data = event.meta_data
                     records_table.download = event.download
@@ -780,6 +856,12 @@ class DataProcessor:
 
         elif(event_type in ["rap-publish-started", "rap-publish-ended"]):
             event_handler = RapPublishHandler(self.session)
+
+        elif(event_type in ['rap-unpublished', "rap-published"]):
+            event_handler = RapPublishUnpublishHandler(self.session)
+
+        elif(event_type == 'rap-deleted'):
+            event_handler = RapDeleteHandler(self.session)
 
         else:
             self.logger.warn(f"Unknown event type '{event_type}'.")
@@ -926,7 +1008,7 @@ class WebhookServerHandler:
             try:
                 servers = session.query(Servers).all()
             except sqlalchemy.exc.OperationalError as err:
-                self.logger.error("Operational error on database while gathering servers.")
+                self.logger.error(f"Operational error on database while gathering servers: {err}")
 
                 raise DatabaseNotReadyError()
             except Exception as err:

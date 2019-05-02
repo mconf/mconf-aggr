@@ -1,0 +1,23 @@
+version: "3"
+services:
+  mconf-aggr-webhook:
+    image: mconf/mconf-aggr:dev
+    deploy:
+      replicas: 1
+      resources:
+        limits:
+          cpus: "0.1"
+          memory: 50M
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "8000:8000"
+    networks:
+      - mconf-net
+    env_file:
+      - ${MCONF_AGGR_WEBHOOK_ENV_FILE}
+    volumes:
+      - ${AGGR_PATH}:/usr/src/mconf-aggr
+
+networks:
+  mconf-net:
