@@ -702,8 +702,6 @@ class RapPublishHandler(DatabaseEventHandler):
                 self.session.add(records_table)
             elif event.current_step == "rap-publish-ended":
                 if workflow_status == Status.PROCESSED:
-                    records_table.workflow = _update_workflow(records_table, event.workflow, Status.PUBLISHED)
-                if current_status == Status.PROCESSED:
                     times = (
                         self.session.query(MeetingsEvents.start_time, MeetingsEvents.end_time).
                         filter(MeetingsEvents.internal_meeting_id == int_id).first()
@@ -722,7 +720,9 @@ class RapPublishHandler(DatabaseEventHandler):
                     records_table.meta_data = event.meta_data
                     records_table.download = event.download
                     records_table.current_step = event.current_step
-                    records_table.playback = _upsert_playback(records_table, event.playback)
+                    updated_playback = _upsert_playback(records_table, event.playback)
+                    records_table.playback = updated_playback
+
                     records_table.workflow = _update_workflow(records_table, event.workflow, Status.PUBLISHED)
                     records_table.current_step = event.current_step
 
