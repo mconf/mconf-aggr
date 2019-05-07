@@ -484,6 +484,7 @@ class RapHandler(DatabaseEventHandler):
             Event to be handled and written to database.
         """
         event_type = event.event_type
+        server_url = event.server_url
         event = event.event
 
         int_id = event.internal_meeting_id
@@ -513,6 +514,20 @@ class RapHandler(DatabaseEventHandler):
         if records_table.status == Status.DELETED:
             records_table.status = Status.PROCESSING
 
+        # Assume the requester server to be the new host of the recording.
+        if event_type == "rap-sanity-started":
+            server_id_result = (
+                self.session.query(Servers.id).
+                    filter(Servers.name == server_url).
+                    first()
+            )
+            if server_id_result:
+                if server_id_result.id != records_table.server_id:
+                    self.logger.info(f"Recording host was updated to '{server_url}'.")
+                records_table.server_id = server_id_result.id
+            else:
+                self.logger.warn(f"No server found for recording '{event.record_id}'.")
+
         meetings_events_table = (
             self.session.query(MeetingsEvents).
             filter(MeetingsEvents.internal_meeting_id == int_id).
@@ -523,17 +538,6 @@ class RapHandler(DatabaseEventHandler):
             records_table.meeting_event_id = meetings_events_table.id
             records_table.start_time = meetings_events_table.start_time
             records_table.end_time = meetings_events_table.end_time
-
-            servers_table = (
-                self.session.query(Servers).
-                filter(Servers.guid == meetings_events_table.server_guid).
-                first()
-            )
-
-            if servers_table:
-                records_table.server_id = servers_table.id
-            else:
-                self.logger.warn(f"No server found for recording '{event.record_id}'.")
         else:
             self.logger.warn(f"No meeting found for recording '{event.record_id}'.")
 
@@ -679,6 +683,7 @@ class RapPublishHandler(DatabaseEventHandler):
             Event to be handled and written to database.
         """
         event_type = event.event_type
+        server_url = event.server_url
         event = event.event
 
         int_id = event.internal_meeting_id
@@ -701,7 +706,6 @@ class RapPublishHandler(DatabaseEventHandler):
 
                 self.session.add(records_table)
             elif event.current_step == "rap-publish-ended":
-                self.logger.debug(event)
                 if workflow_status == Status.PROCESSED:
                     times = (
                         self.session.query(MeetingsEvents.start_time, MeetingsEvents.end_time).
@@ -723,7 +727,6 @@ class RapPublishHandler(DatabaseEventHandler):
                     records_table.current_step = event.current_step
                     updated_playback = _upsert_playback(records_table, event.playback)
                     records_table.playback = updated_playback
-                    self.logger.debug(updated_playback)
 
                     records_table.workflow = _update_workflow(records_table, event.workflow, Status.PUBLISHED)
                     records_table.current_step = event.current_step
