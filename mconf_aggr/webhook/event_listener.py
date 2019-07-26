@@ -165,12 +165,12 @@ class WebhookEventListener:
                 self.logger.error("An error occurred while processing event.")
                 response = WebhookResponse(str(err))
                 resp.body = json.dumps(response.error)
-                resp.status = falcon.HTTP_500
+                resp.status = falcon.HTTP_200
             except Exception as err:
                 self.logger.error("An unexpected error occurred while processing event.")
                 response = WebhookResponse(str(err))
                 resp.body = json.dumps(response.error)
-                resp.status = falcon.HTTP_500
+                resp.status = falcon.HTTP_200
             else:
                 response = WebhookResponse("Event processed successfully")
                 resp.body = json.dumps(response.success)
@@ -248,10 +248,12 @@ class WebhookEventHandler:
         event : str
             event to be parsed and published.
         """
-        unquoted_event = unquote(event)
+        # TODO(psv): verify if this is essential
+        # unquoted_event = unquote(event)
 
         try:
-            decoded_events = self._decode(unquoted_event)
+            #decoded_events = self._decode(unquoted_event)
+            decoded_events = self._decode(event)
         except json.JSONDecodeError as err:
             self.logger.error("Error during event decoding: invalid JSON.")
             self.logger.debug(err)
