@@ -140,6 +140,14 @@ RapEvent = collections.namedtuple('RapEvent',
                                                 'record_id',
                                                 'current_step',
                                   ])
+RapArchiveEvent = collections.namedtuple('RapArchiveEvent',
+                                  [
+                                                'external_meeting_id',
+                                                'internal_meeting_id',
+                                                'record_id',
+                                                'recorded',
+                                                'current_step',
+                                  ])
 
 
 def map_webhook_event(event):
@@ -199,10 +207,13 @@ def map_webhook_event(event):
                 "rap-post-process-started", "rap-post-process-ended"]):
         mapped_event = _map_rap_process_event(event, event_type, server_url)
 
-    elif(event_type in ["rap-archive-started", "rap-archive-ended",
+    elif(event_type in ["rap-archive-started",
                 "rap-sanity-started", "rap-sanity-ended",
                 "rap-post-archive-started", "rap-post-archive-ended"]):
         mapped_event = _map_rap_event(event, event_type, server_url)
+
+    elif(event_type in ["rap-archive-ended"]):
+        mapped_event = _map_rap_archive_event(event, event_type, server_url)
 
     elif(event_type in ["rap-unpublished", "rap-published"]):
         mapped_event = _map_rap_published_unpublished_event(event, event_type, server_url)
@@ -386,6 +397,19 @@ def _map_rap_publish_ended_event(event, event_type, server_url):
                     external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                     internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
                     workflow=_get_nested(event, ["data", "attributes", "workflow"], {}),
+                    current_step=event_type)
+
+    webhook_event = WebhookEvent(event_type, rap_event, server_url)
+
+    return webhook_event
+
+
+def _map_rap_archive_event(event, event_type, server_url):
+    rap_event = RapArchiveEvent(
+                    external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
+                    internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
+                    record_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
+                    recorded=_get_nested(event, ["data", "attributes", "recorded"], True),
                     current_step=event_type)
 
     webhook_event = WebhookEvent(event_type, rap_event, server_url)
