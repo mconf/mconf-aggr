@@ -29,6 +29,11 @@
         "level": "DEBUG",
         "handlers": [
             "console"
-        ]
+        ],
+        "formatters": {
+            "simple": {
+                "format": "%(asctime)s - %(name)-40s - %(levelname)8s - %(message)s"
+            }
+        }
     }
 }

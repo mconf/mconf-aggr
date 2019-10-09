@@ -471,6 +471,76 @@ class UserPresenterUnassignedHandler(UserEventHandler):
         attendee["is_presenter"] = False
 
 
+class RapArchiveHandler(DatabaseEventHandler):
+    """This class handles rap-archive-ended recording events.
+    """
+
+    def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
+        event_type = event.event_type
+        server_url = event.server_url
+        event = event.event
+
+        int_id = event.internal_meeting_id
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+
+        records_table = (
+            self.session.query(Recordings).
+            filter(Recordings.internal_meeting_id == int_id).
+            first()
+        )
+
+        recorded = event.recorded
+
+        # Table recordings does not exist yet. Create it.
+        if not records_table:
+            # Remove the recorded field so no error is raised since that
+            # field is not present in the database.
+            event_dict = event._asdict()
+            event_dict.pop('recorded', None)
+
+            records_table = Recordings(**event_dict)
+
+            records_table.status = Status.PROCESSING
+            records_table.playback = []
+            records_table.workflow = {}
+            records_table.participants = (
+                int(
+                    self.session.query(UsersEvents.id).
+                    join(MeetingsEvents).
+                    filter(MeetingsEvents.internal_meeting_id == int_id).
+                    count()
+                )
+            )
+        elif records_table.status == Status.DELETED:
+            records_table.status = Status.PROCESSING
+        
+        if event_type == "rap-archive-ended" and not recorded:
+            records_table.status = Status.DELETED
+
+        meetings_events_table = (
+            self.session.query(MeetingsEvents).
+            filter(MeetingsEvents.internal_meeting_id == int_id).
+            first()
+        )
+
+        if meetings_events_table:
+            records_table.meeting_event_id = meetings_events_table.id
+            records_table.start_time = meetings_events_table.start_time
+            records_table.end_time = meetings_events_table.end_time
+        else:
+            self.logger.warn(f"No meeting found for recording '{event.record_id}'.")
+
+        records_table.current_step = event.current_step
+
+        self.session.add(records_table)
+
 class RapHandler(DatabaseEventHandler):
     """This class handles general recording events.
     """
@@ -484,6 +554,7 @@ class RapHandler(DatabaseEventHandler):
             Event to be handled and written to database.
         """
         event_type = event.event_type
+        server_url = event.server_url
         event = event.event
 
         int_id = event.internal_meeting_id
@@ -498,7 +569,10 @@ class RapHandler(DatabaseEventHandler):
         # Table recordings does not exist yet. Create it.
         if not records_table:
             records_table = Recordings(**event._asdict())
-            records_table.status = Status.PROCESSING
+
+            # Start as deleted since we don't yet know if
+            # this meeting was recorded or not
+            records_table.status = Status.DELETED
             records_table.playback = []
             records_table.workflow = {}
             records_table.participants = (
@@ -509,9 +583,22 @@ class RapHandler(DatabaseEventHandler):
                     count()
                 )
             )
-
-        if records_table.status == Status.DELETED:
+        elif records_table.status == Status.DELETED:
             records_table.status = Status.PROCESSING
+
+        # Assume the requester server to be the new host of the recording.
+        if event_type == "rap-sanity-started":
+            server_id_result = (
+                self.session.query(Servers.id).
+                    filter(Servers.name == server_url).
+                    first()
+            )
+            if server_id_result:
+                if server_id_result.id != records_table.server_id:
+                    self.logger.info(f"Recording host was updated to '{server_url}'.")
+                records_table.server_id = server_id_result.id
+            else:
+                self.logger.warn(f"No server found for recording '{event.record_id}'.")
 
         meetings_events_table = (
             self.session.query(MeetingsEvents).
@@ -523,17 +610,6 @@ class RapHandler(DatabaseEventHandler):
             records_table.meeting_event_id = meetings_events_table.id
             records_table.start_time = meetings_events_table.start_time
             records_table.end_time = meetings_events_table.end_time
-
-            servers_table = (
-                self.session.query(Servers).
-                filter(Servers.guid == meetings_events_table.server_guid).
-                first()
-            )
-
-            if servers_table:
-                records_table.server_id = servers_table.id
-            else:
-                self.logger.warn(f"No server found for recording '{event.record_id}'.")
         else:
             self.logger.warn(f"No meeting found for recording '{event.record_id}'.")
 
@@ -679,6 +755,7 @@ class RapPublishHandler(DatabaseEventHandler):
             Event to be handled and written to database.
         """
         event_type = event.event_type
+        server_url = event.server_url
         event = event.event
 
         int_id = event.internal_meeting_id
@@ -695,36 +772,38 @@ class RapPublishHandler(DatabaseEventHandler):
             # Update status based on event.
             current_status = records_table.status
             workflow_status = records_table.workflow.get(event.workflow, None)
+
             if event.current_step == "rap-publish-started":
                 if current_status == Status.PROCESSED:
                     records_table.current_step = event.current_step
 
                 self.session.add(records_table)
             elif event.current_step == "rap-publish-ended":
-                if workflow_status == Status.PROCESSED:
-                    records_table.workflow = _update_workflow(records_table, event.workflow, Status.PUBLISHED)
-                if current_status == Status.PROCESSED:
-                    times = (
-                        self.session.query(MeetingsEvents.start_time, MeetingsEvents.end_time).
-                        filter(MeetingsEvents.internal_meeting_id == int_id).first()
-                    )
+                times = (
+                    self.session.query(MeetingsEvents.start_time, MeetingsEvents.end_time).
+                    filter(MeetingsEvents.internal_meeting_id == int_id).first()
+                )
 
-                    start_time, end_time = times
+                start_time, end_time = times
 
-                    records_table.status = Status.PUBLISHED
-                    records_table.published = True
-                    records_table.name = event.name
-                    records_table.is_breakout = event.is_breakout
-                    records_table.start_time = start_time
-                    records_table.end_time = end_time
-                    records_table.size = event.size or 0
-                    records_table.raw_size = event.raw_size
-                    records_table.meta_data = event.meta_data
-                    records_table.download = event.download
-                    records_table.current_step = event.current_step
-                    records_table.playback = _upsert_playback(records_table, event.playback)
-                    records_table.workflow = _update_workflow(records_table, event.workflow, Status.PUBLISHED)
-                    records_table.current_step = event.current_step
+                records_table.status = Status.PUBLISHED
+                records_table.published = True
+                records_table.name = event.name
+                records_table.is_breakout = event.is_breakout
+                records_table.start_time = start_time
+                records_table.end_time = end_time
+                records_table.size = event.size or 0
+                records_table.raw_size = event.raw_size
+                records_table.meta_data = event.meta_data
+                records_table.download = event.download
+                records_table.current_step = event.current_step
+                updated_playback = _upsert_playback(records_table, event.playback)
+                records_table.playback = updated_playback
+
+                flag_modified(records_table, "playback")
+
+                records_table.workflow = _update_workflow(records_table, event.workflow, Status.PUBLISHED)
+                records_table.current_step = event.current_step
 
                 self.session.add(records_table)
             else:
@@ -844,12 +923,15 @@ class DataProcessor:
         elif event_type == "user-presenter-unassigned":
             event_handler = UserPresenterUnassignedHandler(self.session)
 
-        elif(event_type in ["rap-archive-started", "rap-archive-ended",
+        elif(event_type in ["rap-archive-started",
                     "rap-sanity-started", "rap-sanity-ended",
                     "rap-post-archive-started", "rap-post-archive-ended",
                     "rap-post-process-started", "rap-post-process-ended",
                     "rap-post-publish-started", "rap-post-publish-ended"]):
             event_handler = RapHandler(self.session)
+        
+        elif(event_type in ["rap-archive-ended"]):
+            event_handler = RapArchiveHandler(self.session)
 
         elif(event_type in ["rap-process-started", "rap-process-ended"]):
             event_handler = RapProcessHandler(self.session)

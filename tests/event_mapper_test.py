@@ -93,6 +93,7 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="meeting-created",
+            server_url="localhost",
             event=MeetingCreatedEvent(
                 server_url="localhost",
                 external_meeting_id="mock_e",
@@ -118,7 +119,7 @@ class TestMapping(unittest.TestCase):
         with mock.patch("mconf_aggr.webhook.event_mapper._map_create_event") \
             as _map_create_event_mock:
             map_webhook_event(event)
-            _map_create_event_mock.assert_called_with(event, "meeting-created")
+            _map_create_event_mock.assert_called_with(event, "meeting-created", "localhost")
 
         got = map_webhook_event(event)
 
@@ -143,6 +144,7 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="meeting-ended",
+            server_url="localhost",
             event=MeetingEndedEvent(
                 external_meeting_id="mock_e",
                 internal_meeting_id="mock_i",
@@ -186,6 +188,7 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="user-joined",
+            server_url="localhost",
             event=UserJoinedEvent(
                 name="madeup-user",
                 role="MODERATOR",
@@ -231,6 +234,7 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="user-left",
+            server_url="localhost",
             event=UserLeftEvent(
                 internal_user_id="madeup-internal-user-id",
                 external_user_id="madeup-external-user-id",
@@ -275,6 +279,7 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="user-audio-voice-enabled",
+            server_url="localhost",
             event=UserVoiceEnabledEvent(
                 internal_user_id="madeup-internal-user-id",
                 external_user_id="madeup-external-user-id",
@@ -289,7 +294,7 @@ class TestMapping(unittest.TestCase):
         with mock.patch("mconf_aggr.webhook.event_mapper._map_user_voice_enabled_event") \
             as _map_user_voice_enabled_event_mock:
             map_webhook_event(event)
-            _map_user_voice_enabled_event_mock.assert_called_with(event, "user-audio-voice-enabled")
+            _map_user_voice_enabled_event_mock.assert_called_with(event, "user-audio-voice-enabled", "localhost")
 
         got = map_webhook_event(event)
 
@@ -318,6 +323,7 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="user-audio-voice-disabled",
+            server_url="localhost",
             event=UserEvent(
                 internal_user_id="madeup-internal-user-id",
                 external_user_id="madeup-external-user-id",
@@ -386,6 +392,7 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="rap-publish-ended",
+            server_url="localhost",
             event=RapPublishEndedEvent(
                 name="madeup-recording-name",
                 is_breakout=False,
@@ -446,6 +453,7 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="rap-publish-started",
+            server_url="localhost",
             event=RapEvent(
                 external_meeting_id="madeup-external-meeting-id",
                 internal_meeting_id="madeup-internal-meeting-id",
