@@ -16,7 +16,7 @@ from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger, create_session_scope
 from mconf_aggr.webhook.database import DatabaseConnector
-from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents, Servers, SharedSecrets
+from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents, Servers, SharedSecrets, Institutions
 from mconf_aggr.webhook.exceptions import DatabaseNotReadyError, InvalidWebhookEventError, WebhookDatabaseError
 
 
@@ -117,6 +117,21 @@ class MeetingCreatedHandler(DatabaseEventHandler):
                 .first()
                 .name
             )
+        
+        if not metadata.mconf_shared_secret_guid:
+            self.logger.info(f"Empty shared secret guid, meeting '{event.internal_meeting_id}' insertion falling back to institution name")
+            # fallback to name of institution
+            try:
+                found_institution = (
+                    self.session.query(SharedSecrets)
+                    .join(Institutions, SharedSecrets.institution_guid == Institutions.guid)
+                    .filter(Institutions.name == metadata.mconflb_institution_name)
+                    .first()
+                    .institution_guid
+                )
+                new_meetings_events.institution_guid = found_institution
+            except:
+                self.logger.warn(f"Could not match institution name '{metadata.mconflb_institution_name}' to an institution")
 
         if not metadata.mconf_server_guid and not metadata.mconf_server_url:
             servers_table = (

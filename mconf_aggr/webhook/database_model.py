@@ -186,6 +186,7 @@ class MeetingsEvents(Base):
                 "mconf-request-query": value,
                 "mconf-user-ip": value,
                 "mconf-user-agent": value
+                "mconflb-institution-name": value
             },
             {
                 ...
@@ -514,6 +515,43 @@ class SharedSecrets(Base):
                 + ", name=" + str(self.name)
                 + ", secret=" + str(self.secret)
                 + ", scope=" + str(self.scope)
+                + ", created_at=" + str(self.created_at)
+                + ", updated_at=" + str(self.updated_at)
+                + ")>")
+
+class Institutions(Base):
+    """Table institutions in the database.
+
+    Each row in the table represents information about a specific institution.
+    It inherits from Base - a base class to represent tables by SQLAlchemy.
+
+    Attributes
+    ----------
+    id : Column of type Integer
+        Primary key. Identifier of the table.
+    guid : Column of type String
+        Institution GUID.
+    name : Column of type String
+        Name of the institution.
+    created_at : Column of type DateTime
+        Datetime of the meeting creation.
+    updated_at : Column of type DateTime
+        Last datetime the meeting was updated.
+    """
+
+    __tablename__ = "institutions"
+
+    id = Column(Integer, primary_key=True)
+    guid = Column(String, unique=True)
+    name = Column(String)
+    created_at = Column(DateTime, default=datetime.datetime.now)
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+
+    def __repr__(self):
+        return ("<Institutions("
+                + "id=" + str(self.id)
+                + ", guid=" + str(self.guid)
+                + ", name=" + str(self.name)
                 + ", created_at=" + str(self.created_at)
                 + ", updated_at=" + str(self.updated_at)
                 + ")>")
