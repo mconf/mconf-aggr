@@ -66,5 +66,6 @@ class DatabaseConnector:
         password = cfg.config["MCONF_WEBHOOK_DATABASE_PASSWORD"]
         host = cfg.config["MCONF_WEBHOOK_DATABASE_HOST"]
         database = cfg.config["MCONF_WEBHOOK_DATABASE_DATABASE"]
+        port = cfg.config["MCONF_WEBHOOK_DATABASE_PORT"]
 
-        return f"postgresql://{user}:{password}@{host}/{database}"
+        return f"postgresql://{user}:{password}@{host}:{port}/{database}"
