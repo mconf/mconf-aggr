@@ -119,17 +119,16 @@ class MeetingCreatedHandler(DatabaseEventHandler):
             )
         
         if not metadata.mconf_shared_secret_guid:
-            self.logger.info(f"Empty shared secret guid, meeting '{event.internal_meeting_id}' insertion falling back to institution name")
+            self.logger.info(f"Empty shared secret guid, meeting '{event.internal_meeting_id}' insertion falling back to institution name: '{metadata.mconflb_institution_name}'")
             # fallback to name of institution
             try:
                 found_institution = (
                     self.session.query(SharedSecrets)
-                    .join(Institutions, SharedSecrets.institution_guid == Institutions.guid)
-                    .filter(Institutions.name == metadata.mconflb_institution_name)
+                    .filter(SharedSecrets.name == metadata.mconflb_institution_name)
                     .first()
-                    .institution_guid
+                    .guid
                 )
-                new_meetings_events.institution_guid = found_institution
+                new_meetings_events.shared_secret_guid = found_institution
             except:
                 self.logger.warn(f"Could not match institution name '{metadata.mconflb_institution_name}' to an institution")
 
