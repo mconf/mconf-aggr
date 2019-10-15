@@ -11,6 +11,7 @@ import sqlalchemy
 from sqlalchemy import create_engine, func, distinct
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy import update
 
 from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
@@ -179,6 +180,13 @@ class MeetingEndedHandler(DatabaseEventHandler):
             self.session.query(MeetingsEvents)
             .filter(MeetingsEvents.internal_meeting_id == int_id)
             .first()
+        )
+
+        # Update all users that don't have a leave time to the meeting's end time
+        users_table = (
+            self.session.query(UsersEvents)
+            .filter(UsersEvents.meeting_event_id == meetings_events_table.id, UsersEvents.leave_time == None)
+            .update({"leave_time": event.end_time})
         )
 
         if meetings_events_table:
