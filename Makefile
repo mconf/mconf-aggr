@@ -32,8 +32,6 @@ docker-build:
 	docker build -f Dockerfile -t $(IMAGE_NAME):webhook-$(IMAGE_VERSION) .
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-latest
 
-	docker image rm `docker images -f dangling=true -a -q`
-
 docker-build-dev:
 	docker build -f Dockerfile.dev -t $(IMAGE_NAME):dev .
 	docker tag $(IMAGE_NAME):dev $(IMAGE_NAME):dev-latest

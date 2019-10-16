@@ -182,14 +182,16 @@ class MeetingEndedHandler(DatabaseEventHandler):
             .first()
         )
 
-        # Update all users that don't have a leave time to the meeting's end time
-        users_table = (
-            self.session.query(UsersEvents)
-            .filter(UsersEvents.meeting_event_id == meetings_events_table.id, UsersEvents.leave_time == None)
-            .update({"leave_time": event.end_time})
-        )
-
         if meetings_events_table:
+            # Update all users that don't have a leave time to the meeting's end time
+            users_table = (
+                self.session.query(UsersEvents)
+                .filter(UsersEvents.meeting_event_id == meetings_events_table.id, UsersEvents.leave_time == None)
+                .update({"leave_time": event.end_time})
+            )
+            # make sure the users events are updated before deleting the meeting
+            self.session.commit()
+
             meetings_events_table.end_time = event.end_time
 
             self.session.add(meetings_events_table)
