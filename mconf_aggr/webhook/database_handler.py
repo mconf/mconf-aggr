@@ -123,13 +123,30 @@ class MeetingCreatedHandler(DatabaseEventHandler):
             self.logger.info(f"Empty shared secret guid, meeting '{event.internal_meeting_id}' insertion falling back to institution name: '{metadata.mconflb_institution_name}'")
             # fallback to name of institution
             try:
-                found_institution = (
+                # Find the secret using mconflb-institution-name which corresponds
+                # to the shared secret name. The use of term 'institution' is misleading here
+                found_secret = (
                     self.session.query(SharedSecrets)
                     .filter(SharedSecrets.name == metadata.mconflb_institution_name)
                     .first()
-                    .guid
                 )
-                new_meetings_events.shared_secret_guid = found_institution
+                new_meetings_events.shared_secret_guid = found_secret.guid
+                self.logger.info(f"Found secret: '{found_secret.name}' for meeting '{event.internal_meeting_id}'")
+
+                # We found the secret, try to find its institution to complete
+                # the table with information
+                try:
+                    found_institution = (
+                        self.session.query(Institutions)
+                        .filter(Institutions.guid == found_secret.institution_guid)
+                        .first()
+                    )
+                    new_meetings_events.institution_guid = found_institution.guid
+                    new_meetings_events.shared_secret_name = found_secret.name
+                except:
+                    self.logger.warn(f"Could not find institution for secret '{found_secret.name}'")
+
+                self.logger.info(f"Found institution: '{found_institution.name}' for meeting '{event.internal_meeting_id}'")
             except:
                 self.logger.warn(f"Could not match institution name '{metadata.mconflb_institution_name}' to an institution")
 
