@@ -358,9 +358,9 @@ class TestMapping(unittest.TestCase):
                     "name": "madeup-recording-name",
                     "isBreakout": False,
                     "size": 213541,
-                    "rawSize": 213542,
-                    "startTime": 1,
-                    "endTime": 2,
+                    "raw-size": 213542,
+                    "start-time": 1,
+                    "end-time": 2,
                     "metadata": {
                         "meetingId": "madeup-external-meeting-id",
                         "meetingName": "madeup-external-meeting-id",

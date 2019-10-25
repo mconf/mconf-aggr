@@ -375,10 +375,10 @@ class TestOperationsRecording(unittest.TestCase):
                       "recording": {
                         "name": "meetingName",
                         "isBreakout": False,
-                        "startTime": 1348943978,
-                        "endTime": 3432323,
+                        "start-time": 1348943978,
+                        "end-time": 3432323,
                         "size": 45,
-                        "rawSize": 443,
+                        "raw-size": 443,
                         "metadata":{
                         	"something": "set"
                         },

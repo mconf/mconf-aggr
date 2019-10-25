@@ -831,8 +831,8 @@ class RapPublishHandler(DatabaseEventHandler):
                 records_table.published = True
                 records_table.name = event.name
                 records_table.is_breakout = event.is_breakout
-                records_table.start_time = start_time
-                records_table.end_time = end_time
+                records_table.start_time = event.start_time or start_time
+                records_table.end_time = event.end_time or end_time
                 records_table.size = event.size or 0
                 records_table.raw_size = event.raw_size
                 records_table.meta_data = event.meta_data

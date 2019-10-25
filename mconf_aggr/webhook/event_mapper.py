@@ -387,10 +387,10 @@ def _map_rap_publish_ended_event(event, event_type, server_url):
     rap_event = RapPublishEndedEvent(
                     name=_get_nested(event, ["data", "attributes", "recording", "name"], ""),
                     is_breakout=_get_nested(event, ["data", "attributes", "recording", "isBreakout"], False),
-                    start_time=_get_nested(event, ["data", "attributes", "recording", "startTime"], 0),
-                    end_time=_get_nested(event, ["data", "attributes", "recording", "endTime"], 0),
+                    start_time=_get_nested(event, ["data", "attributes", "recording", "start-time"], 0),
+                    end_time=_get_nested(event, ["data", "attributes", "recording", "end-time"], 0),
                     size=_get_nested(event, ["data", "attributes", "recording", "size"], ""),
-                    raw_size=_get_nested(event, ["data", "attributes", "recording", "rawSize"], 0),
+                    raw_size=_get_nested(event, ["data", "attributes", "recording", "raw-size"], 0),
                     meta_data=_get_nested(event, ["data", "attributes", "recording", "metadata"], {}),
                     playback=_get_nested(event, ["data", "attributes", "recording", "playback"], ""),
                     download=_get_nested(event, ["data", "attributes", "recording", "download"], ""),
