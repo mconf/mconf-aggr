@@ -329,7 +329,7 @@ def _map_user_voice_enabled_event(event, event_type, server_url):
                      internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
                      external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                      has_joined_voice=_get_nested(event, ["data", "attributes", "user", "sharing-mic"], True),
-                     is_listening_only=_get_nested(event, ["data", "attributes", "user", "listening_only"], True),
+                     is_listening_only=_get_nested(event, ["data", "attributes", "user", "listening-only"], True),
                      event_name=event_type)
 
     webhook_event = WebhookEvent(event_type, user_event, server_url)

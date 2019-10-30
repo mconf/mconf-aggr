@@ -463,6 +463,7 @@ class UserVoiceDisabledHandler(UserEventHandler):
 
     def _update_attendee(self, attendee, update):
         attendee["has_joined_voice"] = False
+        attendee["is_listening_only"] = False
 
 
 class UserListenOnlyEnabledHandler(UserEventHandler):
