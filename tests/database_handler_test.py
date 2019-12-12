@@ -30,6 +30,7 @@ class TestMeetingCreatedHandler(unittest.TestCase):
 
         self.event = WebhookEvent(
             event_type="meeting-created",
+            server_url="localhost",
             event=MeetingCreatedEvent(
                 server_url="localhost",
                 external_meeting_id="mock_e",
@@ -97,6 +98,7 @@ class TestMeetingEndedHandler(unittest.TestCase):
 
         self.event = WebhookEvent(
             event_type="meeting-ended",
+            server_url="localhost",
             event=MeetingEndedEvent(
                 external_meeting_id="mock_e",
                 internal_meeting_id="mock_i",
@@ -190,6 +192,7 @@ class TestUserJoinedHandler(unittest.TestCase):
 
         self.event = WebhookEvent(
             event_type="user-joined",
+            server_url="localhost",
             event=UserJoinedEvent(
                 name="madeup-user",
                 role="MODERATOR",
@@ -370,14 +373,14 @@ class TestDataProcessor(unittest.TestCase):
             event_handler = self.data_processor._select_handler("invalid-event-type")
 
     def test_select_handler_called(self):
-        event = WebhookEvent(event_type="valid-event-type", event=None)
+        event = WebhookEvent(event_type="valid-event-type", event=None, server_url="localhost")
         self.data_processor._select_handler = mock.MagicMock()
         self.data_processor.update(event)
 
         self.data_processor._select_handler.assert_called_once_with(event.event_type)
 
     def test_handle_called(self):
-        event = WebhookEvent(event_type="valid-event-type", event=None)
+        event = WebhookEvent(event_type="valid-event-type", event=None, server_url="localhost")
         handler_mock = mock.Mock()
         handler_mock.handle = mock.MagicMock()
         self.data_processor._select_handler = mock.MagicMock(return_value=handler_mock)

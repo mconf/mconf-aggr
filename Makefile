@@ -32,8 +32,6 @@ docker-build:
 	docker build -f Dockerfile -t $(IMAGE_NAME):webhook-$(IMAGE_VERSION) .
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-latest
 
-	docker image rm `docker images -f dangling=true -a -q`
-
 docker-build-dev:
 	docker build -f Dockerfile.dev -t $(IMAGE_NAME):dev .
 	docker tag $(IMAGE_NAME):dev $(IMAGE_NAME):dev-latest
@@ -47,11 +45,10 @@ docker-run:
 	-ti $(IMAGE_NAME):webhook-$(IMAGE_VERSION)
 
 docker-run-dev:
-	docker run --rm \
-	-v $(AGGR_PATH)/$(LOGGING_PATH):$(IMAGE_WORKDIR)/$(LOGGING_PATH) \
-	-v $(AGGR_PATH):$(IMAGE_WORKDIR)/ \
-	-p 8000:8000 \
-	--env $(EXTRA_OPTS) -ti $(IMAGE_NAME):dev-latest
+	AGGR_PATH=$(AGGR_PATH) \
+	IMAGE_NAME=$(IMAGE_NAME):dev \
+	MCONF_AGGR_WEBHOOK_IMAGE_VERSION=dev \
+	docker-compose -f development.yml up
 
 docker-tag:
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-$(NUMBER_VERSION)

@@ -11,12 +11,13 @@ import sqlalchemy
 from sqlalchemy import create_engine, func, distinct
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm.attributes import flag_modified
+from sqlalchemy import update
 
 from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger, create_session_scope
 from mconf_aggr.webhook.database import DatabaseConnector
-from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents, Servers, SharedSecrets
+from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents, Servers, SharedSecrets, Institutions
 from mconf_aggr.webhook.exceptions import DatabaseNotReadyError, InvalidWebhookEventError, WebhookDatabaseError
 
 
@@ -105,18 +106,49 @@ class MeetingCreatedHandler(DatabaseEventHandler):
 
         metadata = self.MeetingCreatedMetadata(event.meta_data, None, self.logger)
         new_meetings_events.shared_secret_guid = metadata.mconf_shared_secret_guid
-        new_meetings_events.shared_secret_name = metadata.mconf_shared_secret_name
+        new_meetings_events.shared_secret_name = metadata.mconf_secret_name
         new_meetings_events.server_guid = metadata.mconf_server_guid
         new_meetings_events.server_url = metadata.mconf_server_url
         new_meetings_events.institution_guid = metadata.mconf_institution_guid
 
-        if metadata.mconf_shared_secret_guid and not metadata.mconf_shared_secret_name:
+        if metadata.mconf_shared_secret_guid and not metadata.mconf_secret_name:
             new_meetings_events.shared_secret_name = (
                 self.session.query(SharedSecrets)
                 .filter(SharedSecrets.guid == metadata.mconf_shared_secret_guid)
                 .first()
                 .name
             )
+        
+        if not metadata.mconf_shared_secret_guid:
+            self.logger.info(f"Empty shared secret guid, meeting '{event.internal_meeting_id}' insertion falling back to institution name: '{metadata.mconflb_institution_name}'")
+            # fallback to name of institution
+            try:
+                # Find the secret using mconflb-institution-name which corresponds
+                # to the shared secret name. The use of term 'institution' is misleading here
+                found_secret = (
+                    self.session.query(SharedSecrets)
+                    .filter(SharedSecrets.name == metadata.mconflb_institution_name)
+                    .first()
+                )
+                new_meetings_events.shared_secret_guid = found_secret.guid
+                self.logger.info(f"Found secret: '{found_secret.name}' for meeting '{event.internal_meeting_id}'")
+
+                # We found the secret, try to find its institution to complete
+                # the table with information
+                try:
+                    found_institution = (
+                        self.session.query(Institutions)
+                        .filter(Institutions.guid == found_secret.institution_guid)
+                        .first()
+                    )
+                    new_meetings_events.institution_guid = found_institution.guid
+                    new_meetings_events.shared_secret_name = found_secret.name
+                except:
+                    self.logger.warn(f"Could not find institution for secret '{found_secret.name}'")
+
+                self.logger.info(f"Found institution: '{found_institution.name}' for meeting '{event.internal_meeting_id}'")
+            except:
+                self.logger.warn(f"Could not match institution name '{metadata.mconflb_institution_name}' to an institution")
 
         if not metadata.mconf_server_guid and not metadata.mconf_server_url:
             servers_table = (
@@ -168,6 +200,15 @@ class MeetingEndedHandler(DatabaseEventHandler):
         )
 
         if meetings_events_table:
+            # Update all users that don't have a leave time to the meeting's end time
+            users_table = (
+                self.session.query(UsersEvents)
+                .filter(UsersEvents.meeting_event_id == meetings_events_table.id, UsersEvents.leave_time == None)
+                .update({"leave_time": event.end_time})
+            )
+            # make sure the users events are updated before deleting the meeting
+            self.session.commit()
+
             meetings_events_table.end_time = event.end_time
 
             self.session.add(meetings_events_table)
@@ -422,6 +463,7 @@ class UserVoiceDisabledHandler(UserEventHandler):
 
     def _update_attendee(self, attendee, update):
         attendee["has_joined_voice"] = False
+        attendee["is_listening_only"] = False
 
 
 class UserListenOnlyEnabledHandler(UserEventHandler):
@@ -471,6 +513,76 @@ class UserPresenterUnassignedHandler(UserEventHandler):
         attendee["is_presenter"] = False
 
 
+class RapArchiveHandler(DatabaseEventHandler):
+    """This class handles rap-archive-ended recording events.
+    """
+
+    def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
+        event_type = event.event_type
+        server_url = event.server_url
+        event = event.event
+
+        int_id = event.internal_meeting_id
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+
+        records_table = (
+            self.session.query(Recordings).
+            filter(Recordings.internal_meeting_id == int_id).
+            first()
+        )
+
+        recorded = event.recorded
+
+        # Table recordings does not exist yet. Create it.
+        if not records_table:
+            # Remove the recorded field so no error is raised since that
+            # field is not present in the database.
+            event_dict = event._asdict()
+            event_dict.pop('recorded', None)
+
+            records_table = Recordings(**event_dict)
+
+            records_table.status = Status.PROCESSING
+            records_table.playback = []
+            records_table.workflow = {}
+            records_table.participants = (
+                int(
+                    self.session.query(UsersEvents.id).
+                    join(MeetingsEvents).
+                    filter(MeetingsEvents.internal_meeting_id == int_id).
+                    count()
+                )
+            )
+        elif records_table.status == Status.DELETED:
+            records_table.status = Status.PROCESSING
+        
+        if event_type == "rap-archive-ended" and not recorded:
+            records_table.status = Status.DELETED
+
+        meetings_events_table = (
+            self.session.query(MeetingsEvents).
+            filter(MeetingsEvents.internal_meeting_id == int_id).
+            first()
+        )
+
+        if meetings_events_table:
+            records_table.meeting_event_id = meetings_events_table.id
+            records_table.start_time = meetings_events_table.start_time
+            records_table.end_time = meetings_events_table.end_time
+        else:
+            self.logger.warn(f"No meeting found for recording '{event.record_id}'.")
+
+        records_table.current_step = event.current_step
+
+        self.session.add(records_table)
+
 class RapHandler(DatabaseEventHandler):
     """This class handles general recording events.
     """
@@ -484,6 +596,7 @@ class RapHandler(DatabaseEventHandler):
             Event to be handled and written to database.
         """
         event_type = event.event_type
+        server_url = event.server_url
         event = event.event
 
         int_id = event.internal_meeting_id
@@ -498,7 +611,10 @@ class RapHandler(DatabaseEventHandler):
         # Table recordings does not exist yet. Create it.
         if not records_table:
             records_table = Recordings(**event._asdict())
-            records_table.status = Status.PROCESSING
+
+            # Start as deleted since we don't yet know if
+            # this meeting was recorded or not
+            records_table.status = Status.DELETED
             records_table.playback = []
             records_table.workflow = {}
             records_table.participants = (
@@ -509,6 +625,22 @@ class RapHandler(DatabaseEventHandler):
                     count()
                 )
             )
+        elif records_table.status == Status.DELETED:
+            records_table.status = Status.PROCESSING
+
+        # Assume the requester server to be the new host of the recording.
+        if event_type == "rap-sanity-started":
+            server_id_result = (
+                self.session.query(Servers.id).
+                    filter(Servers.name == server_url).
+                    first()
+            )
+            if server_id_result:
+                if server_id_result.id != records_table.server_id:
+                    self.logger.info(f"Recording host was updated to '{server_url}'.")
+                records_table.server_id = server_id_result.id
+            else:
+                self.logger.warn(f"No server found for recording '{event.record_id}'.")
 
         meetings_events_table = (
             self.session.query(MeetingsEvents).
@@ -520,17 +652,6 @@ class RapHandler(DatabaseEventHandler):
             records_table.meeting_event_id = meetings_events_table.id
             records_table.start_time = meetings_events_table.start_time
             records_table.end_time = meetings_events_table.end_time
-
-            servers_table = (
-                self.session.query(Servers).
-                filter(Servers.guid == meetings_events_table.server_guid).
-                first()
-            )
-
-            if servers_table:
-                records_table.server_id = servers_table.id
-            else:
-                self.logger.warn(f"No server found for recording '{event.record_id}'.")
         else:
             self.logger.warn(f"No meeting found for recording '{event.record_id}'.")
 
@@ -591,8 +712,8 @@ class RapProcessHandler(DatabaseEventHandler):
             self.logger.warn(f"No recording found with id '{event.record_id}'.")
 
 
-class RapPublishHandler(DatabaseEventHandler):
-    """This class handles publishing recording events.
+class RapPublishUnpublishHandler(DatabaseEventHandler):
+    """This class handles publishing and unpublishing recording events.
     """
 
     def handle(self, event):
@@ -615,40 +736,116 @@ class RapPublishHandler(DatabaseEventHandler):
             first()
         )
 
+        if records_table:
+            if event_type == 'rap-unpublished':
+                if records_table.status == Status.PUBLISHED:
+                    records_table.status = Status.UNPUBLISHED
+                    records_table.published = False
+                    self.session.add(records_table)
+                else:
+                    self.logger.warn(f"Tried to unpublish a recording with id '{int_id}' that is not yet published.")
+            elif event_type == 'rap-published':
+                if records_table.status == Status.UNPUBLISHED:
+                    records_table.status = Status.PUBLISHED
+                    records_table.published = True
+                    self.session.add(records_table)
+                else:
+                    self.logger.warn(f"Tried to publish a recording with id '{int_id}' that is not already published.")
+        else:
+            self.logger.warn(f"No recording found with meeting id '{int_id}'.")
+
+class RapDeleteHandler(DatabaseEventHandler):
+    """This class handles deleting recording events.
+    """
+
+    def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
+        event_type = event.event_type
+        event = event.event
+
+        int_id = event.internal_meeting_id
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+
+        records_table = (
+            self.session.query(Recordings).
+            filter(Recordings.internal_meeting_id == int_id).
+            first()
+        )
+
+        if records_table:
+            records_table.status = Status.DELETED
+            self.session.add(records_table)
+        else:
+            self.logger.warn(f"No recording found with meeting id '{int_id}'.")
+
+class RapPublishHandler(DatabaseEventHandler):
+    """This class handles publishing recording events.
+    """
+
+    def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
+        event_type = event.event_type
+        server_url = event.server_url
+        event = event.event
+
+        int_id = event.internal_meeting_id
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+
+        records_table = (
+            self.session.query(Recordings).
+            filter(Recordings.internal_meeting_id == int_id).
+            first()
+        )
+
         # Table recordings already exists.
         if records_table:
             # Update status based on event.
             current_status = records_table.status
             workflow_status = records_table.workflow.get(event.workflow, None)
+
             if event.current_step == "rap-publish-started":
                 if current_status == Status.PROCESSED:
                     records_table.current_step = event.current_step
 
                 self.session.add(records_table)
             elif event.current_step == "rap-publish-ended":
-                if workflow_status == Status.PROCESSED:
-                    records_table.workflow = _update_workflow(records_table, event.workflow, Status.PUBLISHED)
-                if current_status == Status.PROCESSED:
-                    times = (
-                        self.session.query(MeetingsEvents.start_time, MeetingsEvents.end_time).
-                        filter(MeetingsEvents.internal_meeting_id == int_id).first()
-                    )
-                    start_time, end_time = times
+                times = (
+                    self.session.query(MeetingsEvents.start_time, MeetingsEvents.end_time).
+                    filter(MeetingsEvents.internal_meeting_id == int_id).first()
+                )
 
-                    records_table.status = Status.PUBLISHED
-                    records_table.published = True
-                    records_table.name = event.name
-                    records_table.is_breakout = event.is_breakout
-                    records_table.start_time = start_time
-                    records_table.end_time = end_time
-                    records_table.size = event.size
-                    records_table.raw_size = event.raw_size
-                    records_table.meta_data = event.meta_data
-                    records_table.download = event.download
-                    records_table.current_step = event.current_step
-                    records_table.playback = _upsert_playback(records_table, event.playback)
-                    records_table.workflow = _update_workflow(records_table, event.workflow, Status.PUBLISHED)
-                    records_table.current_step = event.current_step
+                start_time, end_time = times
+
+                records_table.status = Status.PUBLISHED
+                records_table.published = True
+                records_table.name = event.name
+                records_table.is_breakout = event.is_breakout
+                records_table.start_time = event.start_time or start_time
+                records_table.end_time = event.end_time or end_time
+                records_table.size = event.size or 0
+                records_table.raw_size = event.raw_size
+                records_table.meta_data = event.meta_data
+                records_table.download = event.download
+                records_table.current_step = event.current_step
+                updated_playback = _upsert_playback(records_table, event.playback)
+                records_table.playback = updated_playback
+
+                flag_modified(records_table, "playback")
+
+                records_table.workflow = _update_workflow(records_table, event.workflow, Status.PUBLISHED)
+                records_table.current_step = event.current_step
 
                 self.session.add(records_table)
             else:
@@ -768,18 +965,27 @@ class DataProcessor:
         elif event_type == "user-presenter-unassigned":
             event_handler = UserPresenterUnassignedHandler(self.session)
 
-        elif(event_type in ["rap-archive-started", "rap-archive-ended",
+        elif(event_type in ["rap-archive-started",
                     "rap-sanity-started", "rap-sanity-ended",
                     "rap-post-archive-started", "rap-post-archive-ended",
                     "rap-post-process-started", "rap-post-process-ended",
                     "rap-post-publish-started", "rap-post-publish-ended"]):
             event_handler = RapHandler(self.session)
+        
+        elif(event_type in ["rap-archive-ended"]):
+            event_handler = RapArchiveHandler(self.session)
 
         elif(event_type in ["rap-process-started", "rap-process-ended"]):
             event_handler = RapProcessHandler(self.session)
 
         elif(event_type in ["rap-publish-started", "rap-publish-ended"]):
             event_handler = RapPublishHandler(self.session)
+
+        elif(event_type in ['rap-unpublished', "rap-published"]):
+            event_handler = RapPublishUnpublishHandler(self.session)
+
+        elif(event_type == 'rap-deleted'):
+            event_handler = RapDeleteHandler(self.session)
 
         else:
             self.logger.warn(f"Unknown event type '{event_type}'.")
@@ -926,7 +1132,7 @@ class WebhookServerHandler:
             try:
                 servers = session.query(Servers).all()
             except sqlalchemy.exc.OperationalError as err:
-                self.logger.error("Operational error on database while gathering servers.")
+                self.logger.error(f"Operational error on database while gathering servers: {err}")
 
                 raise DatabaseNotReadyError()
             except Exception as err:
