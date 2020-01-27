@@ -1046,18 +1046,15 @@ class WebhookDataWriter(AggregatorCallback):
                 with session_scope() as session:
                     DataProcessor(session).update(data)
         except sqlalchemy.exc.OperationalError as err:
-            self.logger.error("Operational error on database. Not persisting data.")
-            self.logger.debug(err)
+            self.logger.error(f"Operational error on database. Not persisting data: {err}")
 
             raise CallbackError() from err
         except WebhookDatabaseError as err:
-            self.logger.error("An error occurred while persisting data. Not persisting data.")
-            self.logger.debug(err)
+            self.logger.error(f"An error occurred while persisting data. Not persisting data: {err}")
 
             raise CallbackError() from err
         except Exception as err:
-            self.logger.error("Unknown error on database handler. Not persisting data.")
-            self.logger.debug(err)
+            self.logger.error(f"Unknown error on database handler. Not persisting data: {err}")
 
             raise CallbackError() from err
 
@@ -1093,7 +1090,7 @@ class AuthenticationHandler:
             try:
                 server = session.query(Servers.secret).filter(Servers.name == server).first()
             except sqlalchemy.exc.OperationalError as err:
-                self.logger.error("Operational error on database while validating token.")
+                self.logger.error(f"Operational error on database while validating token: {err}")
                 server = None
             except Exception as err:
                 self.logger.warn(f"Unknown error while validating token: {err}")

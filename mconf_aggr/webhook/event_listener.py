@@ -255,8 +255,7 @@ class WebhookEventHandler:
             #decoded_events = self._decode(unquoted_event)
             decoded_events = self._decode(event)
         except json.JSONDecodeError as err:
-            self.logger.error("Error during event decoding: invalid JSON.")
-            self.logger.debug(err)
+            self.logger.error(f"Error during event decoding: invalid JSON: {err}")
             raise RequestProcessingError("Event provided is not a valid JSON")
 
         if server_url:
