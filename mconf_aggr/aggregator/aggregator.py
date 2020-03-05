@@ -16,7 +16,6 @@ import reprlib
 import threading
 from collections import namedtuple
 
-
 class AggregatorNotRunning(Exception):
     """Raised if the aggregator has stopped for some reason.
 
