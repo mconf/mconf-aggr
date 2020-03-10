@@ -11,6 +11,7 @@ this module.
 
 import itertools
 import logging
+import logaugment
 import queue
 import reprlib
 import threading
@@ -140,6 +141,7 @@ class SubscriberThread(threading.Thread):
         self._errorevent = errorevent
         self._stopevent = threading.Event()
         self.logger = logger or logging.getLogger(__name__)
+        logaugment.add(self.logger, code="", site="", keywords="null")
 
     def run(self):
         """Run thread's main loop.
@@ -204,6 +206,7 @@ class Channel:
         self.name = name
         self.queue = queue.Queue(maxsize=maxsize)
         self.logger = logger or logging.getLogger(__name__)
+        logaugment.add(self.logger, code="", site="", keywords="null")
 
     def close(self):
         """Close the channel.
@@ -311,6 +314,7 @@ class Publisher:
         self.channels = None
         self._running = True
         self.logger = logger or logging.getLogger(__name__)
+        logaugment.add(self.logger, code="", site="", keywords="null")
 
     def update_channels(self, channels):
         """Update the channels to publish to.
@@ -406,6 +410,7 @@ class Aggregator:
         self._error_thread = None
         self._running = False  # It is considered running only after its setup.
         self.logger = logger or logging.getLogger(__name__)
+        logaugment.add(self.logger, code="", site="", keywords="null")
 
         self.logger.info("Aggregator created.")
 

@@ -6,6 +6,7 @@ which event was received by the `update` method on `WebhookDataWriter` and passe
 
 """
 import logging
+import logaugment
 
 import sqlalchemy
 from sqlalchemy import create_engine, func, distinct
@@ -46,6 +47,7 @@ class DatabaseEventHandler:
         """
         self.session = session
         self.logger = logger or logging.getLogger(__name__)
+        logaugment.add(self.logger, code="", site="", keywords="null")
 
     def handle(self, event):
         """This method is meant to be implemented downstream.
@@ -66,6 +68,7 @@ class MeetingCreatedHandler(DatabaseEventHandler):
             self._metadata = metadata
             self._default_value = default_value
             self._logger = logger or logging.getLogger(__name__)
+            logaugment.add(self._logger, code="", site="", keywords="null")
 
         def __getattr__(self, name):
             field = name.replace("_", "-")
@@ -911,6 +914,7 @@ class DataProcessor:
         """
         self.session = session
         self.logger = logger or logging.getLogger(__name__)
+        logaugment.add(self.logger, code="", site="", keywords="null")
 
     def update(self, event):
         event_handler = self._select_handler(event.event_type)
@@ -1015,6 +1019,7 @@ class WebhookDataWriter(AggregatorCallback):
             If not supplied, it will instantiate a new `PostgresConnector`.
         """
         self.logger = logger or logging.getLogger(__name__)
+        logaugment.add(self.logger, code="", site="", keywords="null")
 
     def setup(self):
         """Setup any resources needed to iteract with the database.
@@ -1071,6 +1076,7 @@ class AuthenticationHandler:
             If not supplied, it will instantiate a new logger from __name__.
         """
         self.logger = logger or logging.getLogger(__name__)
+        logaugment.add(self.logger, code="", site="", keywords="null")
 
     def secret(self, server):
         """Get a shared secret for a given server in the database.
@@ -1115,6 +1121,7 @@ class WebhookServerHandler:
             If not supplied, it will instantiate a new logger from __name__.
         """
         self.logger = logger or logging.getLogger(__name__)
+        logaugment.add(self.logger, code="", site="", keywords="null")
 
     def servers(self):
         """Get all available servers from database.

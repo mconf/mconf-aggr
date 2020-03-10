@@ -4,6 +4,7 @@ It will receive, validate, parse and send the parsed data to be processed.
 """
 import json
 import logging
+import logaugment
 import time
 from urllib.parse import unquote
 
@@ -62,6 +63,7 @@ class AuthMiddleware:
         * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/WWW-Authenticate
         """
         self.logger = logging.getLogger(__name__)
+        logaugment.add(self.logger, code="", site="", keywords="null")
 
         auth_required = cfg.config["MCONF_WEBHOOK_AUTH_REQUIRED"]
 
@@ -138,6 +140,7 @@ class WebhookEventListener:
         """
         self.event_handler = event_handler
         self.logger = logger or logging.getLogger(__name__)
+        logaugment.add(self.logger, code="", site="", keywords="null")
 
     @falcon.before(AuthMiddleware())
     def on_post(self, req, resp):
@@ -230,6 +233,7 @@ class WebhookEventHandler:
         self.publisher = publisher
         self.channel = channel
         self.logger = logger or logging.getLogger(__name__)
+        logaugment.add(self.logger, code="", site="", keywords="null")
 
     def stop(self):
         pass

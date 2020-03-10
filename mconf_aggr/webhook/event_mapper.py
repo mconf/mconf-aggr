@@ -2,6 +2,7 @@
 """
 import collections
 import logging
+import logaugment
 
 from mconf_aggr.webhook.exceptions import InvalidWebhookMessageError, InvalidWebhookEventError
 
@@ -167,6 +168,7 @@ def map_webhook_event(event):
         It encapsulates both the event type and the event itself.
     """
     logger = logging.getLogger(__name__)
+    logaugment.add(logger, code="", site="", keywords="null")
 
     try:
         event_type = event["data"]["id"]

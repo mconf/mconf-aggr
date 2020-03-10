@@ -3,6 +3,7 @@
 It will receive, validate, parse and send the parsed data to be processed.
 """
 import logging
+import logaugment
 
 import falcon
 import sqlalchemy
@@ -36,6 +37,7 @@ class ProbeListener:
             If not supplied, it will instantiate a new logger from __name__.
         """
         self.logger = logger or logging.getLogger(__name__)
+        logaugment.add(self.logger, code="", site="", keywords="null")
 
         #_init()
 
