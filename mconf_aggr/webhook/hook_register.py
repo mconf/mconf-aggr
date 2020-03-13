@@ -108,7 +108,7 @@ class WebhookRegister:
                 self.logger.info(f"Webhook registration for server '{server}' ok.", extra = logging_extra)
 
                 self.success_servers.append(server)
-            logging_extra["keywords"] = [x for x in logging_extra["keywords"] not in ["warning"]]
+            logging_extra["keywords"] = [x for x in logging_extra["keywords"] if x not in ["warning"]]
 
         logging_extra["code"] = "Registration ok"
         logging_extra["site"] = ""

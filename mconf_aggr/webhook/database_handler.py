@@ -280,7 +280,7 @@ class UserJoinedHandler(DatabaseEventHandler):
 
         logging_extra = {
             "code": "User joined event handler",
-            "keywords": ["user joined", "user", "internal user id", f"internal-user-id={event.internal_user_id}", f"internal-meeting-id={event.internal_meeting_id}", "event", "handler", "database"]
+            "keywords": ["user joined", "user", f"internal-user-id={event.internal_user_id}", f"internal-meeting-id={event.internal_meeting_id}", "event", "handler", "database"]
         }
 
         int_id = event.internal_meeting_id
@@ -429,7 +429,7 @@ class UserLeftHandler(DatabaseEventHandler):
         else:
             logging_extra = {
             "code": "Meeting not found",
-            "keywords": ["meeting", "meeting-id", "not found", "warning", "event", "handler", "database"]
+            "keywords": ["meeting", f"internal-meeting-id={event.internal_meeting_id}", "not found", "warning", "event", "handler", "database"]
             }
             self.logger.warn(f"No meeting found with internal-meeting-id '{int_id}'.", extra = logging_extra)
 
@@ -443,7 +443,7 @@ class UserLeftHandler(DatabaseEventHandler):
         else:
             logging_extra = {
             "code": "User not found",
-            "keywords": ["user", "internal user id", "not found", "warning", "event", "handler", "database"]
+            "keywords": ["user", f"internal-user-id={user_id}", "not found", "warning", "event", "handler", "database"]
             }
             self.logger.warn(f"No user found with internal-user-id '{user_id}'.", extra = logging_extra)
 
@@ -499,7 +499,7 @@ class UserEventHandler(DatabaseEventHandler):
         else:
             logging_extra = {
             "code": "Meeting not found",
-            "keywords": ["meeting", "meeting-id", "not found", "warning", "event", "handler", "database"]
+            "keywords": ["meeting", f"internal-meeting-id={event.internal_meeting_id}", "not found", "warning", "event", "handler", "database"]
             }
             self.logger.warn(f"No meeting found with internal-meeting-id '{int_id}'.", extra=logging_extra)
 
