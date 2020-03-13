@@ -65,14 +65,22 @@ class AuthMiddleware:
         self.logger = logging.getLogger(__name__)
         logaugment.add(self.logger, code="", site="", keywords="null")
 
+        logging_extra = {
+            "code": "Processing requests",
+            "keywords": ["https", "falcon", "requests", "domain"]
+        }
+
         auth_required = cfg.config["MCONF_WEBHOOK_AUTH_REQUIRED"]
 
         if auth_required:
             server_url = req.get_param("domain")
 
             if not server_url:
+                logging_extra["code"] = "Missing domain"
+                logging_extra["keywords"] += ["warning"]
                 self.logger.warn(
-                    "Domain missing from (last hop) '{}'.".format(req.host)
+                    "Domain missing from (last hop) '{}'.".format(req.host),
+                    extra = logging_extra
                 )
                 raise falcon.HTTPUnauthorized(
                     "Domain required for authentication",
@@ -83,9 +91,13 @@ class AuthMiddleware:
             token = req.get_header("Authorization")
             www_authentication = ["Bearer realm=\"mconf-aggregator\""]
 
+            logging_extra["site"] = str(server_url)
             if token is None:
+                logging_extra["code"] = "Missing token"
+                logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
                 self.logger.warn(
-                    "Authentication token missing from '{}'.".format(server_url)
+                    "Authentication token missing from '{}'.".format(server_url),
+                    extra = logging_extra
                 )
                 raise falcon.HTTPUnauthorized(
                     "Authentication required",
@@ -95,8 +107,11 @@ class AuthMiddleware:
 
             if not self._token_is_valid(server_url, token):
                 requester = req.host
+                logging_extra["code"] = "Validate token"
+                logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
                 self.logger.warn(
-                    "Unable to validate token '{}' from '{}' (last hop: '{}').".format(token, server_url, requester)
+                    "Unable to validate token '{}' from '{}' (last hop: '{}').".format(token, server_url, requester),
+                    extra = logging_extra
                 )
                 raise falcon.HTTPUnauthorized(
                     "Unable to validate authentication token",
@@ -153,28 +168,41 @@ class WebhookEventListener:
         req : falcon.Request
         resp : falcon.Response
         """
+        logging_extra = {
+            "code": "POST requests",
+            "keywords": ["https", "falcon", "POST", "requests", "domain", "webhook", "listener"]
+        }
+
         with time_logger(self.logger.debug,
-                         "Processing webhook event took {elapsed}s."):
+                         "Processing webhook event took {elapsed}s.", extra = logging_extra):
             server_url = req.get_param("domain")
             event = req.get_param("event")
+    
+            logging_extra["site"] = str(server_url)
 
-            self.logger.info("Webhook event received from '{}' (last hop: '{}').".format(server_url, req.host))
+            self.logger.info("Webhook event received from '{}' (last hop: '{}').".format(server_url, req.host), extra = logging_extra)
 
             # Always responds with HTTP status code 200 in order to prevent
             # the sending webhook endpoint from stopping requesting.
             try:
                 self.event_handler.process_event(server_url, event)
             except WebhookError as err:
+                logging_extra["code"] = "Webhook error"
+                logging_extra["keywords"] += ["error", "exception"] if(set(["error", "exception"]).issubset(set(logging_extra["keywords"]))) else []
                 self.logger.error("An error occurred while processing event.")
                 response = WebhookResponse(str(err))
                 resp.body = json.dumps(response.error)
                 resp.status = falcon.HTTP_200
             except Exception as err:
+                logging_extra["code"] = "Unexpected error"
+                logging_extra["keywords"] += ["error", "exception"] if(set(["error", "exception"]).issubset(set(logging_extra["keywords"]))) else []
                 self.logger.error("An unexpected error occurred while processing event.")
                 response = WebhookResponse(str(err))
                 resp.body = json.dumps(response.error)
                 resp.status = falcon.HTTP_200
             else:
+                logging_extra["code"] = "Success process"
+                logging_extra["keywords"] += ["sucess"] if("sucess" not in logging_extra["keywords"]) else []
                 response = WebhookResponse("Event processed successfully")
                 resp.body = json.dumps(response.success)
                 resp.status = falcon.HTTP_200
@@ -252,6 +280,11 @@ class WebhookEventHandler:
         event : str
             event to be parsed and published.
         """
+        logging_extra = {
+            "code": "Parse and publish data",
+            "keywords": ["parse", "publish", "data", "process", "to aggregator"]
+        }
+
         # TODO(psv): verify if this is essential
         # unquoted_event = unquote(event)
 
@@ -259,6 +292,8 @@ class WebhookEventHandler:
             #decoded_events = self._decode(unquoted_event)
             decoded_events = self._decode(event)
         except json.JSONDecodeError as err:
+            logging_extra["code"] = "Invalid JSON"
+            logging_extra["keywords"] += ["JSON", "error", "except"]
             self.logger.error(f"Error during event decoding: invalid JSON: {err}")
             raise RequestProcessingError("Event provided is not a valid JSON")
 
@@ -279,9 +314,16 @@ class WebhookEventHandler:
                 try:
                     self.publisher.publish(webhook_event, channel=self.channel)
                 except PublishError as err:
+                    logging_extra["code"] = "Publish error"
+                    logging_extra["keywords"] += ["error", "exception"] if(set(["error", "exception"]).issubset(set(logging_extra["keywords"]))) else []
                     self.logger.error("Something went wrong while publishing.")
+
+                    logging_extra["code"] = "Parse and publish data"
+                    logging_extra["keywords"] += [x for x in logging_extra["keywords"] if x not in ["error", "exception"]]
                     continue
             else:
+                logging_extra["code"] = "Not publishing"
+                logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
                 self.logger.warn("Not publishing event from '{}'".format(server_url))
 
     def _decode(self, event):

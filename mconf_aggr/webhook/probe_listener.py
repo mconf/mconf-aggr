@@ -39,8 +39,6 @@ class ProbeListener:
         self.logger = logger or logging.getLogger(__name__)
         logaugment.add(self.logger, code="", site="", keywords="null")
 
-        #_init()
-
     def on_get(self, req, resp):
         """Handle GET requests.
 
@@ -76,10 +74,15 @@ class LivenessProbeListener(ProbeListener):
         -------
         bool : True if the application is running correctly. False otherwise.
         """
+        logging_extra = {
+            "code": "Endpoint listener",
+            "keywords": ["listener", "endpoint", "health"]
+        }
+
         try:
             _ping_database()
         except DatabaseNotReadyError as err:
-            self.logger.warn(str(err))
+            self.logger.warn(str(err), extra=logging_extra)
 
             return False
 
@@ -98,10 +101,15 @@ class ReadinessProbeListener(ProbeListener):
         bool : True if the service is ready to handle requests adequately.
         False otherwise.
         """
+        logging_extra = {
+            "code": "Endpoint listener",
+            "keywords": ["listener", "endpoint", "ready"]
+        }
+
         try:
             _ping_database()
         except DatabaseNotReadyError as err:
-            self.logger.warn(str(err))
+            self.logger.warn(str(err), extra = logging_extra)
 
             return False
 

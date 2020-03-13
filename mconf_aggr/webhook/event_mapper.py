@@ -170,11 +170,18 @@ def map_webhook_event(event):
     logger = logging.getLogger(__name__)
     logaugment.add(logger, code="", site="", keywords="null")
 
+    logging_extra = {
+        "code": "Webhook mapping",
+        "keywords": ["webhook", "map", "event", "data structure", "data"]
+    }
+
     try:
         event_type = event["data"]["id"]
         server_url = event["server_url"]
     except (KeyError, TypeError) as err:
-        logger.warn("Webhook message dos not contain a valid id: {}".format(err))
+        logging_extra["code"] = "Invalid message id"
+        logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
+        logger.warn("Webhook message dos not contain a valid id: {}".format(err), extra = logging_extra)
         raise InvalidWebhookMessageError("Webhook message dos not contain a valid id")
 
     if event_type == "meeting-created":
@@ -224,7 +231,9 @@ def map_webhook_event(event):
         mapped_event = _map_rap_deleted_event(event, event_type, server_url)
 
     else:
-        logger.warn("Webhook event id is not valid: '{}'".format(event_type))
+        logging_extra["code"] = "Invalid webhook event id"
+        logging_extra["keywords"] += (["warning"] if("warning" not in logging_extra["keywords"]) else []) + ["event="+str(event_type)]
+        logger.warn("Webhook event id is not valid: '{}'".format(event_type), extra = logging_extra)
         raise InvalidWebhookEventError("Webhook event '{}' is not valid".format(event_type))
 
     return mapped_event
