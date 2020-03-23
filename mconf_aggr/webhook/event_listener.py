@@ -17,6 +17,7 @@ from mconf_aggr.webhook.database_handler import WebhookDataWriter, Authenticatio
 from mconf_aggr.webhook.event_mapper import map_webhook_event
 from mconf_aggr.webhook.exceptions import WebhookError, RequestProcessingError
 
+from mconf_aggr.webhook.hook_proxy import WebhookProxyThread
 
 """Falcon follows the REST architectural style, meaning (among
 other things) that you think in terms of resources and state
@@ -173,14 +174,16 @@ class WebhookEventListener:
             "keywords": ["https", "falcon", "POST", "requests", "domain", "webhook", "listener"]
         }
 
-        with time_logger(self.logger.debug,
-                         "Processing webhook event took {elapsed}s.", extra = logging_extra):
+        with time_logger(self.logger.debug, "Processing webhook event took {elapsed}s.", extra = logging_extra):
             server_url = req.get_param("domain")
             event = req.get_param("event")
     
             logging_extra["site"] = str(server_url)
 
             self.logger.info("Webhook event received from '{}' (last hop: '{}').".format(server_url, req.host), extra = logging_extra)
+
+            proxy_hook = WebhookProxyThread(event=req.params, url="http://3e9375ea.ngrok.io")
+            proxy_hook.send_hook()
 
             # Always responds with HTTP status code 200 in order to prevent
             # the sending webhook endpoint from stopping requesting.
