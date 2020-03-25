@@ -77,7 +77,7 @@ class WebhookRegister:
             "code": "Create webhooks",
             "keywords": ["webhook", "hook", "register", "create", "callback"]
         }
-        self.logger.info(f"Creating hooks.", extra = logging_extra)
+        self.logger.info(f"Creating hooks.", extra=logging_extra)
         # Iterate over its dictionary of server_name-server_secret key-values.
         # We still use token and secret interchangeably.
         for server, token in self._servers.items():
@@ -92,27 +92,27 @@ class WebhookRegister:
                 logging_extra["code"] = "Registration failed"
                 logging_extra["site"] = str(server)
                 logging_extra["keywords"] += (["warning"] if("warning" not in logging_extra["keywords"]) else [])
-                self.logger.warn(f"Webhook registration for server '{server}' failed ({err.reason}).", extra = logging_extra)
+                self.logger.warn(f"Webhook registration for server '{server}' failed ({err.reason}).", extra=logging_extra)
                 self.failed_servers.append(server)
             except WebhookAlreadyExistsError as err:
                 logging_extra["code"] = "Registration ok"
-                self.logger.info(f"Webhook registration for server '{server}' ok (webhook already exists).", extra = logging_extra)
+                self.logger.info(f"Webhook registration for server '{server}' ok (webhook already exists).", extra=logging_extra)
             except Exception as err:
                 logging_extra["code"] = "Registration failed for an unexpected reason"
                 logging_extra["keywords"] += (["warning"] if("warning" not in logging_extra["keywords"]) else []) 
-                self.logger.warn(f"Webhook registration for server '{server}' failed (unexpected reason).", extra = logging_extra)
+                self.logger.warn(f"Webhook registration for server '{server}' failed (unexpected reason).", extra=logging_extra)
 
                 self.failed_servers.append(server)
             else:
                 logging_extra["code"] = "Registration ok"
-                self.logger.info(f"Webhook registration for server '{server}' ok.", extra = logging_extra)
+                self.logger.info(f"Webhook registration for server '{server}' ok.", extra=logging_extra)
 
                 self.success_servers.append(server)
             logging_extra["keywords"] = [x for x in logging_extra["keywords"] if x not in ["warning"]]
 
         logging_extra["code"] = "Registration ok"
         logging_extra["site"] = ""
-        self.logger.info(f"Hooks registration done.", extra = logging_extra)
+        self.logger.info(f"Hooks registration done.", extra=logging_extra)
 
     def _fetch_servers_from_database(self):
         handler = WebhookServerHandler()
@@ -185,7 +185,7 @@ class WebhookServer:
         r = None
         try:
             r = requests.get(hook_url, params=params)
-            self.logger.debug(f"response from '{hook_url}': '{r.text}'.", extra = logging_extra)
+            self.logger.debug(f"response from '{hook_url}': '{r.text}'.", extra=logging_extra)
         except requests.exceptions.ConnectionError as err:
             raise WebhookCreateError("connection error") from err
         except Exception as err:

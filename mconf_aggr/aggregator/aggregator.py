@@ -158,7 +158,7 @@ class SubscriberThread(threading.Thread):
         self.logger.debug(
             "Running thread with callback {}"
             .format(self.subscriber.callback),
-            extra = logging_extra
+            extra=logging_extra
         )
         while not self._stopevent.is_set():
             try:
@@ -167,9 +167,9 @@ class SubscriberThread(threading.Thread):
             except ChannelClosed:
                 continue
             except CallbackError:
-                logging_extra["keywords"] += ["error", "exception"] if(set(["error", "exception"]).issubset(set(logging_extra["keywords"]))) else []
+                logging_extra["keywords"] = ["Aggregator", "run", "thread", "subscriber", "callback", "exception", "error"]
 
-                self.logger.info("An error occurred while running a subscriber.", extra = logging_extra)
+                self.logger.info("An error occurred while running a subscriber.", extra=logging_extra)
                 #self._errorevent.set()
 
         return
@@ -193,7 +193,7 @@ class SubscriberThread(threading.Thread):
         self.logger.debug(
             "Thread with callback {} exited with success."
             .format(self.subscriber.callback),
-            extra = logging_extra
+            extra=logging_extra
         )
 
 
@@ -232,12 +232,12 @@ class Channel:
             "keywords": ["channel", "close", "signal", "queue"]
         }
 
-        self.logger.debug("Closing channel {}.".format(self.name), extra = logging_extra)
+        self.logger.debug("Closing channel {}.".format(self.name), extra=logging_extra)
         if not self.empty():
             logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
             self.logger.warn("There are data not consumed in channel {}."
                              .format(self.name),
-                             extra = logging_extra)
+                             extra=logging_extra)
         self.queue.put(None)
 
     def publish(self, data):
@@ -253,11 +253,11 @@ class Channel:
             "keywords": ["channel", "publish", "data", "queue"]
         }
 
-        self.logger.debug("Putting data into the channel.", extra = logging_extra)
+        self.logger.debug("Putting data into the channel.", extra=logging_extra)
         self.queue.put(data)
         self.logger.debug("Channel {} has {} element(s)."
                           .format(self.name, self.qsize()),
-                          extra = logging_extra)
+                          extra=logging_extra)
 
     def pop(self):
         """Pop data from the channel.
@@ -281,13 +281,13 @@ class Channel:
             "keywords": ["channel", "pop", "data", "queue"]
         }
 
-        self.logger.debug("Popping data from the channel.", extra = logging_extra)
+        self.logger.debug("Popping data from the channel.", extra=logging_extra)
         data = self.queue.get()
 
         if data is None:
             self.logger.debug("Signaling closing channel {} for clients "
                               "waiting for data.".format(self.name),
-                              extra = logging_extra)
+                              extra=logging_extra)
             raise ChannelClosed()
 
         self.queue.task_done()
@@ -361,7 +361,7 @@ class Publisher:
             "keywords": ["Publisher", "update", "channel", "subscriber"]
         }
 
-        self.logger.debug("Updating channels in publisher.", extra = logging_extra)
+        self.logger.debug("Updating channels in publisher.", extra=logging_extra)
         self.channels = channels
 
     def publish(self, data, channel='default'):
@@ -389,11 +389,11 @@ class Publisher:
         }
         
         if self._running:
-            self.logger.debug("Publishing data to subscribers.", extra = logging_extra)
+            self.logger.debug("Publishing data to subscribers.", extra=logging_extra)
 
             if self.channels is None:
                 logging_extra["keywords"] += ["error", "exception"]
-                self.logger.exception("No channel was found for this publisher.", extra = logging_extra)
+                self.logger.exception("No channel was found for this publisher.", extra=logging_extra)
                 raise PublishError()
 
             for subscriber in self.channels[channel]:
@@ -408,7 +408,7 @@ class Publisher:
             "code": "Publisher stop",
             "keywords": ["Publisher", "stop"]
         }
-        self.logger.debug("Stopping the publisher.", extra = logging_extra)
+        self.logger.debug("Stopping the publisher.", extra=logging_extra)
         self._running = False
 
     def __repr__(self):
@@ -483,31 +483,32 @@ class Aggregator:
             "keywords": ["Aggregator", "setup", "subscriber", "callback"]
         }
 
-        self.logger.info("Setting up aggregator.", extra = logging_extra)
+        self.logger.info("Setting up aggregator.", extra=logging_extra)
 
         logging_extra["code"] = "Callback setup"
         for subscriber in self.subscribers:
             try:
+                logging_extra["keywords"] = ["Aggregator", "setup", "subscriber", "callback"]
                 self.logger.debug(
                     "Setting up callback {}."
                     .format(subscriber.callback),
-                    extra = logging_extra
+                    extra=logging_extra
                 )
                 subscriber.callback.setup()
             except NotImplementedError:
-                logging_extra["keywords"] += ["warning", "not implemented"] if(set(["warning", "not implemented"]).issubset(set(logging_extra["keywords"]))) else []
+                logging_extra["keywords"] = ["Aggregator", "setup", "subscriber", "callback", "exception", "warning", "not implemented"]
                 self.logger.warn(
                     "setup() not implemented for callback {}."
                     .format(subscriber.callback),
-                    extra = logging_extra
+                    extra=logging_extra
                 )
                 continue
             except Exception:
-                logging_extra["keywords"] += ["error", "exception"] if(set(["error", "exception"]).issubset(set(logging_extra["keywords"]))) else []
+                logging_extra["keywords"] = ["Aggregator", "setup", "subscriber", "callback", "exception", "error"]
                 self.logger.exception(
                     "Something went wrong while setting up callback {}."
                     .format(subscriber.callback),
-                    extra = logging_extra
+                    extra=logging_extra
                 )
                 self.remove_callback(subscriber.callback)
                 continue
@@ -546,7 +547,7 @@ class Aggregator:
             "keywords": ["Aggregator", "start", "subscriber", "callback", "thread"]
         }
 
-        self.logger.info("Starting threads for callbacks.", extra = logging_extra)
+        self.logger.info("Starting threads for callbacks.", extra=logging_extra)
 
         self._error_thread.start()
 
@@ -556,7 +557,7 @@ class Aggregator:
                 thread.start()
         except RuntimeError:
             logging_extra["keywords"] += ["error", "exception"]
-            self.logger.exception("Error while starting thread. Cleaning up.", extra = logging_extra)
+            self.logger.exception("Error while starting thread. Cleaning up.", extra=logging_extra)
             for thread in self.threads:
                 if thread.is_alive():
                     thread.exit()
@@ -566,12 +567,12 @@ class Aggregator:
         if all([thread.is_alive() for thread in self.threads]):
             logging_extra["code"] = "Aggregator start"
             logging_extra["keywords"] += ["success"]
-            self.logger.info("All threads started with success.", extra = logging_extra)
+            self.logger.info("All threads started with success.", extra=logging_extra)
 
         self._running = True
 
         logging_extra["code"] = "Aggregator is running"
-        self.logger.info("Aggregator running.", extra = logging_extra)
+        self.logger.info("Aggregator running.", extra=logging_extra)
 
     def stop(self):
         """Stop the aggregator.
@@ -586,20 +587,20 @@ class Aggregator:
         }
 
         if not self._running:
-            self.logger.info("Aggregator already stopped.", extra = logging_extra)
+            self.logger.info("Aggregator already stopped.", extra=logging_extra)
 
             return
 
-        self.logger.info("Stopping aggregator.", extra = logging_extra)
+        self.logger.info("Stopping aggregator.", extra=logging_extra)
 
         logging_extra["code"] = "Tear down callbacks"
         logging_extra["keywords"] += ["tear down"]
-        self.logger.info("Tearing down callbacks.", extra = logging_extra)
+        self.logger.info("Tearing down callbacks.", extra=logging_extra)
         for subscriber in self.subscribers:
             try:
                 self.logger.debug(
                     "Tearing down callback {}."
-                    .format(subscriber.callback), extra = logging_extra
+                    .format(subscriber.callback), extra=logging_extra
                 )
                 subscriber.callback.teardown()
             except NotImplementedError:
@@ -607,7 +608,7 @@ class Aggregator:
                 self.logger.warn(
                     "teardown() not implemented for callback {}."
                     .format(subscriber.callback),
-                    extra = logging_extra
+                    extra=logging_extra
                 )
                 logging_extra["keywords"] = [x for x in logging_extra["keywords"] if x not in ["error", "exception", "not implemented"]]
                 continue
@@ -616,27 +617,27 @@ class Aggregator:
                 self.logger.exception(
                     "Something went wrong while tearing down callback {}."
                     .format(subscriber.callback),
-                    extra = logging_extra
+                    extra=logging_extra
                 )
                 logging_extra["keywords"] = [x for x in logging_extra["keywords"] if x not in ["error", "exception"]]
                 continue
 
         logging_extra["code"] = "Threads exit"
         logging_extra["keywords"] += ["exit"]
-        self.logger.info("Exiting threads.", extra = logging_extra)
+        self.logger.info("Exiting threads.", extra=logging_extra)
         for thread in self.threads:
             thread.exit()
 
         if not any([thread.is_alive() for thread in self.threads]):
             logging_extra["keywords"] += ["sucess"]
-            self.logger.info("All threads exited with success.", extra = logging_extra)
+            self.logger.info("All threads exited with success.", extra=logging_extra)
 
         self.publisher.stop()
 
         self._running = False
 
         logging_extra["keywords"] += ["finished", "finish"]
-        self.logger.info("Aggregator finished with success.", extra = logging_extra)
+        self.logger.info("Aggregator finished with success.", extra=logging_extra)
 
     def register_callback(self, callback, channel='default'):
         """Register a new callback.
@@ -657,7 +658,7 @@ class Aggregator:
             "keywords": ["Aggregator", "callback", "register"]
         }
 
-        self.logger.debug("Registering new callback {}.".format(callback), extra = logging_extra)
+        self.logger.debug("Registering new callback {}.".format(callback), extra=logging_extra)
 
         try:
             subscribers = self.channels[channel]
@@ -668,7 +669,7 @@ class Aggregator:
             self.logger.debug(
                 "Creating new list of subscribers for channel {}."
                 .format(channel),
-                extra = logging_extra
+                extra=logging_extra
             )
             subscribers = []
 
@@ -692,7 +693,7 @@ class Aggregator:
         self.logger.debug(
             "Removing callback {} from subscribers."
             .format(callback),
-            extra = logging_extra
+            extra=logging_extra
         )
         for channel, subscribers in self.channels.items():
             filtered_subscribers = list(filter(lambda subscriber:

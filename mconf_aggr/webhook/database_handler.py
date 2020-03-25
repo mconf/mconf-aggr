@@ -96,7 +96,7 @@ class MeetingCreatedHandler(DatabaseEventHandler):
             "keywords": ["meeting", "created", f"internal-meeting-id={event.internal_meeting_id}", "event", "handler", "webhook"]
         }
 
-        self.logger.info(f"Processing meeting-created event for internal-meeting-id: '{event.internal_meeting_id}'.", extra = logging_extra)
+        self.logger.info(f"Processing meeting-created event for internal-meeting-id: '{event.internal_meeting_id}'.", extra=logging_extra)
 
         # Create tables meetings_events and meetings.
         if (
@@ -107,7 +107,7 @@ class MeetingCreatedHandler(DatabaseEventHandler):
             logging_extra["code"] = "Meeting already exists"
             logging_extra["keywords"] += ["warning", "database"]
 
-            self.logger.warn(f"Meeting with internal-meeting-id '{event.internal_meeting_id}' already exists.", extra = logging_extra)
+            self.logger.warn(f"Meeting with internal-meeting-id '{event.internal_meeting_id}' already exists.", extra=logging_extra)
             return
 
         new_meetings_events = MeetingsEvents(**event._asdict())
@@ -135,7 +135,7 @@ class MeetingCreatedHandler(DatabaseEventHandler):
             "code": "Empty secret",
             "keywords": ["secret", "empty", f"internal-meeting-id={event.internal_meeting_id}", "database"]
             }
-            self.logger.info(f"Empty shared secret guid, meeting '{event.internal_meeting_id}' insertion falling back to institution name: '{metadata.mconflb_institution_name}'", extra = logging_extra)
+            self.logger.info(f"Empty shared secret guid, meeting '{event.internal_meeting_id}' insertion falling back to institution name: '{metadata.mconflb_institution_name}'", extra=logging_extra)
             # fallback to name of institution
             try:
                 # Find the secret using mconflb-institution-name which corresponds
@@ -151,7 +151,7 @@ class MeetingCreatedHandler(DatabaseEventHandler):
                     .first()
                 )
                 new_meetings_events.shared_secret_guid = found_secret.guid
-                self.logger.info(f"Found secret: '{found_secret.name}' for meeting '{event.internal_meeting_id}'", extra = logging_extra)
+                self.logger.info(f"Found secret: '{found_secret.name}' for meeting '{event.internal_meeting_id}'", extra=logging_extra)
 
                 # We found the secret, try to find its institution to complete
                 # the table with information
@@ -168,19 +168,19 @@ class MeetingCreatedHandler(DatabaseEventHandler):
                     "code": "Institution not found",
                     "keywords": ["institution", "secret", "meeting", "warning", "event", "handler", "database"]
                     }
-                    self.logger.warn(f"Could not find institution for secret '{found_secret.name}'", extra = logging_extra)
+                    self.logger.warn(f"Could not find institution for secret '{found_secret.name}'", extra=logging_extra)
 
                 logging_extra = {
                 "code": "Institution found",
                 "keywords": ["institution", "meeting", f"internal-meeting-id={event.internal_meeting_id}", "secret", "event", "handler", "database"]
                 }
-                self.logger.info(f"Found institution: '{found_institution.name}' for meeting '{event.internal_meeting_id}'", extra = logging_extra)
+                self.logger.info(f"Found institution: '{found_institution.name}' for meeting '{event.internal_meeting_id}'", extra=logging_extra)
             except:
                 logging_extra = {
                 "code": "Institution not found",
                 "keywords": ["institution", "name", "not found", "warning", "event", "handler", "database"]
                 }
-                self.logger.warn(f"Could not match institution name '{metadata.mconflb_institution_name}' to an institution", extra = logging_extra)
+                self.logger.warn(f"Could not match institution name '{metadata.mconflb_institution_name}' to an institution", extra=logging_extra)
 
         if not metadata.mconf_server_guid and not metadata.mconf_server_url:
             servers_table = (
@@ -228,7 +228,7 @@ class MeetingEndedHandler(DatabaseEventHandler):
         }
 
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing meeting-ended event for internal-meeting-id: '{int_id}'.", extra = logging_extra)
+        self.logger.info(f"Processing meeting-ended event for internal-meeting-id: '{int_id}'.", extra=logging_extra)
 
         # Table meetings_events to be updated.
         meetings_events_table = (
@@ -285,7 +285,7 @@ class UserJoinedHandler(DatabaseEventHandler):
 
         int_id = event.internal_meeting_id
 
-        self.logger.info(f"Processing user-joined event for internal-user-id '{event.internal_user_id}'.'", extra = logging_extra)
+        self.logger.info(f"Processing user-joined event for internal-user-id '{event.internal_user_id}'.'", extra=logging_extra)
 
         users_events_table = self._get_users_events(event)
 
@@ -335,7 +335,7 @@ class UserJoinedHandler(DatabaseEventHandler):
                     "keywords": ["meeting", "warning", "not found", "user", f"internal-user-id={event.internal_user_id}", "event", "handler", "database"]
                 }
 
-                self.logger.warn(f"No meeting found for user '{event.internal_user_id}'.", extra = logging_extra)
+                self.logger.warn(f"No meeting found for user '{event.internal_user_id}'.", extra=logging_extra)
                 raise WebhookDatabaseError(f"no meeting found for user '{event.internal_user_id}'")
 
             # Update unique_users in table meetings_events.
@@ -411,7 +411,7 @@ class UserLeftHandler(DatabaseEventHandler):
 
         user_id = event.internal_user_id
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing user-left message for internal-user-id '{user_id}' in meeting '{int_id}'.", extra = logging_extra)
+        self.logger.info(f"Processing user-left message for internal-user-id '{user_id}' in meeting '{int_id}'.", extra=logging_extra)
 
         # Table meetings to be updated.
         meetings_table = self.session.query(Meetings).\
@@ -431,7 +431,7 @@ class UserLeftHandler(DatabaseEventHandler):
             "code": "Meeting not found",
             "keywords": ["meeting", f"internal-meeting-id={event.internal_meeting_id}", "not found", "warning", "event", "handler", "database"]
             }
-            self.logger.warn(f"No meeting found with internal-meeting-id '{int_id}'.", extra = logging_extra)
+            self.logger.warn(f"No meeting found with internal-meeting-id '{int_id}'.", extra=logging_extra)
 
         # Table users_events to be updated.
         users_table = self.session.query(UsersEvents).\
@@ -445,7 +445,7 @@ class UserLeftHandler(DatabaseEventHandler):
             "code": "User not found",
             "keywords": ["user", f"internal-user-id={user_id}", "not found", "warning", "event", "handler", "database"]
             }
-            self.logger.warn(f"No user found with internal-user-id '{user_id}'.", extra = logging_extra)
+            self.logger.warn(f"No user found with internal-user-id '{user_id}'.", extra=logging_extra)
 
 
     def _remove_attendee(self, meetings_table, user_id):
@@ -658,7 +658,7 @@ class RapArchiveHandler(DatabaseEventHandler):
             "keywords": ["meeting", "internal-meeting-id", "not found", "warning", "event", "handler", "database"]
             }
 
-            self.logger.warn(f"No meeting found for recording '{event.record_id}'.", extra = logging_extra)
+            self.logger.warn(f"No meeting found for recording '{event.record_id}'.", extra=logging_extra)
 
         records_table.current_step = event.current_step
 
@@ -726,12 +726,12 @@ class RapHandler(DatabaseEventHandler):
                     logging_extra["code"] = "Host updated"
                     logging_extra["site"] = str(server_url)
                     logging_extra["keywords"] += ["host", "update", "server"]
-                    self.logger.info(f"Recording host was updated to '{server_url}'.", extra = logging_extra)
+                    self.logger.info(f"Recording host was updated to '{server_url}'.", extra=logging_extra)
                 records_table.server_id = server_id_result.id
             else:
                 logging_extra["code"] = "Server not found"
                 logging_extra["keywords"] += ["server", "not found", "warning"]
-                self.logger.warn(f"No server found for recording '{event.record_id}'.", extra = logging_extra)
+                self.logger.warn(f"No server found for recording '{event.record_id}'.", extra=logging_extra)
 
         meetings_events_table = (
             self.session.query(MeetingsEvents).
@@ -745,7 +745,7 @@ class RapHandler(DatabaseEventHandler):
             records_table.end_time = meetings_events_table.end_time
         else:
             logging_extra["code"] = "Meeting not found"
-            self.logger.warn(f"No meeting found for recording '{event.record_id}'.", extra = logging_extra)
+            self.logger.warn(f"No meeting found for recording '{event.record_id}'.", extra=logging_extra)
 
         records_table.current_step = event.current_step
 
@@ -773,7 +773,7 @@ class RapProcessHandler(DatabaseEventHandler):
         }
 
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.", extra = logging_extra)
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.", extra=logging_extra)
 
         records_table = (
             self.session.query(Recordings).
@@ -806,12 +806,12 @@ class RapProcessHandler(DatabaseEventHandler):
                 logging_extra["keywords"] += ["warning"]
                 self.logger.warn(f"Invalid event '{event.current_step}' from "
                     f" current status '{current_status}' for recording '{event.record_id}'.",
-                    extra = logging_extra
+                    extra=logging_extra
                 )
         else:
             logging_extra["code"] = "Recording not found"
             logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
-            self.logger.warn(f"No recording found with id '{event.record_id}'.", extra = logging_extra)
+            self.logger.warn(f"No recording found with id '{event.record_id}'.", extra=logging_extra)
 
 
 class RapPublishUnpublishHandler(DatabaseEventHandler):
@@ -835,7 +835,7 @@ class RapPublishUnpublishHandler(DatabaseEventHandler):
         }
 
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.", extra = logging_extra)
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.", extra=logging_extra)
 
         records_table = (
             self.session.query(Recordings).
@@ -852,7 +852,7 @@ class RapPublishUnpublishHandler(DatabaseEventHandler):
                 else:
                     logging_extra["code"] = "Recording not published"
                     logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
-                    self.logger.warn(f"Tried to unpublish a recording with id '{int_id}' that is not yet published.", extra = logging_extra)
+                    self.logger.warn(f"Tried to unpublish a recording with id '{int_id}' that is not yet published.", extra=logging_extra)
             elif event_type == 'rap-published':
                 if records_table.status == Status.UNPUBLISHED:
                     records_table.status = Status.PUBLISHED
@@ -861,11 +861,11 @@ class RapPublishUnpublishHandler(DatabaseEventHandler):
                 else:
                     logging_extra["code"] = "Recording already published"
                     logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
-                    self.logger.warn(f"Tried to publish a recording with id '{int_id}' that is already published.", extra = logging_extra) 
+                    self.logger.warn(f"Tried to publish a recording with id '{int_id}' that is already published.", extra=logging_extra) 
         else:
             logging_extra["code"] = "Recording not found"
             logging_extra["keywords"] += (["warning"] if("warning" not in logging_extra["keywords"]) else []) + ["not found"]
-            self.logger.warn(f"No recording found with meeting id '{int_id}'.", extra = logging_extra)
+            self.logger.warn(f"No recording found with meeting id '{int_id}'.", extra=logging_extra)
 
 class RapDeleteHandler(DatabaseEventHandler):
     """This class handles deleting recording events.
@@ -889,7 +889,7 @@ class RapDeleteHandler(DatabaseEventHandler):
         }
 
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.", extra = logging_extra)
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.", extra=logging_extra)
 
         records_table = (
             self.session.query(Recordings).
@@ -903,7 +903,7 @@ class RapDeleteHandler(DatabaseEventHandler):
         else:
             logging_extra["code"] = "Recording not found"
             logging_extra["keywords"] += ["warning"]
-            self.logger.warn(f"No recording found with meeting id '{int_id}'.", extra = logging_extra)
+            self.logger.warn(f"No recording found with meeting id '{int_id}'.", extra=logging_extra)
 
 class RapPublishHandler(DatabaseEventHandler):
     """This class handles publishing recording events.
@@ -927,7 +927,7 @@ class RapPublishHandler(DatabaseEventHandler):
         }
 
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.", extra = logging_extra)
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.", extra=logging_extra)
 
         records_table = (
             self.session.query(Recordings).
@@ -979,12 +979,12 @@ class RapPublishHandler(DatabaseEventHandler):
                 logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
                 self.logger.warn(f"Invalid event '{event.current_step}' from "
                     f" current status '{current_status}' for meeting '{int_id}'.", 
-                    extra = logging_extra
+                    extra=logging_extra
                 )
         else:
             logging_extra["code"] = "Recording not found"
             logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
-            self.logger.warn(f"No recording found with meeting id '{int_id}'.", extra = logging_extra)
+            self.logger.warn(f"No recording found with meeting id '{int_id}'.", extra=logging_extra)
 
 
 def _update_meeting(meetings_table):
@@ -1064,7 +1064,7 @@ class DataProcessor:
         "keywords": ["dispatch", "general", "event", "handler", "database"]
         }
 
-        self.logger.debug("Selecting event processor.", extra = logging_extra)
+        self.logger.debug("Selecting event processor.", extra=logging_extra)
 
         if(event_type == "meeting-created"):
             event_handler = MeetingCreatedHandler(self.session)
@@ -1127,7 +1127,7 @@ class DataProcessor:
         else:
             logging_extra["code"] = "Unknown event"
             logging_extra["keywords"] += ["event", "type"]
-            self.logger.warn(f"Unknown event type '{event_type}'.", extra = logging_extra)
+            self.logger.warn(f"Unknown event type '{event_type}'.", extra=logging_extra)
             raise InvalidWebhookEventError(f"unknown event type '{event_type}'")
 
         return event_handler
@@ -1164,7 +1164,7 @@ class WebhookDataWriter(AggregatorCallback):
             "keywords": ["WebhookDataWriter", "setup", "webhook", "hook", "database"]
         }
 
-        self.logger.info("Setting up WebhookDataWriter", extra = logging_extra)
+        self.logger.info("Setting up WebhookDataWriter", extra=logging_extra)
 
     def teardown(self):
         """Release any resources used to iteract with the database.
@@ -1174,7 +1174,7 @@ class WebhookDataWriter(AggregatorCallback):
             "keywords": ["WebhookDataWriter", "tear down", "webhook", "hook", "database"]
         }
 
-        self.logger.info("Tearing down WebhookDataWriter", extra = logging_extra)
+        self.logger.info("Tearing down WebhookDataWriter", extra=logging_extra)
 
     def run(self, data):
         """Run main logic of the writer.
@@ -1192,29 +1192,29 @@ class WebhookDataWriter(AggregatorCallback):
         """
         logging_extra = {
             "code": "WebhookDataWriter run",
-            "keywords": ["WebhookDataWriter", "run", "webhook", "hook", "database", "event"]
+            "keywords": ["WebhookDataWriter", "run", "webhook", "hook", "database", f"event={data.event_type}"]
         }
         try:
             with time_logger(self.logger.debug,
-                             "Processing information to database took {elapsed}s.", extra = logging_extra):
+                             "Processing information to database took {elapsed}s.", extra=logging_extra):
                 with session_scope() as session:
                     DataProcessor(session).update(data)
         except sqlalchemy.exc.OperationalError as err:
             logging_extra["keywords"] += ["error", "data", "persisting"]
 
-            self.logger.error(f"Operational error on database. Not persisting data: {err}", extra = logging_extra)
+            self.logger.error(f"Operational error on database. Not persisting data: {err}", extra=logging_extra)
 
             raise CallbackError() from err
         except WebhookDatabaseError as err:
             logging_extra["keywords"] += ["error", "data", "persisting"]
 
-            self.logger.error(f"An error occurred while persisting data. Not persisting data: {err}", extra = logging_extra)
+            self.logger.error(f"An error occurred while persisting data. Not persisting data: {err}", extra=logging_extra)
 
             raise CallbackError() from err
         except Exception as err:
             logging_extra["keywords"] += ["error", "data", "persisting"]
 
-            self.logger.error(f"Unknown error on database handler. Not persisting data: {err}", extra = logging_extra)
+            self.logger.error(f"Unknown error on database handler. Not persisting data: {err}", extra=logging_extra)
 
             raise CallbackError() from err
 
@@ -1249,7 +1249,7 @@ class AuthenticationHandler:
         logging_extra = {
             "code": "Get secret",
             "site": str(server),
-            "keywords": ["shared secret", "server", "database"]
+            "keywords": ["shared secret", "server", "database", "exception"]
         }
 
         found_secret = None
@@ -1258,13 +1258,13 @@ class AuthenticationHandler:
                 server = session.query(Servers.secret).filter(Servers.name == server).first()
             except sqlalchemy.exc.OperationalError as err:
                 logging_extra["code"] = "Database error"
-                logging_extra["keywords"] += ["error", "exception"] if(set(["error", "exception"]).issubset(set(logging_extra["keywords"]))) else [] 
-                self.logger.error(f"Operational error on database while validating token: {err}", extra = logging_extra)
+                logging_extra["keywords"] = ["shared secret", "server", "database", "exception", "error"]
+                self.logger.error(f"Operational error on database while validating token: {err}", extra=logging_extra)
                 server = None
             except Exception as err:
                 logging_extra["code"] = "Unknown error"
-                logging_extra["keywords"] += ["warning", "exception"] if(set(["warning", "exception"]).issubset(set(logging_extra["keywords"]))) else [] 
-                self.logger.warn(f"Unknown error while validating token: {err}", extra = logging_extra)
+                logging_extra["keywords"] = ["shared secret", "server", "database", "exception", "warning"]
+                self.logger.warn(f"Unknown error while validating token: {err}", extra=logging_extra)
                 server = None
 
             if server:
@@ -1298,7 +1298,7 @@ class WebhookServerHandler:
         """
         logging_extra = {
             "code": "Get servers",
-            "keywords": ["server", "get", "database"]
+            "keywords": ["WebhookServerHandler", "server", "get", "database"]
         }
 
         servers = None
@@ -1307,13 +1307,13 @@ class WebhookServerHandler:
                 servers = session.query(Servers).all()
             except sqlalchemy.exc.OperationalError as err:
                 logging_extra["code"] = "Database error"
-                logging_extra["keywords"] += ["error", "exception"] if(set(["error", "exception"]).issubset(set(logging_extra["keywords"]))) else [] 
+                logging_extra["keywords"] = ["WebhookServerHandler", "server", "get", "database", "exception", "error"]
                 self.logger.error(f"Operational error on database while gathering servers: {err}")
 
                 raise DatabaseNotReadyError()
             except Exception as err:
                 logging_extra["code"] = "Unknown error"
-                logging_extra["keywords"] += ["warning", "exception"] if(set(["warning", "exception"]).issubset(set(logging_extra["keywords"]))) else [] 
+                logging_extra["keywords"] = ["WebhookServerHandler", "server", "get", "database", "exception", "warning"]
                 self.logger.warn(f"Unknown error while gathering servers: {err}")
 
                 raise DatabaseNotReadyError()
