@@ -168,7 +168,7 @@ def map_webhook_event(event):
         It encapsulates both the event type and the event itself.
     """
     logger = logging.getLogger(__name__)
-    logaugment.add(logger, code="", site="", keywords="null")
+    logaugment.add(logger, code="", site="map_webhook_event",  server="", event="", keywords="null")
 
     logging_extra = {
         "code": "Webhook mapping",
@@ -183,6 +183,10 @@ def map_webhook_event(event):
         logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
         logger.warn("Webhook message dos not contain a valid id: {}".format(err), extra=logging_extra)
         raise InvalidWebhookMessageError("Webhook message dos not contain a valid id")
+
+    logging_extra["server"] = server_url
+    logging_extra["event"] = event_type
+    logger.debug("Mapping event", extra=logging_extra)
 
     if event_type == "meeting-created":
         mapped_event = _map_create_event(event, event_type, server_url)
@@ -232,7 +236,7 @@ def map_webhook_event(event):
 
     else:
         logging_extra["code"] = "Invalid webhook event id"
-        logging_extra["keywords"] += (["warning"] if("warning" not in logging_extra["keywords"]) else []) + ["event="+str(event_type)]
+        logging_extra["keywords"] += ["warning"]
         logger.warn("Webhook event id is not valid: '{}'".format(event_type), extra=logging_extra)
         raise InvalidWebhookEventError("Webhook event '{}' is not valid".format(event_type))
 

@@ -3,7 +3,7 @@
     "disable_existing_loggers": false,
     "formatters": {
         "simple": {
-            "format": "{\"type\":\"%(levelname)s\",\"time\":\"%(asctime)s\",\"code\":\"%(code)s\",\"site\":\"%(site)s\",\"keywords\":%(keywords)s,\"description\":\"%(message)s\"}",
+            "format": "{\"type\":\"%(levelname)s\",\"time\":\"%(asctime)s\",\"code\":\"%(code)s\",\"site\":\"%(site)s\",\"server\":\"%(server)s\",\"event\":\"%(event)s\",\"keywords\":%(keywords)s,\"description\":\"%(message)s\"}",
             "datefmt": "%a %b %d %H:%M:%S %Y"
         }
     },
@@ -33,7 +33,7 @@
         ],
         "formatters": {
             "simple": {
-                "format": "{\"type\":\"%(levelname)s\",\"time\":\"%(asctime)s\",\"code\":\"%(code)s\",\"site\":\"%(site)s\",\"keywords\":%(keywords)s,\"description\":\"%(message)s\"}",
+                "format": "{\"type\":\"%(levelname)s\",\"time\":\"%(asctime)s\",\"code\":\"%(code)s\",\"site\":\"%(site)s\",\"server\":\"%(server)s\",\"event\":\"%(event)s\",\"keywords\":%(keywords)s,\"description\":\"%(message)s\"}",
                 "datefmt": "%a %b %d %H:%M:%S %Y"
             }
         }

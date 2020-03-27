@@ -141,7 +141,7 @@ class SubscriberThread(threading.Thread):
         self._errorevent = errorevent
         self._stopevent = threading.Event()
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="", keywords="null")
+        logaugment.add(self.logger, code="", site="SubscriberThread", server="", event="", keywords="null")
 
     def run(self):
         """Run thread's main loop.
@@ -152,8 +152,9 @@ class SubscriberThread(threading.Thread):
         exit, it simply returns and the thread is done.
         """
         logging_extra = {
-            "code": "Aggregator run",
-            "keywords": ["Aggregator", "run", "thread", "subscriber", "callback"]
+            "code": "Subscriber run",
+            "site": "SubscriberThread.run",
+            "keywords": ["run", "thread", "subscriber", "callback"]
         }
         self.logger.debug(
             "Running thread with callback {}"
@@ -167,7 +168,7 @@ class SubscriberThread(threading.Thread):
             except ChannelClosed:
                 continue
             except CallbackError:
-                logging_extra["keywords"] = ["Aggregator", "run", "thread", "subscriber", "callback", "exception", "error"]
+                logging_extra["keywords"] = ["run", "thread", "subscriber", "callback", "exception", "error"]
 
                 self.logger.info("An error occurred while running a subscriber.", extra=logging_extra)
                 #self._errorevent.set()
@@ -183,7 +184,8 @@ class SubscriberThread(threading.Thread):
         """
         logging_extra = {
             "code": "Exit threads",
-            "keywords": ["Aggregator", "exit", "thread", "subscriber", "callback", "finish", "sucess"]
+            "site": "SubscriberThread.exit",
+            "keywords": ["exit", "thread", "subscriber", "callback", "finish", "sucess"]
         }
 
         self._stopevent.set()
@@ -219,7 +221,7 @@ class Channel:
         self.name = name
         self.queue = queue.Queue(maxsize=maxsize)
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="", keywords="null")
+        logaugment.add(self.logger, code="", site="Channel", server="", event="", keywords="null")
 
     def close(self):
         """Close the channel.
@@ -229,7 +231,8 @@ class Channel:
         """
         logging_extra = {
             "code": "Channel close",
-            "keywords": ["channel", "close", "signal", "queue"]
+            "site": "Channel.close",
+            "keywords": ["close", "signal", "queue", f"channel={self.name}"]
         }
 
         self.logger.debug("Closing channel {}.".format(self.name), extra=logging_extra)
@@ -250,7 +253,8 @@ class Channel:
         """
         logging_extra = {
             "code": "Channel publish",
-            "keywords": ["channel", "publish", "data", "queue"]
+            "site": "Channel.publish",
+            "keywords": ["publish", "data", "queue", f"channel={self.name}"]
         }
 
         self.logger.debug("Putting data into the channel.", extra=logging_extra)
@@ -277,8 +281,9 @@ class Channel:
             If the channel was closed.
         """
         logging_extra = {
-            "code": "Channel pop",
-            "keywords": ["channel", "pop", "data", "queue"]
+            "code": "Channel pop data",
+            "site": "Channel.pop",
+            "keywords": ["pop", "data", "queue", f"channel={self.name}"]
         }
 
         self.logger.debug("Popping data from the channel.", extra=logging_extra)
@@ -346,7 +351,7 @@ class Publisher:
         self.channels = None
         self._running = True
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="", keywords="null")
+        logaugment.add(self.logger, code="", site="Publisher", server="", event="", keywords="null")
 
     def update_channels(self, channels):
         """Update the channels to publish to.
@@ -358,7 +363,8 @@ class Publisher:
         """
         logging_extra = {
             "code": "Updating channel",
-            "keywords": ["Publisher", "update", "channel", "subscriber"]
+            "site": "Publisher.update_channels",
+            "keywords": ["update", "channel", "subscriber"]
         }
 
         self.logger.debug("Updating channels in publisher.", extra=logging_extra)
@@ -385,7 +391,8 @@ class Publisher:
         """
         logging_extra = {
             "code": "Publisher publish",
-            "keywords": ["Publisher", "publish", "subscriber", "channel", "data"]
+            "site": "Publisher.publish",
+            "keywords": ["publish", "subscriber", "channel", "data"]
         }
         
         if self._running:
@@ -406,6 +413,7 @@ class Publisher:
         """
         logging_extra = {
             "code": "Publisher stop",
+            "site": "Publisher.stop",
             "keywords": ["Publisher", "stop"]
         }
         self.logger.debug("Stopping the publisher.", extra=logging_extra)
@@ -457,11 +465,12 @@ class Aggregator:
         self._error_thread = None
         self._running = False  # It is considered running only after its setup.
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="", keywords="null")
+        logaugment.add(self.logger, code="", site="Aggregator", server="", event="", keywords="null")
 
         logging_extra = {
             "code": "Initialize",
-            "keywords": ["Aggregator", "init", "data structure", "controller"]
+            "site": "Aggregator.__init__",
+            "keywords": ["aggregator", "init", "data structure", "controller"]
         }
 
         self.logger.info("Aggregator created.", extra=logging_extra)
@@ -480,7 +489,8 @@ class Aggregator:
         """
         logging_extra = {
             "code": "Aggregator setup",
-            "keywords": ["Aggregator", "setup", "subscriber", "callback"]
+            "site": "Aggregator.setup",
+            "keywords": ["aggregator", "setup", "subscriber", "callback"]
         }
 
         self.logger.info("Setting up aggregator.", extra=logging_extra)
@@ -488,7 +498,7 @@ class Aggregator:
         logging_extra["code"] = "Callback setup"
         for subscriber in self.subscribers:
             try:
-                logging_extra["keywords"] = ["Aggregator", "setup", "subscriber", "callback"]
+                logging_extra["keywords"] = ["aggregator", "setup", "subscriber", "callback"]
                 self.logger.debug(
                     "Setting up callback {}."
                     .format(subscriber.callback),
@@ -496,7 +506,7 @@ class Aggregator:
                 )
                 subscriber.callback.setup()
             except NotImplementedError:
-                logging_extra["keywords"] = ["Aggregator", "setup", "subscriber", "callback", "exception", "warning", "not implemented"]
+                logging_extra["keywords"] = ["aggregator", "setup", "subscriber", "callback", "exception", "warning", "not implemented"]
                 self.logger.warn(
                     "setup() not implemented for callback {}."
                     .format(subscriber.callback),
@@ -504,7 +514,7 @@ class Aggregator:
                 )
                 continue
             except Exception:
-                logging_extra["keywords"] = ["Aggregator", "setup", "subscriber", "callback", "exception", "error"]
+                logging_extra["keywords"] = ["aggregator", "setup", "subscriber", "callback", "exception", "error"]
                 self.logger.exception(
                     "Something went wrong while setting up callback {}."
                     .format(subscriber.callback),
@@ -544,7 +554,8 @@ class Aggregator:
         """
         logging_extra = {
             "code": "Aggregator start",
-            "keywords": ["Aggregator", "start", "subscriber", "callback", "thread"]
+            "site": "Aggregator.start",
+            "keywords": ["aggregator", "start", "subscriber", "callback", "thread"]
         }
 
         self.logger.info("Starting threads for callbacks.", extra=logging_extra)
@@ -583,7 +594,8 @@ class Aggregator:
         """
         logging_extra = {
             "code": "Aggregator stop",
-            "keywords": ["Aggregator", "stop", "subscriber", "callback", "thread"]
+            "site": "Aggregator.stop",
+            "keywords": ["aggregator", "stop", "subscriber", "callback", "thread"]
         }
 
         if not self._running:
@@ -604,22 +616,22 @@ class Aggregator:
                 )
                 subscriber.callback.teardown()
             except NotImplementedError:
-                logging_extra["keywords"] += ["error", "exception", "not implemented"]
+                logging_extra["keywords"] = ["not implemented", "warning", "aggregator", "stop", "subscriber", "callback", "thread", "tear down"]
                 self.logger.warn(
                     "teardown() not implemented for callback {}."
                     .format(subscriber.callback),
                     extra=logging_extra
                 )
-                logging_extra["keywords"] = [x for x in logging_extra["keywords"] if x not in ["error", "exception", "not implemented"]]
+                logging_extra["keywords"] = ["aggregator", "stop", "subscriber", "callback", "thread", "tear down"]
                 continue
             except Exception:
-                logging_extra["keywords"] += ["error", "exception"]
+                logging_extra["keywords"] = ["exception", "aggregator", "stop", "subscriber", "callback", "thread", "tear down"]
                 self.logger.exception(
                     "Something went wrong while tearing down callback {}."
                     .format(subscriber.callback),
                     extra=logging_extra
                 )
-                logging_extra["keywords"] = [x for x in logging_extra["keywords"] if x not in ["error", "exception"]]
+                logging_extra["keywords"] = ["aggregator", "stop", "subscriber", "callback", "thread", "tear down"]
                 continue
 
         logging_extra["code"] = "Threads exit"
@@ -636,7 +648,7 @@ class Aggregator:
 
         self._running = False
 
-        logging_extra["keywords"] += ["finished", "finish"]
+        logging_extra["keywords"] = ["aggregator", "stop", "subscriber", "callback", "thread", "finished"]
         self.logger.info("Aggregator finished with success.", extra=logging_extra)
 
     def register_callback(self, callback, channel='default'):
@@ -655,7 +667,8 @@ class Aggregator:
         """
         logging_extra = {
             "code": "Aggregator callback register",
-            "keywords": ["Aggregator", "callback", "register"]
+            "site": "Aggregator.register_callback",
+            "keywords": ["aggregator", "callback", "register"]
         }
 
         self.logger.debug("Registering new callback {}.".format(callback), extra=logging_extra)
@@ -664,7 +677,7 @@ class Aggregator:
             subscribers = self.channels[channel]
         except KeyError:
             logging_extra["code"] = "Channel create"
-            logging_extra["keywords"] += ["channel", "subscriber"]
+            logging_extra["keywords"] += ["subscribers", f"channel={channel}"]
 
             self.logger.debug(
                 "Creating new list of subscribers for channel {}."
@@ -687,7 +700,8 @@ class Aggregator:
         """
         logging_extra = {
             "code": "Aggregator callback register remove",
-            "keywords": ["Aggregator", "callback", "register", "remove"]
+            "site": "Aggregator.remove_callback",
+            "keywords": ["aggregator", "callback", "register", "remove"]
         }
 
         self.logger.debug(

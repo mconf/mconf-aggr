@@ -63,10 +63,11 @@ class AuthMiddleware:
         * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/WWW-Authenticate
         """
         self.logger = logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="", keywords="null")
+        logaugment.add(self.logger, code="", site="AuthMiddleware", server="", event="", keywords="null")
 
         logging_extra = {
             "code": "Processing requests",
+            "site": "AuthMiddleware.process_request",
             "keywords": ["https", "falcon", "requests", "domain"]
         }
 
@@ -91,7 +92,7 @@ class AuthMiddleware:
             token = req.get_header("Authorization")
             www_authentication = ["Bearer realm=\"mconf-aggregator\""]
 
-            logging_extra["site"] = str(server_url)
+            logging_extra["server"] = server_url
             if token is None:
                 logging_extra["code"] = "Missing token"
                 logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
@@ -155,7 +156,7 @@ class WebhookEventListener:
         """
         self.event_handler = event_handler
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="", keywords="null")
+        logaugment.add(self.logger, code="", site="WebhookEventListener", server="", event="", keywords="null")
 
     @falcon.before(AuthMiddleware())
     def on_post(self, req, resp):
@@ -168,11 +169,10 @@ class WebhookEventListener:
         req : falcon.Request
         resp : falcon.Response
         """
-        event_id = json.loads(req.get_param("event"))[0]["data"]["id"]
         logging_extra = {
-            "code": "POST requests",
-            "site": str(req.get_param("domain")),
-            "keywords": ["https", "falcon", "POST", "requests", "domain", "webhook", "listener", "event={}".format(event_id)]
+            "code": "POST request",
+            "site": "WebhookEventListener.on_post",
+            "keywords": ["https", "falcon", "POST", "requests", "domain", "webhook", "listener"]
         }
 
         with time_logger(self.logger.debug,
@@ -180,29 +180,30 @@ class WebhookEventListener:
             server_url = req.get_param("domain")
             event = req.get_param("event")
 
+            logging_extra["server"] = server_url
             self.logger.info("Webhook event received from '{}' (last hop: '{}').".format(server_url, req.host), extra=logging_extra)
 
             # Always responds with HTTP status code 200 in order to prevent
             # the sending webhook endpoint from stopping requesting.
             try:
+                logging_extra["code"] = "Processing webhook event"
+                self.logger.debug("Processing event", extra=logging_extra)
                 self.event_handler.process_event(server_url, event)
             except WebhookError as err:
                 logging_extra["code"] = "Webhook error"
                 logging_extra["keywords"] += ["exception", "error"]
-                self.logger.error(f"An error occurred while processing event: {err}")
+                self.logger.error(f"An error occurred while processing event: {err}", extra=logging_extra)
                 response = WebhookResponse(str(err))
                 resp.body = json.dumps(response.error)
                 resp.status = falcon.HTTP_200
             except Exception as err:
                 logging_extra["code"] = "Unexpected error"
                 logging_extra["keywords"] += ["exception", "error"]
-                self.logger.error(f"An unexpected error occurred while processing event: {err}")
+                self.logger.error(f"An unexpected error occurred while processing event: {err}", extra=logging_extra)
                 response = WebhookResponse(str(err))
                 resp.body = json.dumps(response.error)
                 resp.status = falcon.HTTP_200
             else:
-                logging_extra["code"] = "Success process"
-                logging_extra["keywords"] += ["sucess"]
                 response = WebhookResponse("Event processed successfully")
                 resp.body = json.dumps(response.success)
                 resp.status = falcon.HTTP_200
@@ -261,7 +262,7 @@ class WebhookEventHandler:
         self.publisher = publisher
         self.channel = channel
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="", keywords="null")
+        logaugment.add(self.logger, code="", site="WebhookEventHandler", server="", event="", keywords="null")
 
     def stop(self):
         pass
@@ -282,6 +283,8 @@ class WebhookEventHandler:
         """
         logging_extra = {
             "code": "Parse and publish data",
+            "site": "WebhookEventHandler.process_event",
+            "server": server_url or "",
             "keywords": ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator"]
         }
 
@@ -290,6 +293,8 @@ class WebhookEventHandler:
 
         try:
             #decoded_events = self._decode(unquoted_event)
+            logging_extra["code"] = "Decoding events"
+            self.logger.debug("Parsing events as a JSON file.", extra=logging_extra)
             decoded_events = self._decode(event)
         except json.JSONDecodeError as err:
             logging_extra["code"] = "Invalid JSON"
@@ -299,7 +304,12 @@ class WebhookEventHandler:
 
         if server_url:
             # In case the server URL does not contain a valid scheme.
+            logging_extra["code"] = "Decoding url"
+            self.logger.debug("Normalizing server url.", extra=logging_extra)
+
             server_url = _normalize_server_url(server_url)
+
+            logging_extra["server"] = server_url
 
         # We can handle more than one event at once.
         for webhook_event in decoded_events:
@@ -307,11 +317,20 @@ class WebhookEventHandler:
             try:
                 # Instance of WebhookEvent.
                 webhook_event = map_webhook_event(webhook_event)
+
+                logging_extra["event"] = webhook_event.event_type
             except Exception as err:
+                logging_extra["code"] = "Mapping error"
+                logging_extra["keywords"] += ["mapper", "warning"]
+                self.logger.warning(f"Something went wrong: {err}")
                 webhook_event = None
                 
             if webhook_event:
                 try:
+                    logging_extra["code"] = "Publishing webhook event"
+                    logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", f"channel={self.channel}"]
+                    self.logger.debug("Publishing event.", extra=logging_extra)
+
                     self.publisher.publish(webhook_event, channel=self.channel)
                 except PublishError as err:
                     logging_extra["code"] = "Publish error"

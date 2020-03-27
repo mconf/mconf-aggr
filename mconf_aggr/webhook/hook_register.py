@@ -51,7 +51,7 @@ class WebhookRegister:
         self._failed_servers = [] # List of servers that failed to register.
 
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="", keywords="null")
+        logaugment.add(self.logger, code="", site="WebhookRegister", server="", event="", keywords="null")
 
         if servers:
             # Use the servers passed as argument.
@@ -75,13 +75,16 @@ class WebhookRegister:
     def create_hooks(self):
         logging_extra = {
             "code": "Create webhooks",
-            "keywords": ["webhook", "hook", "register", "create", "callback"]
+            "site": "WebhookRegister.create_hooks",
+            "keywords": ["hook", "register", "create", "callback", 'server=""']
         }
         self.logger.info(f"Creating hooks.", extra=logging_extra)
         # Iterate over its dictionary of server_name-server_secret key-values.
         # We still use token and secret interchangeably.
         for server, token in self._servers.items():
             inner_server = WebhookServer(server, token)
+
+            logging_extra["keywords"] = ["hook", "register", "create", "callback", f"server={server}"]
             # When creating a hook, i.e., registerting a webhook callback,
             # it may fail due to many different reasons.
             # If it fails, appends the failed server to the failed_servers list.
@@ -90,8 +93,7 @@ class WebhookRegister:
                 _ = inner_server.create_hook(self._callback_url, self._get_raw, self._hook_id)
             except WebhookCreateError as err:
                 logging_extra["code"] = "Registration failed"
-                logging_extra["site"] = str(server)
-                logging_extra["keywords"] += (["warning"] if("warning" not in logging_extra["keywords"]) else [])
+                logging_extra["keywords"] = ["create error", "warning", "hook", "register", "create", "callback", f"server={server}"]
                 self.logger.warn(f"Webhook registration for server '{server}' failed ({err.reason}).", extra=logging_extra)
                 self.failed_servers.append(server)
             except WebhookAlreadyExistsError as err:
@@ -99,7 +101,7 @@ class WebhookRegister:
                 self.logger.info(f"Webhook registration for server '{server}' ok (webhook already exists).", extra=logging_extra)
             except Exception as err:
                 logging_extra["code"] = "Registration failed for an unexpected reason"
-                logging_extra["keywords"] += (["warning"] if("warning" not in logging_extra["keywords"]) else []) 
+                logging_extra["keywords"] = ["unexpected", "exception", "warning", "hook", "register", "create", "callback", f"server={server}"]
                 self.logger.warn(f"Webhook registration for server '{server}' failed (unexpected reason).", extra=logging_extra)
 
                 self.failed_servers.append(server)
@@ -111,7 +113,7 @@ class WebhookRegister:
             logging_extra["keywords"] = [x for x in logging_extra["keywords"] if x not in ["warning"]]
 
         logging_extra["code"] = "Registration ok"
-        logging_extra["site"] = ""
+        logging_extra["keywords"][-1] = 'server=""'
         self.logger.info(f"Hooks registration done.", extra=logging_extra)
 
     def _fetch_servers_from_database(self):
@@ -149,7 +151,7 @@ class WebhookServer:
         self._secret = secret
 
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="", keywords="null")
+        logaugment.add(self.logger, code="", site="WebhookServer", server="", event="", keywords="null")
 
     def create_hook(self, callback_url, get_raw=False, hook_id=None):
         """Register a webhook callback.
@@ -172,7 +174,8 @@ class WebhookServer:
         """
         logging_extra = {
             "code": "Create webhooks",
-            "keywords": ["webhook", "hook", "register", "create", "callback", "single server"]
+            "site": "WebhookServer.create_hook",
+            "keywords": ["webhook", "hook", "register", "create", "callback", "single server", f"url={callback_url}"]
         }
 
         hook_url = self._build_create_hook_url()
