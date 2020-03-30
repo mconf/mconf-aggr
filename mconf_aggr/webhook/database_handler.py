@@ -260,7 +260,7 @@ class UserJoinedHandler(DatabaseEventHandler):
         # Query for meetings_events to link with users_events table.
         meetings_events_table = (
             self.session.query(MeetingsEvents)
-            .filter(MeetingsEvents.internal_meeting_id.match(int_id))
+            .filter(MeetingsEvents.internal_meeting_id == int_id)
             .first()
         )
 
