@@ -9,10 +9,13 @@ def timestamp_now():
 kafka_topic = 'sample'
 
 internal_meeting_id = "58ec2673ad6768c8f904c7e0d66307dbbf7a74f8-1571938092195"
+internal_meeting_id_bytes = b"58ec2673ad6768c8f904c7e0d66307dbbf7a74f8-1571938092195"
 external_meeting_id = "random-4960974"
 internal_user_id = "w_ygp0wa4hp9nx"
 
-producer = KafkaProducer(bootstrap_servers='localhost:32769', value_serializer=lambda m: json.dumps(m).encode('ascii'))
+producer = KafkaProducer(bootstrap_servers='localhost:32768', value_serializer=lambda m: json.dumps(m).encode('ascii'))
+
+a = input(">")
 
 createJSON = [
     {
@@ -44,8 +47,10 @@ createJSON = [
     }
 ]
 
-producer.send(kafka_topic, key=b'meeting-created', value=createJSON)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=createJSON)
 producer.flush()
+
+a = input(">")
 
 presenterAssignedJSON = [
     {
@@ -69,8 +74,10 @@ presenterAssignedJSON = [
     }
 ]
 
-producer.send(kafka_topic, key=b'user-presenter-assigned', value=presenterAssignedJSON)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=presenterAssignedJSON)
 producer.flush()
+
+a = input(">")
 
 userJoinedJSON = [
     {
@@ -97,8 +104,10 @@ userJoinedJSON = [
     }
 ]
 
-producer.send(kafka_topic, key=b'user-joined', value=userJoinedJSON)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=userJoinedJSON)
 producer.flush()
+
+a = input(">")
 
 userPresenterUnassignedJSON = [
     {
@@ -123,8 +132,10 @@ userPresenterUnassignedJSON = [
     }
 ]
 
-producer.send(kafka_topic, key=b'user-presenter-unassigned', value=userPresenterUnassignedJSON)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=userPresenterUnassignedJSON)
 producer.flush()
+
+a = input(">")
 
 userAudioVoiceEnabledJSON = [
     {
@@ -150,8 +161,10 @@ userAudioVoiceEnabledJSON = [
     }
 ]
 
-producer.send(kafka_topic, key=b'user-audio-voice-enabled', value=userAudioVoiceEnabledJSON)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=userAudioVoiceEnabledJSON)
 producer.flush()
+
+a = input(">")
 
 meetingRecordingChangedJSON = [
     {
@@ -171,8 +184,10 @@ meetingRecordingChangedJSON = [
     }
 ]
 
-producer.send(kafka_topic, key=b'meeting-recording-changed', value=meetingRecordingChangedJSON)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=meetingRecordingChangedJSON)
 producer.flush()
+
+a = input(">")
 
 meetingEndedJSON = [
     {
@@ -192,5 +207,5 @@ meetingEndedJSON = [
     }
 ]
 
-producer.send(kafka_topic, key=b'meeting-ended', value=meetingEndedJSON)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=meetingEndedJSON)
 producer.flush()

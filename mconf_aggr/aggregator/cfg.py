@@ -33,6 +33,9 @@ class EnvConfig:
         self._config["MCONF_WEBHOOK_DATABASE_PASSWORD"] = os.getenv("MCONF_WEBHOOK_DATABASE_PASSWORD")
         self._config["MCONF_WEBHOOK_DATABASE_DATABASE"] = os.getenv("MCONF_WEBHOOK_DATABASE_DATABASE")
         self._config["MCONF_WEBHOOK_DATABASE_PORT"] = os.getenv("MCONF_WEBHOOK_DATABASE_PORT") or "5432"
+        self._config["MCONF_KAFKA_HOST"] = os.getenv("MCONF_KAFKA_HOST") or "localhost:9092"
+        self._config["MCONF_KAFKA_TOPIC"] = os.getenv("MCONF_KAFKA_TOPIC")
+        self._config["MCONF_KAFKA_GROUP_ID"] = os.getenv("MCONF_KAFKA_GROUP_ID")
         self._config["MCONF_WEBHOOK_ROUTE"] = os.getenv("MCONF_WEBHOOK_ROUTE") or "/"
         self._config["MCONF_WEBHOOK_AUTH_REQUIRED"] = to_bool(os.getenv("MCONF_WEBHOOK_AUTH_REQUIRED", "True"))
         self._config["MCONF_WEBHOOK_LOG_LEVEL"] = os.getenv("MCONF_WEBHOOK_LOG_LEVEL")

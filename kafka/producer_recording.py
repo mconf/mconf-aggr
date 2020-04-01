@@ -9,11 +9,14 @@ def timestamp_now():
 kafka_topic = 'sample'
 
 internal_meeting_id = "58ec2673ad6768c8f904c7e0d66307dbbf7a74f8-1571938092195"
+internal_meeting_id_bytes = b"58ec2673ad6768c8f904c7e0d66307dbbf7a74f8-1571938092195"
 record_id = internal_meeting_id
 external_meeting_id = "random-4960974"
 internal_user_id = "w_ygp0wa4hp9nx"
 
-producer = KafkaProducer(bootstrap_servers='localhost:32769', value_serializer=lambda m: json.dumps(m).encode('ascii'))
+producer = KafkaProducer(bootstrap_servers='localhost:32768', value_serializer=lambda m: json.dumps(m).encode('ascii'))
+
+a = input('>')
 
 rap_archive_started_json = [
     {
@@ -34,8 +37,10 @@ rap_archive_started_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-archive-started', value=rap_archive_started_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_archive_started_json)
 producer.flush()
+
+a = input('>')
 
 rap_archive_ended_json = [
     {
@@ -60,8 +65,10 @@ rap_archive_ended_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-archive-ended', value=rap_archive_ended_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_archive_ended_json)
 producer.flush()
+
+a = input('>')
 
 
 rap_sanity_started_json = [
@@ -83,8 +90,10 @@ rap_sanity_started_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-sanity-started', value=rap_sanity_started_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_sanity_started_json)
 producer.flush()
+
+a = input('>')
 
 rap_sanity_ended_json = [
     {
@@ -107,8 +116,10 @@ rap_sanity_ended_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-sanity-ended', value=rap_sanity_ended_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_sanity_ended_json)
 producer.flush()
+
+a = input('>')
 
 
 rap_process_started_json = [
@@ -131,8 +142,10 @@ rap_process_started_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-process-started', value=rap_process_started_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_process_started_json)
 producer.flush()
+
+a = input('>')
 
 rap_process_ended_json = [
     {
@@ -156,8 +169,10 @@ rap_process_ended_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-process-ended', value=rap_process_ended_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_process_ended_json)
 producer.flush()
+
+a = input('>')
 
 rap_process_started_pv_json = [
     {
@@ -179,8 +194,10 @@ rap_process_started_pv_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-process-started', value=rap_process_started_pv_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_process_started_pv_json)
 producer.flush()
+
+a = input('>')
 
 rap_process_ended_pv_json = [
     {
@@ -204,8 +221,10 @@ rap_process_ended_pv_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-process-ended', value=rap_process_ended_pv_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_process_ended_pv_json)
 producer.flush()
+
+a = input('>')
 
 rap_publish_started_json = [
     {
@@ -227,8 +246,10 @@ rap_publish_started_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-publish-started', value=rap_publish_started_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_publish_started_json)
 producer.flush()
+
+a = input('>')
 
 rap_publish_ended_json = [
     {
@@ -297,8 +318,10 @@ rap_publish_ended_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-publish-ended', value=rap_publish_ended_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_publish_ended_json)
 producer.flush()
+
+a = input('>')
 
 rap_post_publish_started_json = [
     {
@@ -320,8 +343,10 @@ rap_post_publish_started_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-post-publish-started', value=rap_post_publish_started_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_post_publish_started_json)
 producer.flush()
+
+a = input('>')
 
 rap_post_publish_ended_json = [
     {
@@ -345,8 +370,10 @@ rap_post_publish_ended_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-post-publish-started', value=rap_post_publish_started_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_post_publish_started_json)
 producer.flush()
+
+a = input('>')
 
 rap_process_started_pv_json = [
     {
@@ -368,8 +395,10 @@ rap_process_started_pv_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-process-started', value=rap_process_started_pv_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_process_started_pv_json)
 producer.flush()
+
+a = input('>')
 
 rap_process_ended_pv_json = [
     {
@@ -393,8 +422,10 @@ rap_process_ended_pv_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-process-ended', value=rap_process_ended_pv_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_process_ended_pv_json)
 producer.flush()
+
+a = input('>')
 
 rap_publish_started_pv_json = [
     {
@@ -416,8 +447,10 @@ rap_publish_started_pv_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-publish-started', value=rap_publish_started_pv_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_publish_started_pv_json)
 producer.flush()
+
+a = input('>')
 
 rap_publish_ended_pv_json = [
     {
@@ -486,8 +519,10 @@ rap_publish_ended_pv_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-publish-ended', value=rap_publish_ended_pv_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_publish_ended_pv_json)
 producer.flush()
+
+a = input('>')
 
 rap_post_publish_started_2_json = [
     {
@@ -509,8 +544,10 @@ rap_post_publish_started_2_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-post-publish-started', value=rap_post_publish_started_2_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_post_publish_started_2_json)
 producer.flush()
+
+a = input('>')
 
 rap_post_publish_ended_2_json = [
     {
@@ -534,8 +571,10 @@ rap_post_publish_ended_2_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-post-publish-ended', value=rap_post_publish_ended_2_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_post_publish_ended_2_json)
 producer.flush()
+
+a = input('>')
 
 rap_publish_ended_rec_json = [
     {
@@ -592,8 +631,10 @@ rap_publish_ended_rec_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-publish-ended', value=rap_publish_ended_rec_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_publish_ended_rec_json)
 producer.flush()
+
+a = input('>')
 
 rap_publish_ended_rec_pv_json = [
     {
@@ -650,5 +691,7 @@ rap_publish_ended_rec_pv_json = [
     }
 ]
 
-producer.send(kafka_topic, key=b'rap-publish-ended', value=rap_publish_ended_rec_pv_json)
+producer.send(kafka_topic, key=internal_meeting_id_bytes, value=rap_publish_ended_rec_pv_json)
 producer.flush()
+
+a = input('>')

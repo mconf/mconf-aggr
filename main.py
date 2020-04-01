@@ -11,7 +11,7 @@ import falcon
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.webhook.database import DatabaseConnector
 from mconf_aggr.webhook.database_handler import WebhookDataWriter
-from mconf_aggr.webhook.event_listener import WebhookEventHandler, WebhookEventListener, AuthMiddleware
+from mconf_aggr.webhook.event_listener import WebhookEventHandler, WebhookEventListener, AuthMiddleware, KafkaEventListener
 from mconf_aggr.webhook.probe_listener import LivenessProbeListener, ReadinessProbeListener
 from mconf_aggr.webhook.hook_register import WebhookRegister
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
@@ -48,9 +48,8 @@ except SetupError:
 publisher = aggregator.publisher
 
 event_handler = WebhookEventHandler(publisher, channel)
-hook = WebhookEventListener(event_handler)
+kafka_listener = KafkaEventListener(event_handler)
 
-app.add_route(route, hook)
 app.add_route("/health", LivenessProbeListener())
 app.add_route("/ready", ReadinessProbeListener())
 

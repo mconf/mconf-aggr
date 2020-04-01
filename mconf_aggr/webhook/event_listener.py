@@ -8,6 +8,8 @@ import time
 from urllib.parse import unquote
 
 import falcon
+import threading
+from kafka import KafkaConsumer
 
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
@@ -175,6 +177,49 @@ class WebhookEventListener:
                 response = WebhookResponse("Event processed successfully")
                 resp.body = json.dumps(response.success)
                 resp.status = falcon.HTTP_200
+
+class KafkaEventListener(threading.Thread):
+    """Listener for Kafka.
+
+    This class works as a KafkaConsumer, using a specific thread to run it.
+    """
+
+    def __init__(self, event_handler, logger=None, **kwargs):
+        """Constructor of the KafkaEventListener.
+
+        Parameters
+        ----------
+        event_handler : WebhookEventHandler.
+        logger : logging.Logger
+            If not supplied, it will instantiate a new logger from __name__.
+        """
+        threading.Thread.__init__(self, **kwargs)
+        self.event_handler = event_handler
+        self.kafka_host = cfg.config["MCONF_KAFKA_HOST"]
+        self.kafka_topic = cfg.config["MCONF_KAFKA_TOPIC"]
+        self.kafka_consumer = KafkaConsumer(self.kafka_topic, bootstrap_servers = self.kafka_host, enable_auto_commit=False, group_id=cfg.config["MCONF_KAFKA_GROUP_ID"])
+        self.logger = logger or logging.getLogger(__name__)
+
+        self.start()
+
+    def run(self):
+        """Method which will run when the thread starts.
+        Consuming every message from Kafka and processing it as an event.
+        """
+        for message in self.kafka_consumer:
+            with time_logger(self.logger.debug,
+                            "Processing webhook event took {elapsed}s."):
+                # TODO(hen) Set server correctly
+                server_url = "test-live220.dev.mconf.com"
+
+                self.logger.info("Webhook event received from '{}'.".format(server_url))
+
+                try:
+                    self.event_handler.process_event(server_url, message.value)
+                    self.kafka_consumer.commit()
+                except Exception as err:
+                    self.logger.error(f"An unexpected error occurred while processing event ({err}).")
+                    continue
 
 
 class WebhookResponse:
