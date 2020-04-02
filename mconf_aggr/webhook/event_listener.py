@@ -209,17 +209,13 @@ class KafkaEventListener(threading.Thread):
         for message in self.kafka_consumer:
             with time_logger(self.logger.debug,
                             "Processing webhook event took {elapsed}s."):
-                # TODO(hen) Set server correctly
-                server_url = "test-live220.dev.mconf.com"
-
-                self.logger.info("Webhook event received from '{}'.".format(server_url))
-
                 try:
-                    self.event_handler.process_event(server_url, message.value)
-                    self.kafka_consumer.commit()
+                    self.event_handler.process_data(message.value)
                 except Exception as err:
                     self.logger.error(f"An unexpected error occurred while processing event ({err}).")
                     continue
+
+                self.kafka_consumer.commit()
 
 
 class WebhookResponse:
@@ -279,7 +275,33 @@ class WebhookEventHandler:
     def stop(self):
         pass
 
-    def process_event(self, server_url, event):
+    def process_data(self, data):
+        """Parse and publish data to aggregator.
+
+        Raises
+        Exception
+            If any error occur during event handling.
+
+        Parameters
+        ----------
+        data : str
+            all the data about the event to be parsed and published.
+        """
+        try:
+            decoded_data = self._decode(data)
+            server_url = decoded_data[0]["server_domain"]
+        except json.JSONDecodeError as err:
+            self.logger.error(f"Error during event decoding: invalid JSON: {err}")
+            raise RequestProcessingError("Event provided is not a valid JSON")
+        except KeyError as err:
+            self.logger.error(f"Invalid key in the given event: {err}")
+            raise RequestProcessingError("Event provided is not a valid JSON")
+
+        self.logger.info("Event received from '{}'.".format(server_url))
+
+        self.process_event(server_url, decoded_data, decoded=True)
+    
+    def process_event(self, server_url, event, decoded=False):
         """Parse and publish data to aggregator.
 
         Raises
@@ -290,18 +312,23 @@ class WebhookEventHandler:
         ----------
         server_url : str
             event origin's URL.
-        event : str
+        event : str / dict
             event to be parsed and published.
+        decoded : boolean
+            if true, event is already decoded and it's a dict.
         """
         # TODO(psv): verify if this is essential
         # unquoted_event = unquote(event)
 
-        try:
-            #decoded_events = self._decode(unquoted_event)
-            decoded_events = self._decode(event)
-        except json.JSONDecodeError as err:
-            self.logger.error(f"Error during event decoding: invalid JSON: {err}")
-            raise RequestProcessingError("Event provided is not a valid JSON")
+        if not decoded:
+            try:
+                #decoded_events = self._decode(unquoted_event)
+                decoded_events = self._decode(event)
+            except json.JSONDecodeError as err:
+                self.logger.error(f"Error during event decoding: invalid JSON: {err}")
+                raise RequestProcessingError("Event provided is not a valid JSON")
+        else:
+            decoded_events = event
 
         if server_url:
             # In case the server URL does not contain a valid scheme.
