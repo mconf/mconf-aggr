@@ -197,7 +197,13 @@ class KafkaEventListener(threading.Thread):
         self.event_handler = event_handler
         self.kafka_host = cfg.config["MCONF_KAFKA_HOST"]
         self.kafka_topic = cfg.config["MCONF_KAFKA_TOPIC"]
-        self.kafka_consumer = KafkaConsumer(self.kafka_topic, bootstrap_servers = self.kafka_host, enable_auto_commit=False, group_id=cfg.config["MCONF_KAFKA_GROUP_ID"])
+        self.kafka_consumer = KafkaConsumer(self.kafka_topic, 
+            bootstrap_servers = self.kafka_host, 
+            enable_auto_commit=False, group_id=cfg.config["MCONF_KAFKA_GROUP_ID"],
+            security_protocol=cfg.config["MCONF_KAFKA_SECURITY_PROTOCOL"],
+            sasl_mechanism=cfg.config["MCONF_KAFKA_SASL_MECHANISM"],
+            sasl_plain_username=cfg.config["MCONF_KAFKA_SASL_USERNAME"],
+            sasl_plain_password=cfg.config["MCONF_KAFKA_SASL_PASSWORD"])
         self.logger = logger or logging.getLogger(__name__)
 
         self.start()
@@ -213,7 +219,6 @@ class KafkaEventListener(threading.Thread):
                     self.event_handler.process_data(message.value)
                 except Exception as err:
                     self.logger.error(f"An unexpected error occurred while processing event ({err}).")
-                    continue
 
                 self.kafka_consumer.commit()
 
@@ -289,7 +294,7 @@ class WebhookEventHandler:
         """
         try:
             decoded_data = self._decode(data)
-            server_url = decoded_data[0]["server_domain"]
+            server_url = decoded_data["server_domain"]
         except json.JSONDecodeError as err:
             self.logger.error(f"Error during event decoding: invalid JSON: {err}")
             raise RequestProcessingError("Event provided is not a valid JSON")
@@ -299,7 +304,7 @@ class WebhookEventHandler:
 
         self.logger.info("Event received from '{}'.".format(server_url))
 
-        self.process_event(server_url, decoded_data, decoded=True)
+        self.process_event(server_url, [decoded_data], decoded=True)
     
     def process_event(self, server_url, event, decoded=False):
         """Parse and publish data to aggregator.

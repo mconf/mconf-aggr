@@ -39,6 +39,10 @@ class EnvConfig:
         self._config["MCONF_WEBHOOK_ROUTE"] = os.getenv("MCONF_WEBHOOK_ROUTE") or "/"
         self._config["MCONF_WEBHOOK_AUTH_REQUIRED"] = to_bool(os.getenv("MCONF_WEBHOOK_AUTH_REQUIRED", "True"))
         self._config["MCONF_WEBHOOK_LOG_LEVEL"] = os.getenv("MCONF_WEBHOOK_LOG_LEVEL")
+        self._config["MCONF_KAFKA_SASL_USERNAME"] = os.getenv("MCONF_KAFKA_SASL_USERNAME")
+        self._config["MCONF_KAFKA_SASL_PASSWORD"] = os.getenv("MCONF_KAFKA_SASL_PASSWORD")
+        self._config["MCONF_KAFKA_SECURITY_PROTOCOL"] = os.getenv("MCONF_KAFKA_SECURITY_PROTOCOL")
+        self._config["MCONF_KAFKA_SASL_MECHANISM"] = os.getenv("MCONF_KAFKA_SASL_MECHANISM")
 
     def __getitem__(self, key):
         """Make accessing configurations easier."""
