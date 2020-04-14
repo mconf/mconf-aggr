@@ -212,15 +212,26 @@ class KafkaEventListener(threading.Thread):
         """Method which will run when the thread starts.
         Consuming every message from Kafka and processing it as an event.
         """
-        for message in self.kafka_consumer:
-            with time_logger(self.logger.debug,
-                            "Processing webhook event took {elapsed}s."):
-                try:
-                    self.event_handler.process_data(message.value)
-                except Exception as err:
-                    self.logger.error(f"An unexpected error occurred while processing event ({err}).")
+        interval = 5
+        while True:
+            try:
+                for message in self.kafka_consumer:
+                    with time_logger(self.logger.info,
+                                    "Processing webhook event took {elapsed}s."):
+                        try:
+                            self.event_handler.process_data(message.value)
+                        except Exception as err:
+                            self.logger.error(f"An unexpected error occurred while processing event ({err}).")
 
-                self.kafka_consumer.commit()
+                        self.kafka_consumer.commit()
+            except Exception as err:
+                self.logger.error(f"An unexpected error occurred while processing event ({err}). Reconnecting to kafka in {interval} seconds.")
+
+                time.sleep(interval)
+                
+                continue
+
+            
 
 
 class WebhookResponse:
