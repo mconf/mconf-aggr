@@ -530,58 +530,57 @@ class RapArchiveHandler(DatabaseEventHandler):
         event = event.event
 
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
-
-        records_table = (
-            self.session.query(Recordings).
-            filter(Recordings.internal_meeting_id == int_id).
-            first()
-        )
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}' (RapArchiveHandler).")
 
         recorded = event.recorded
 
-        # Table recordings does not exist yet. Create it.
-        if not records_table:
-            # Remove the recorded field so no error is raised since that
-            # field is not present in the database.
-            event_dict = event._asdict()
-            event_dict.pop('recorded', None)
-
-            records_table = Recordings(**event_dict)
-
-            records_table.status = Status.PROCESSING
-            records_table.playback = []
-            records_table.workflow = {}
-            records_table.participants = (
-                int(
-                    self.session.query(UsersEvents.id).
-                    join(MeetingsEvents).
-                    filter(MeetingsEvents.internal_meeting_id == int_id).
-                    count()
-                )
+        # Meeting was set to be recorded.
+        if recorded:
+            records_table = (
+                self.session.query(Recordings).
+                filter(Recordings.internal_meeting_id == int_id).
+                first()
             )
-        elif records_table.status == Status.DELETED:
-            records_table.status = Status.PROCESSING
-        
-        if event_type == "rap-archive-ended" and not recorded:
-            records_table.status = Status.DELETED
 
-        meetings_events_table = (
-            self.session.query(MeetingsEvents).
-            filter(MeetingsEvents.internal_meeting_id == int_id).
-            first()
-        )
+            # Table recordings does not exist yet. Create it.
+            if not records_table:
+                # Remove the recorded field so no error is raised since that
+                # field is not present in the database.
+                event_dict = event._asdict()
+                event_dict.pop('recorded', None)
 
-        if meetings_events_table:
-            records_table.meeting_event_id = meetings_events_table.id
-            records_table.start_time = meetings_events_table.start_time
-            records_table.end_time = meetings_events_table.end_time
-        else:
-            self.logger.warn(f"No meeting found for recording '{event.record_id}'.")
+                records_table = Recordings(**event_dict)
 
-        records_table.current_step = event.current_step
+                records_table.status = Status.PROCESSING
+                records_table.playback = []
+                records_table.workflow = {}
+                records_table.participants = (
+                    int(
+                        self.session.query(UsersEvents.id).
+                        join(MeetingsEvents).
+                        filter(MeetingsEvents.internal_meeting_id == int_id).
+                        count()
+                    )
+                )
+            elif records_table.status == Status.DELETED:
+                records_table.status = Status.PROCESSING
 
-        self.session.add(records_table)
+            meetings_events_table = (
+                self.session.query(MeetingsEvents).
+                filter(MeetingsEvents.internal_meeting_id == int_id).
+                first()
+            )
+
+            if meetings_events_table:
+                records_table.meeting_event_id = meetings_events_table.id
+                records_table.start_time = meetings_events_table.start_time
+                records_table.end_time = meetings_events_table.end_time
+            else:
+                self.logger.warn(f"No meeting found for recording '{event.record_id}'.")
+
+            records_table.current_step = event.current_step
+
+            self.session.add(records_table)
 
 class RapHandler(DatabaseEventHandler):
     """This class handles general recording events.

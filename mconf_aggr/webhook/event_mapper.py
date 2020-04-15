@@ -207,8 +207,7 @@ def map_webhook_event(event):
                 "rap-post-process-started", "rap-post-process-ended"]):
         mapped_event = _map_rap_process_event(event, event_type, server_url)
 
-    elif(event_type in ["rap-archive-started",
-                "rap-sanity-started", "rap-sanity-ended",
+    elif(event_type in ["rap-sanity-started", "rap-sanity-ended",
                 "rap-post-archive-started", "rap-post-archive-ended"]):
         mapped_event = _map_rap_event(event, event_type, server_url)
 
