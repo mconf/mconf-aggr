@@ -1051,7 +1051,7 @@ class WebhookDataWriter(AggregatorCallback):
             If any error occur while persisting event into database.
         """
         try:
-            with time_logger(self.logger.debug,
+            with time_logger(self.logger.info,
                              "Processing information to database took {elapsed}s."):
                 with session_scope() as session:
                     DataProcessor(session).update(data)
