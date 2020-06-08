@@ -10,9 +10,11 @@ You can define *webhook-env-file.env* in the *env* folder and run *dev_run.sh*. 
 ```./dev_run.sh [-g] [-d | -l]```
 
 - **-g:** If you don't want to define the environment file, you can use the *-g* option that will generate it using *gen_file.sh*.
-- **-d:** To run inside a Docker container.
-- **-l:** To run locally.
+- **-d:** Run inside a Docker container.
+- **-l:** Run locally.
+- **-r:** Should register hook on live. The options are "true" or "false". Default is false.
+- **-n:** Run ngrok. The options are "true" or "false". Default is false.
 
 **Caution:** you cannot use *-d* and *-l* simultaneously. In addition, execution in Docker is defined by default.
 
-In addition, if you don't want to use *dev_run.sh*, you can skip to *dev_locally.sh* (to run locally) and *dev_docker.sh* (to run in a Docker container).
+Also, if you don't want to use *dev_run.sh*, you can skip to *dev_locally.sh* (to run locally) and *dev_docker.sh* (to run in a Docker container).
