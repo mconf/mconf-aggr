@@ -18,9 +18,12 @@ do
   esac
 done
 
-if [ -z "$ngrok" ]; then
+if [[ -z "$ngrok" || $ngrok == "null" ]]; then
 	echo "ngrok is not running"
 fi
+
+echo "IP: $ip"
+echo "ngrok: $ngrok"
 
 cd $MC_AGGR/envs
 echo "MCONF_WEBHOOK_CALLBACK_URL=$ngrok" > webhook-env-file.env 

@@ -29,7 +29,8 @@ do
 done
 
 if [[ $NGROK == "true" ]]; then
-  ./utils/ngrok http 8080 > /dev/null &
+  ./utils/ngrok http 8000 > /dev/null &
+  sleep 2
 fi
 
 if [[ $GENERATE == "true" ]]; then

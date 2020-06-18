@@ -219,6 +219,9 @@ def map_webhook_event(event):
 
     elif(event_type == "rap-deleted"):
         mapped_event = _map_rap_deleted_event(event, event_type, server_url)
+    
+    elif(event_type == 'rap-archive-started'):
+        mapped_event = _map_rap_archive_started(event, event_type, server_url)
 
     else:
         logger.warn("Webhook event id is not valid: '{}'".format(event_type))
@@ -428,6 +431,11 @@ def _map_rap_event(event, event_type, server_url):
     webhook_event = WebhookEvent(event_type, rap_event, server_url)
 
     return webhook_event
+
+def _map_rap_archive_started(event, event_type, server_url):
+    """Map `rap-archive-started` event to internal representation.
+    """
+    raise NotImplementedError()
 
 
 def _get_nested(d, keys, default):
