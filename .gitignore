@@ -104,3 +104,6 @@ log/*.log
 tmp/
 
 *.org
+
+# ngrok
+scripts/utils/ngrok
