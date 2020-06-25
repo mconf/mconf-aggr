@@ -7,13 +7,13 @@ This folder contains all the scripts that configure the environment to run the a
 
 You can define *webhook-env-file.env* in the *env* folder and run *dev_run.sh*. Basically, this script can generate the environment file, run it locally or in a container.
 
-```./dev_run.sh [-g] [-d | -l]```
+```./dev_run.sh [-g] [-d | -l] [-r {true|false}] [-n {true|false}]```
 
 - **-g:** If you don't want to define the environment file, you can use the *-g* option that will generate it using *gen_file.sh*.
 - **-d:** Run inside a Docker container.
 - **-l:** Run locally.
 - **-r:** Should register hook on live. The options are "true" or "false". Default is false.
-- **-n:** Run ngrok. The options are "true" or "false". Default is false.
+- **-n:** Run ngrok. The options are "true" or "false". Default is false. To use this option you must download [ngrok](https://ngrok.com/) and copy it to ```$MC_AGGR/scripts/utils```.
 
 **Caution:** you cannot use *-d* and *-l* simultaneously. In addition, execution in Docker is defined by default.
 
