@@ -9,8 +9,11 @@ Where *json* is the filename and *url* is the aggregator's endpoint.
 
 ### load_test
 Also, to do load tests, you can use ``` load_test.py ``` and set some parameters:
-- -r: it will randomize meeting's configuration. If not set, it'll use *config.cfg*. Also, if there isn't a *config.cfg*, it will be random anyway.
-- -e: run forever. Use ```CTRL+C``` to stop requests.
+- -b/--between: how many milliseconds between requests.
+- -e/--ever: run forever. Use ```CTRL+C``` to stop requests.
+- -h: to get more information about the script.
+- -r/--randomize: it will randomize meeting's configuration. If not set, it'll use *config.cfg*. Also, if there isn't a *config.cfg*, it will be random anyway.
+- -s/--simultaneously: how many threads running simultaneously.
 - -t/--times: how many meetings will be generated and sent to aggregator. ```--times=1``` will send only one meeting.
 
 
