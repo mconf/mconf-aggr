@@ -11,7 +11,7 @@ from sqlalchemy import (BigInteger,
                         String,
                         Enum)
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import backref, relationship
+from sqlalchemy.orm import backref, relationship, validates
 
 
 """Base class from which we extend table classes.
@@ -198,23 +198,23 @@ class MeetingsEvents(Base):
     id = Column(Integer, primary_key=True)
 
     shared_secret_guid = Column(String) # Index?
-    shared_secret_name = Column(String)
+    shared_secret_name = Column(String(50))
     server_guid = Column(String)
-    server_url = Column(String)
+    server_url = Column(String(255))
     institution_guid = Column(String)
 
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
-    external_meeting_id = Column(String) # Index?
-    internal_meeting_id = Column(String, unique=True) # Index?
-    name = Column(String)
+    external_meeting_id = Column(String(255)) # Index?
+    internal_meeting_id = Column(String(255), unique=True) # Index?
+    name = Column(String(255))
     create_time = Column(BigInteger)
-    create_date = Column(String)
+    create_date = Column(String(50))
     voice_bridge = Column(Integer)
-    dial_number = Column(String)
-    attendee_pw = Column(String)
-    moderator_pw = Column(String)
+    dial_number = Column(String(50))
+    attendee_pw = Column(String(50))
+    moderator_pw = Column(String(50))
     duration = Column(Integer)
     recording = Column(Boolean)
     has_forcibly_ended = Column(Boolean)
@@ -224,6 +224,14 @@ class MeetingsEvents(Base):
     is_breakout = Column(Boolean)
     unique_users = Column(Integer)
     meta_data = Column("metadata", JSON) # Name metadata is used by Base class.
+
+    @validates('shared_secret_name', 'server_url', 'external_meeting_id', 'internal_meeting_id', 
+        'name', 'create_date', 'dial_number', 'attendee_pw', 'moderator_pw')
+    def validate_code(self, key, value):
+        max_len = getattr(self.__class__, key).prop.columns[0].type.length
+        if value and len(value) > max_len:
+            return value[:max_len]
+        return value
 
     def __repr__(self):
         return ("<MeetingsEvents("
@@ -315,14 +323,14 @@ class Recordings(Base):
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
-    record_id = Column(String, unique=True)
+    record_id = Column(String(255), unique=True)
     meeting_event_id = Column(Integer)
     server_id = Column(Integer)
 
-    name = Column(String)
+    name = Column(String(255))
     status = Column(status_enum)
-    internal_meeting_id = Column(String, unique=True)
-    external_meeting_id = Column(String)
+    internal_meeting_id = Column(String(255), unique=True)
+    external_meeting_id = Column(String(255))
 
     is_breakout = Column(Boolean)
     published = Column(Boolean)
@@ -331,12 +339,19 @@ class Recordings(Base):
     participants = Column(Integer)
     size = Column(BigInteger)
     raw_size = Column(BigInteger)
-    current_step = Column(String)
+    current_step = Column(String(50))
 
     meta_data = Column("metadata", JSON) # Name metadata is used by Base class.
     playback = Column(JSON)
     download = Column(JSON)
     workflow = Column(JSON)
+
+    @validates('record_id', 'name', 'internal_meeting_id', 'external_meeting_id', 'current_step')
+    def validate_code(self, key, value):
+        max_len = getattr(self.__class__, key).prop.columns[0].type.length
+        if value and len(value) > max_len:
+            return value[:max_len]
+        return value
 
     def __repr__(self):
      return ("<Recordings("
@@ -406,14 +421,21 @@ class UsersEvents(Base):
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
-    name = Column(String)
-    role = Column(String)
+    name = Column(String(255))
+    role = Column(String(50))
     join_time = Column(BigInteger)
     leave_time = Column(BigInteger)
-    internal_user_id = Column(String, unique=True)
-    external_user_id = Column(String)
+    internal_user_id = Column(String(255), unique=True)
+    external_user_id = Column(String(255))
 
     meta_data = Column("metadata", JSON) # Name metadata is used by Base class.
+
+    @validates('name', 'role', 'internal_user_id', 'external_user_id')
+    def validate_code(self, key, value):
+        max_len = getattr(self.__class__, key).prop.columns[0].type.length
+        if value and len(value) > max_len:
+            return value[:max_len]
+        return value
 
     def __repr__(self):
         return ("<UsersEvents("
@@ -455,10 +477,17 @@ class Servers(Base):
     id = Column(Integer, primary_key=True)
     guid = Column(String, unique=True)
     institution_guid = Column(String, unique=True)
-    name = Column(String)
-    secret = Column(String)
-    ip = Column(String)
+    name = Column(String(50))
+    secret = Column(String(50))
+    ip = Column(String(15))
     enabled = Column(Boolean)
+
+    @validates('name', 'secret', 'ip')
+    def validate_code(self, key, value):
+        max_len = getattr(self.__class__, key).prop.columns[0].type.length
+        if value and len(value) > max_len:
+            return value[:max_len]
+        return value
 
     def __repr__(self):
         return ("<Servers("
