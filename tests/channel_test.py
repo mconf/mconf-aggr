@@ -1,4 +1,5 @@
 import logging
+import logaugment
 import unittest
 
 from mconf_aggr.aggregator.aggregator import Channel
@@ -7,6 +8,7 @@ from mconf_aggr.aggregator.aggregator import Channel
 class TestChannel(unittest.TestCase):
     def setUp(self):
         logger = logging.getLogger('test_channel')
+        logaugment.set(logger, code="", site="TestChannel",  server="", event="", keywords="null")
         self.channel = Channel('test_channel', maxsize=5, logger=logger)
 
     def test_publish(self):
