@@ -10,7 +10,7 @@ RUN apk update && \
     apk add --no-cache openssl && \
     apk add --virtual .build-deps gcc musl-dev postgresql-dev 
 
-RUN pip install --install-option="--prefix=/usr/local" -r /requirements_dev.txt
+RUN pip install --prefix=/usr/local -r /requirements_dev.txt
 
 RUN apk --purge del .build-deps
 
