@@ -63,7 +63,7 @@ class AuthMiddleware:
         * https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/WWW-Authenticate
         """
         self.logger = logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="AuthMiddleware", server="", event="", keywords="null")
+        logaugment.set(self.logger, code="", site="AuthMiddleware", server="", event="", keywords="null")
 
         logging_extra = {
             "code": "Processing requests",
@@ -156,7 +156,7 @@ class WebhookEventListener:
         """
         self.event_handler = event_handler
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="WebhookEventListener", server="", event="", keywords="null")
+        logaugment.set(self.logger, code="", site="WebhookEventListener", server="", event="", keywords="null")
 
     @falcon.before(AuthMiddleware())
     def on_post(self, req, resp):
@@ -262,7 +262,7 @@ class WebhookEventHandler:
         self.publisher = publisher
         self.channel = channel
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="WebhookEventHandler", server="", event="", keywords="null")
+        logaugment.set(self.logger, code="", site="WebhookEventHandler", server="", event="", keywords="null")
 
     def stop(self):
         pass

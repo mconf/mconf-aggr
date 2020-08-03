@@ -37,7 +37,7 @@ class ProbeListener:
             If not supplied, it will instantiate a new logger from __name__.
         """
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="ProbeListener", server="", event="", keywords="null")
+        logaugment.set(self.logger, code="", site="ProbeListener", server="", event="", keywords="null")
 
     def on_get(self, req, resp):
         """Handle GET requests.

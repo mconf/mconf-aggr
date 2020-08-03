@@ -51,7 +51,7 @@ class WebhookRegister:
         self._failed_servers = [] # List of servers that failed to register.
 
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="WebhookRegister", server="", event="", keywords="null")
+        logaugment.set(self.logger, code="", site="WebhookRegister", server="", event="", keywords="null")
 
         if servers:
             # Use the servers passed as argument.
@@ -151,7 +151,7 @@ class WebhookServer:
         self._secret = secret
 
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="WebhookServer", server="", event="", keywords="null")
+        logaugment.set(self.logger, code="", site="WebhookServer", server="", event="", keywords="null")
 
     def create_hook(self, callback_url, get_raw=False, hook_id=None):
         """Register a webhook callback.

@@ -168,7 +168,7 @@ def map_webhook_event(event):
         It encapsulates both the event type and the event itself.
     """
     logger = logging.getLogger(__name__)
-    logaugment.add(logger, code="", site="map_webhook_event",  server="", event="", keywords="null")
+    logaugment.set(logger, code="", site="map_webhook_event",  server="", event="", keywords="null")
 
     logging_extra = {
         "code": "Webhook mapping",

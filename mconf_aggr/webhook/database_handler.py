@@ -47,7 +47,7 @@ class DatabaseEventHandler:
         """
         self.session = session
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="DatabaseEventHandler", server="", event="", keywords="null")
+        logaugment.set(self.logger, code="", site="DatabaseEventHandler", server="", event="", keywords="null")
 
     def handle(self, event):
         """This method is meant to be implemented downstream.
@@ -68,7 +68,7 @@ class MeetingCreatedHandler(DatabaseEventHandler):
             self._metadata = metadata
             self._default_value = default_value
             self._logger = logger or logging.getLogger(__name__)
-            logaugment.add(self._logger, code="", site="MeetingCreatedHandler", server="", event="", keywords="null")
+            logaugment.set(self._logger, code="", site="MeetingCreatedHandler", server="", event="", keywords="null")
 
         def __getattr__(self, name):
             field = name.replace("_", "-")
@@ -1058,7 +1058,7 @@ class DataProcessor:
         """
         self.session = session
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="DataProcessor", server="", event="", keywords="null")
+        logaugment.set(self.logger, code="", site="DataProcessor", server="", event="", keywords="null")
 
     def update(self, event):
         event_handler = self._select_handler(event.event_type)
@@ -1172,7 +1172,7 @@ class WebhookDataWriter(AggregatorCallback):
             If not supplied, it will instantiate a new `PostgresConnector`.
         """
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="WebhookDataWriter", server="", event="", keywords="null")
+        logaugment.set(self.logger, code="", site="WebhookDataWriter", server="", event="", keywords="null")
 
     def setup(self):
         """Setup any resources needed to iteract with the database.
@@ -1251,7 +1251,7 @@ class AuthenticationHandler:
             If not supplied, it will instantiate a new logger from __name__.
         """
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="AuthenticationHandler", server="", event="", keywords="null")
+        logaugment.set(self.logger, code="", site="AuthenticationHandler", server="", event="", keywords="null")
 
     def secret(self, server):
         """Get a shared secret for a given server in the database.
@@ -1307,7 +1307,7 @@ class WebhookServerHandler:
             If not supplied, it will instantiate a new logger from __name__.
         """
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.add(self.logger, code="", site="WebhookServerHandler", server="", event="", keywords="null")
+        logaugment.set(self.logger, code="", site="WebhookServerHandler", server="", event="", keywords="null")
 
     def servers(self):
         """Get all available servers from database.
