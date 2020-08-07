@@ -225,8 +225,7 @@ class MeetingsEvents(Base):
     unique_users = Column(Integer)
     meta_data = Column("metadata", JSON) # Name metadata is used by Base class.
 
-    @validates('shared_secret_name', 'server_url', 'external_meeting_id', 'internal_meeting_id', 
-        'name', 'create_date', 'dial_number', 'attendee_pw', 'moderator_pw')
+    @validates('name')
     def validate_code(self, key, value):
         max_len = getattr(self.__class__, key).prop.columns[0].type.length
         if value and len(value) > max_len:
@@ -346,7 +345,7 @@ class Recordings(Base):
     download = Column(JSON)
     workflow = Column(JSON)
 
-    @validates('record_id', 'name', 'internal_meeting_id', 'external_meeting_id', 'current_step')
+    @validates('name')
     def validate_code(self, key, value):
         max_len = getattr(self.__class__, key).prop.columns[0].type.length
         if value and len(value) > max_len:
@@ -430,7 +429,7 @@ class UsersEvents(Base):
 
     meta_data = Column("metadata", JSON) # Name metadata is used by Base class.
 
-    @validates('name', 'role', 'internal_user_id', 'external_user_id')
+    @validates('name')
     def validate_code(self, key, value):
         max_len = getattr(self.__class__, key).prop.columns[0].type.length
         if value and len(value) > max_len:
@@ -482,7 +481,7 @@ class Servers(Base):
     ip = Column(String(15))
     enabled = Column(Boolean)
 
-    @validates('name', 'secret', 'ip')
+    @validates('name')
     def validate_code(self, key, value):
         max_len = getattr(self.__class__, key).prop.columns[0].type.length
         if value and len(value) > max_len:
