@@ -76,13 +76,13 @@ class Meetings(Base):
                 ...
             }
         ]
-    shared_secret_guid : Column of type String
+    m_shared_secret_guid : Column of type String
         Shared secret GUID.
-    institution_guid : Column of the type String.
+    m_institution_guid : Column of the type String.
         Institution GUID.
-    external_meeting_id : Column of type String
+    ext_meeting_id : Column of type String
         External meeting id of the meeting.
-    internal_meeting_id : Column of type String
+    int_meeting_id : Column of type String
         Internal meeting id of the meeting.
     """
     __tablename__ = "meetings"
@@ -105,10 +105,10 @@ class Meetings(Base):
     moderator_count = Column(Integer)
     attendees = Column(JSON)
 
-    shared_secret_guid = Column(String)
-    institution_guid = Column(String)
-    external_meeting_id = Column(String)
-    internal_meeting_id = Column(String)
+    m_shared_secret_guid = Column(String)
+    m_institution_guid = Column(String)
+    ext_meeting_id = Column(String)
+    int_meeting_id = Column(String)
 
     def __repr__(self):
      return ("<Meetings("
@@ -123,10 +123,10 @@ class Meetings(Base):
             + ", video_count=" + str(self.video_count)
             + ", moderator_count=" + str(self.moderator_count)
             + ", attendees=" + str(self.attendees)
-            + ", shared_secret_guid=" + str(self.shared_secret_guid)
-            + ", institution_guid=" + str(self.institution_guid)
-            + ", external_meeting_id=" + str(self.external_meeting_id)
-            + ", internal_meeting_id=" + str(self.internal_meeting_id)
+            + ", m_shared_secret_guid=" + str(self.m_shared_secret_guid)
+            + ", m_institution_guid=" + str(self.m_institution_guid)
+            + ", ext_meeting_id=" + str(self.ext_meeting_id)
+            + ", int_meeting_id=" + str(self.int_meeting_id)
             + ")>")
 
 
@@ -331,9 +331,9 @@ class Recordings(Base):
         Information about the recording playback.
     download : Column of type JSON
         Information about the recording download.
-    shared_secret_guid : Column of type String
+    r_shared_secret_guid : Column of type String
         Shared secret GUID.
-    institution_guid : Column of the type String.
+    r_institution_guid : Column of the type String.
         Institution GUID.
     """
     __tablename__ = "recordings"
@@ -366,8 +366,8 @@ class Recordings(Base):
     download = Column(JSON)
     workflow = Column(JSON)
 
-    shared_secret_guid = Column(String)
-    institution_guid = Column(String)
+    r_shared_secret_guid = Column(String)
+    r_institution_guid = Column(String)
 
     @validates('name')
     def validate_code(self, key, value):
@@ -398,8 +398,8 @@ class Recordings(Base):
             + ", meta_data=" + str(self. meta_data)
             + ", playback=" + str(self. playback)
             + ", download=" + str(self. download)
-            + ", shared_secret_guid=" + str(self.shared_secret_guid)
-            + ", institution_guid=" + str(self.institution_guid)
+            + ", r_shared_secret_guid=" + str(self.r_shared_secret_guid)
+            + ", r_institution_guid=" + str(self.r_institution_guid)
             + ")>")
 
 

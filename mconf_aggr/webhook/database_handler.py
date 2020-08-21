@@ -196,10 +196,10 @@ class MeetingCreatedHandler(DatabaseEventHandler):
                                video_count=0,
                                moderator_count=0,
                                attendees=[],
-                               shared_secret_guid=new_meetings_events.shared_secret_guid,
-                               institution_guid=new_meetings_events.institution_guid,
-                               external_meeting_id=new_meetings_events.external_meeting_id,
-                               internal_meeting_id=new_meetings_events.internal_meeting_id)
+                               m_shared_secret_guid=new_meetings_events.shared_secret_guid,
+                               m_institution_guid=new_meetings_events.institution_guid,
+                               ext_meeting_id=new_meetings_events.external_meeting_id,
+                               int_meeting_id=new_meetings_events.internal_meeting_id)
         new_meeting.meeting_event = new_meetings_events
 
         self.session.add(new_meeting)
@@ -658,8 +658,8 @@ class RapArchiveHandler(DatabaseEventHandler):
                 records_table.meeting_event_id = meetings_events_table.id
                 records_table.start_time = meetings_events_table.start_time
                 records_table.end_time = meetings_events_table.end_time
-                records_table.shared_secret_guid = meetings_events_table.shared_secret_guid
-                records_table.institution_guid = meetings_events_table.institution_guid
+                records_table.r_shared_secret_guid = meetings_events_table.shared_secret_guid
+                records_table.r_institution_guid = meetings_events_table.institution_guid
             else:
                 logging_extra["code"] = "Meeting not found",
                 logging_extra["keywords"]=  ["meeting not found", "warning", "event handler", "database", f"internal-meeting-id={event.internal_meeting_id}"]
@@ -751,8 +751,8 @@ class RapHandler(DatabaseEventHandler):
             records_table.meeting_event_id = meetings_events_table.id
             records_table.start_time = meetings_events_table.start_time
             records_table.end_time = meetings_events_table.end_time
-            records_table.shared_secret_guid = meetings_events_table.shared_secret_guid
-            records_table.institution_guid = meetings_events_table.institution_guid
+            records_table.r_shared_secret_guid = meetings_events_table.shared_secret_guid
+            records_table.r_institution_guid = meetings_events_table.institution_guid
         else:
             logging_extra["code"] = "Meeting not found"
             logging_extra["keywords"] = ["meeting not found", "warning", "event handler", "database", f"record={event.record_id}", f"internal-meeting-id={event.internal_meeting_id}"]
