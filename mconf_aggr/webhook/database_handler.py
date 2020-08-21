@@ -616,7 +616,7 @@ class RapArchiveHandler(DatabaseEventHandler):
         # Meeting was set to be recorded.
         if recorded:
             records_table = (
-                self.session.query(Recordings).
+                self.session.query(Recordings).with_for_update(of=Recordings).
                 filter(Recordings.internal_meeting_id == int_id).
                 first()
             )
@@ -692,67 +692,56 @@ class RapHandler(DatabaseEventHandler):
         self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.", extra=logging_extra)
 
         records_table = (
-            self.session.query(Recordings).
+            self.session.query(Recordings).with_for_update(of=Recordings).
             filter(Recordings.internal_meeting_id == int_id).
             first()
         )
 
-        # Table recordings does not exist yet. Create it.
-        if not records_table:
-            records_table = Recordings(**event._asdict())
+        # Table recordings already exists.
+        if records_table:
+            if records_table.status == Status.DELETED:
+                records_table.status = Status.PROCESSING
 
-            # Start as deleted since we don't yet know if
-            # this meeting was recorded or not
-            records_table.status = Status.DELETED
-            records_table.playback = []
-            records_table.workflow = {}
-            records_table.participants = (
-                int(
-                    self.session.query(UsersEvents.id).
-                    join(MeetingsEvents).
-                    filter(MeetingsEvents.internal_meeting_id == int_id).
-                    count()
+            # Assume the requester server to be the new host of the recording.
+            if event_type == "rap-sanity-started":
+                server_id_result = (
+                    self.session.query(Servers.id).
+                        filter(Servers.name == server_url).
+                        first()
                 )
-            )
-        elif records_table.status == Status.DELETED:
-            records_table.status = Status.PROCESSING
+                if server_id_result:
+                    if server_id_result.id != records_table.server_id:
+                        logging_extra["code"] = "Host updated"
+                        logging_extra["keywords"] = ["event handler", "database", "host", "update", f"internal-meeting-id={event.internal_meeting_id}"]
+                        self.logger.info(f"Recording host was updated to '{server_url}'.", extra=logging_extra)
+                    records_table.server_id = server_id_result.id
+                else:
+                    logging_extra["code"] = "Server not found"
+                    logging_extra["keywords"] = ["server not found", "warning", "event handler", "database", f"record={event.record_id}", f"internal-meeting-id={event.internal_meeting_id}"]
+                    self.logger.warn(f"No server found for recording '{event.record_id}'.", extra=logging_extra)
 
-        # Assume the requester server to be the new host of the recording.
-        if event_type == "rap-sanity-started":
-            server_id_result = (
-                self.session.query(Servers.id).
-                    filter(Servers.name == server_url).
-                    first()
+            meetings_events_table = (
+                self.session.query(MeetingsEvents).
+                filter(MeetingsEvents.internal_meeting_id == int_id).
+                first()
             )
-            if server_id_result:
-                if server_id_result.id != records_table.server_id:
-                    logging_extra["code"] = "Host updated"
-                    logging_extra["keywords"] = ["event handler", "database", "host", "update", f"internal-meeting-id={event.internal_meeting_id}"]
-                    self.logger.info(f"Recording host was updated to '{server_url}'.", extra=logging_extra)
-                records_table.server_id = server_id_result.id
+
+            if meetings_events_table:
+                records_table.meeting_event_id = meetings_events_table.id
+                records_table.start_time = meetings_events_table.start_time
+                records_table.end_time = meetings_events_table.end_time
             else:
-                logging_extra["code"] = "Server not found"
-                logging_extra["keywords"] = ["server not found", "warning", "event handler", "database", f"record={event.record_id}", f"internal-meeting-id={event.internal_meeting_id}"]
-                self.logger.warn(f"No server found for recording '{event.record_id}'.", extra=logging_extra)
+                logging_extra["code"] = "Meeting not found"
+                logging_extra["keywords"] = ["meeting not found", "warning", "event handler", "database", f"record={event.record_id}", f"internal-meeting-id={event.internal_meeting_id}"]
+                self.logger.warn(f"No meeting found for recording '{event.record_id}'.", extra=logging_extra)
 
-        meetings_events_table = (
-            self.session.query(MeetingsEvents).
-            filter(MeetingsEvents.internal_meeting_id == int_id).
-            first()
-        )
+            records_table.current_step = event.current_step
 
-        if meetings_events_table:
-            records_table.meeting_event_id = meetings_events_table.id
-            records_table.start_time = meetings_events_table.start_time
-            records_table.end_time = meetings_events_table.end_time
+            self.session.add(records_table)
         else:
-            logging_extra["code"] = "Meeting not found"
-            logging_extra["keywords"] = ["meeting not found", "warning", "event handler", "database", f"record={event.record_id}", f"internal-meeting-id={event.internal_meeting_id}"]
-            self.logger.warn(f"No meeting found for recording '{event.record_id}'.", extra=logging_extra)
-
-        records_table.current_step = event.current_step
-
-        self.session.add(records_table)
+            logging_extra["code"] = "Recording not found"
+            logging_extra["keywords"] = ["recording not found", "warning", "event handler", "database", f"recording={event.record_id}", f"internal-meeting-id={event.internal_meeting_id}"]
+            self.logger.warn(f"No recording found with id '{event.record_id}'.", extra=logging_extra)
 
 
 class RapProcessHandler(DatabaseEventHandler):
