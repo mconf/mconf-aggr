@@ -1218,10 +1218,12 @@ class WebhookDataWriter(AggregatorCallback):
         logging_extra = {
             "code": "WebhookDataWriter run",
             "site": "WebhookDataWriter.run",
-            "keywords": ["WebhookDataWriter", "run", "thread", "hook", "database"]
+            "keywords": ["WebhookDataWriter", "run", "thread", "hook", "database"],
+            "server": getattr(data, "server_url", ""),
+            "event": getattr(data, "event_type", "")
         }
         try:
-            with time_logger(self.logger.debug,
+            with time_logger(self.logger.info,
                              "Processing information to database took {elapsed}s.", extra=logging_extra):
                 with session_scope() as session:
                     DataProcessor(session).update(data)
