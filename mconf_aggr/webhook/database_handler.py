@@ -256,8 +256,7 @@ class MeetingEndedHandler(DatabaseEventHandler):
             # Table meetings to be updated.
             meetings_table = (
                 self.session.query(Meetings)
-                .join(Meetings.meeting_event)
-                .filter(MeetingsEvents.internal_meeting_id == int_id)
+                .filter(Meetings.int_meeting_id == int_id)
                 .first()
             )
 
@@ -319,8 +318,7 @@ class UserJoinedHandler(DatabaseEventHandler):
             # Table meetings to be updated.
             meetings_table = (
                 self.session.query(Meetings)
-                .join(Meetings.meeting_event)
-                .filter(MeetingsEvents.internal_meeting_id == int_id)
+                .filter(Meetings.int_meeting_id == int_id)
                 .first()
             )
 
