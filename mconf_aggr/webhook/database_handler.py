@@ -195,7 +195,11 @@ class MeetingCreatedHandler(DatabaseEventHandler):
                                voice_participant_count=0,
                                video_count=0,
                                moderator_count=0,
-                               attendees=[])
+                               attendees=[],
+                               m_shared_secret_guid=new_meetings_events.shared_secret_guid,
+                               m_institution_guid=new_meetings_events.institution_guid,
+                               ext_meeting_id=new_meetings_events.external_meeting_id,
+                               int_meeting_id=new_meetings_events.internal_meeting_id)
         new_meeting.meeting_event = new_meetings_events
 
         self.session.add(new_meeting)
@@ -252,8 +256,7 @@ class MeetingEndedHandler(DatabaseEventHandler):
             # Table meetings to be updated.
             meetings_table = (
                 self.session.query(Meetings)
-                .join(Meetings.meeting_event)
-                .filter(MeetingsEvents.internal_meeting_id == int_id)
+                .filter(Meetings.int_meeting_id == int_id)
                 .first()
             )
 
@@ -315,8 +318,7 @@ class UserJoinedHandler(DatabaseEventHandler):
             # Table meetings to be updated.
             meetings_table = (
                 self.session.query(Meetings)
-                .join(Meetings.meeting_event)
-                .filter(MeetingsEvents.internal_meeting_id == int_id)
+                .filter(Meetings.int_meeting_id == int_id)
                 .first()
             )
 
@@ -654,6 +656,8 @@ class RapArchiveHandler(DatabaseEventHandler):
                 records_table.meeting_event_id = meetings_events_table.id
                 records_table.start_time = meetings_events_table.start_time
                 records_table.end_time = meetings_events_table.end_time
+                records_table.r_shared_secret_guid = meetings_events_table.shared_secret_guid
+                records_table.r_institution_guid = meetings_events_table.institution_guid
             else:
                 logging_extra["code"] = "Meeting not found",
                 logging_extra["keywords"]=  ["meeting not found", "warning", "event handler", "database", f"internal-meeting-id={event.internal_meeting_id}"]
@@ -745,6 +749,8 @@ class RapHandler(DatabaseEventHandler):
             records_table.meeting_event_id = meetings_events_table.id
             records_table.start_time = meetings_events_table.start_time
             records_table.end_time = meetings_events_table.end_time
+            records_table.r_shared_secret_guid = meetings_events_table.shared_secret_guid
+            records_table.r_institution_guid = meetings_events_table.institution_guid
         else:
             logging_extra["code"] = "Meeting not found"
             logging_extra["keywords"] = ["meeting not found", "warning", "event handler", "database", f"record={event.record_id}", f"internal-meeting-id={event.internal_meeting_id}"]
@@ -1212,10 +1218,12 @@ class WebhookDataWriter(AggregatorCallback):
         logging_extra = {
             "code": "WebhookDataWriter run",
             "site": "WebhookDataWriter.run",
-            "keywords": ["WebhookDataWriter", "run", "thread", "hook", "database"]
+            "keywords": ["WebhookDataWriter", "run", "thread", "hook", "database"],
+            "server": getattr(data, "server_url", ""),
+            "event": getattr(data, "event_type", "")
         }
         try:
-            with time_logger(self.logger.debug,
+            with time_logger(self.logger.info,
                              "Processing information to database took {elapsed}s.", extra=logging_extra):
                 with session_scope() as session:
                     DataProcessor(session).update(data)

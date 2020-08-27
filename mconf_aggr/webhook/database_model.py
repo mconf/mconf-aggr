@@ -76,6 +76,14 @@ class Meetings(Base):
                 ...
             }
         ]
+    m_shared_secret_guid : Column of type String
+        Shared secret GUID.
+    m_institution_guid : Column of the type String.
+        Institution GUID.
+    ext_meeting_id : Column of type String
+        External meeting id of the meeting.
+    int_meeting_id : Column of type String
+        Internal meeting id of the meeting.
     """
     __tablename__ = "meetings"
 
@@ -97,6 +105,11 @@ class Meetings(Base):
     moderator_count = Column(Integer)
     attendees = Column(JSON)
 
+    m_shared_secret_guid = Column(String)
+    m_institution_guid = Column(String)
+    ext_meeting_id = Column(String)
+    int_meeting_id = Column(String)
+
     def __repr__(self):
      return ("<Meetings("
             + "id=" + str(self.id)
@@ -109,7 +122,11 @@ class Meetings(Base):
             + ", voice_participant_count=" + str(self.voice_participant_count)
             + ", video_count=" + str(self.video_count)
             + ", moderator_count=" + str(self.moderator_count)
-            + ", attendees=" + str(self. attendees)
+            + ", attendees=" + str(self.attendees)
+            + ", m_shared_secret_guid=" + str(self.m_shared_secret_guid)
+            + ", m_institution_guid=" + str(self.m_institution_guid)
+            + ", ext_meeting_id=" + str(self.ext_meeting_id)
+            + ", int_meeting_id=" + str(self.int_meeting_id)
             + ")>")
 
 
@@ -314,6 +331,10 @@ class Recordings(Base):
         Information about the recording playback.
     download : Column of type JSON
         Information about the recording download.
+    r_shared_secret_guid : Column of type String
+        Shared secret GUID.
+    r_institution_guid : Column of the type String.
+        Institution GUID.
     """
     __tablename__ = "recordings"
 
@@ -345,6 +366,9 @@ class Recordings(Base):
     download = Column(JSON)
     workflow = Column(JSON)
 
+    r_shared_secret_guid = Column(String)
+    r_institution_guid = Column(String)
+
     @validates('name')
     def validate_code(self, key, value):
         max_len = getattr(self.__class__, key).prop.columns[0].type.length
@@ -374,6 +398,8 @@ class Recordings(Base):
             + ", meta_data=" + str(self. meta_data)
             + ", playback=" + str(self. playback)
             + ", download=" + str(self. download)
+            + ", r_shared_secret_guid=" + str(self.r_shared_secret_guid)
+            + ", r_institution_guid=" + str(self.r_institution_guid)
             + ")>")
 
 

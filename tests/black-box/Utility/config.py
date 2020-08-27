@@ -5,17 +5,17 @@ class Config:
     def __init__(self, file_path="Utility/config.cfg"):
         self.randomize_configuration()
         self.read_configuration(file_path)
+        self.header = {'HOST': self.url_endpoint, 'CONTENT-TYPE': self.content_type, 'AUTHORIZATION': self.authorization}
 
     def randomize_configuration(self):
         self.internal_meeting_id = get_random_alpha_numeric_string(40) + "-" + get_random_alpha_numeric_string(13)
         self.record_id = get_random_alpha_numeric_string(40) + "-" + get_random_alpha_numeric_string(13)
         self.external_meeting_id = "random-" + get_random_numeric_string(7)
         self.internal_user_id = get_random_alpha_string(1) + "_" + get_random_alpha_numeric_string(12)
-        self.domain = "test-live220.dev.mconf.com"
+        self.domain = "fake-live.mconf.com"
         self.url_endpoint = "http://localhost:8000"
         self.content_type = "application/x-www-form-urlencoded"
-        self.authorization = "Bearer 492d3c625ca4a18ec84caac9fb86ac95"
-        self.header = {'HOST': self.url_endpoint, 'CONTENT-TYPE': self.content_type, 'AUTHORIZATION': self.authorization}
+        self.authorization = "Bearer 12345678901234567890123456789012"
         
     def read_configuration(self, file_path):
         try:

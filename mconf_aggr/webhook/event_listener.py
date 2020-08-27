@@ -175,7 +175,7 @@ class WebhookEventListener:
             "keywords": ["https", "falcon", "POST", "requests", "domain", "webhook", "listener"]
         }
 
-        with time_logger(self.logger.debug,
+        with time_logger(self.logger.info,
                          "Processing webhook event took {elapsed}s.", extra=logging_extra):
             server_url = req.get_param("domain")
             event = req.get_param("event")
@@ -313,34 +313,39 @@ class WebhookEventHandler:
 
         # We can handle more than one event at once.
         for webhook_event in decoded_events:
-            webhook_event["server_url"] = server_url
-            try:
-                # Instance of WebhookEvent.
-                webhook_event = map_webhook_event(webhook_event)
-
-                logging_extra["event"] = webhook_event.event_type
-            except Exception as err:
-                logging_extra["code"] = "Mapping error"
-                logging_extra["keywords"] += ["mapper", "warning"]
-                self.logger.warning(f"Something went wrong: {err}")
-                webhook_event = None
-                
-            if webhook_event:
+            with time_logger(self.logger.info,
+                             "Handling event took {elapsed}s.", extra=logging_extra):
+                webhook_event["server_url"] = server_url
                 try:
-                    logging_extra["code"] = "Publishing webhook event"
-                    logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", f"channel={self.channel}"]
-                    self.logger.debug("Publishing event.", extra=logging_extra)
+                    # Instance of WebhookEvent.
+                    webhook_event = map_webhook_event(webhook_event)
 
-                    self.publisher.publish(webhook_event, channel=self.channel)
-                except PublishError as err:
-                    logging_extra["code"] = "Publish error"
-                    logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", "exception", "error"]
-                    self.logger.error("Something went wrong while publishing.")
-                    continue
-            else:
-                logging_extra["code"] = "Not publishing"
-                logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", "warning"]
-                self.logger.warn("Not publishing event from '{}'".format(server_url))
+                    logging_extra["event"] = webhook_event.event_type
+                except Exception as err:
+                    logging_extra["code"] = "Mapping error"
+                    logging_extra["keywords"] += ["mapper", "warning"]
+                    self.logger.warning(f"Something went wrong: {err}")
+                    webhook_event = None
+                    
+                if webhook_event:
+                    try:
+                        logging_extra["code"] = "Publishing webhook event"
+                        logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", f"channel={self.channel}"]
+                        self.logger.debug("Publishing event.", extra=logging_extra)
+
+                        self.publisher.publish(webhook_event, channel=self.channel)
+                    except PublishError as err:
+                        logging_extra["code"] = "Publish error"
+                        logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", "exception", "error"]
+                        self.logger.error("Something went wrong while publishing.")
+                        continue
+                else:
+                    logging_extra["code"] = "Not publishing"
+                    logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", "warning"]
+                    self.logger.warn("Not publishing event from '{}'".format(server_url))
+
+                logging_extra["code"] = "HandlingEventTime"
+                logging_extra["keywords"] = ["event", "handle", "time", "map", "publish"]
 
     def _decode(self, event):
         return json.loads(event)
