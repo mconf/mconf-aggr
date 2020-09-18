@@ -188,6 +188,15 @@ class MeetingCreatedHandler(DatabaseEventHandler):
                 servers_table.name, servers_table.guid
             )
 
+        # running external meeting id must be unique
+        if (
+            self.session.query(Meetings)
+            .filter(Meetings.ext_meeting_id == event.external_meeting_id)
+            .first()
+        ):
+            self.logger.warn(f"Meeting with external-meeting-id '{event.external_meeting_id}' already exists.")
+            return
+
         new_meeting = Meetings(running=False,
                                has_user_joined=False,
                                participant_count=0,
