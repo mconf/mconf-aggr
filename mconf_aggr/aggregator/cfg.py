@@ -14,7 +14,6 @@ import logging
 import logging.config
 import os
 
-
 class EnvConfig:
     def __init__(self):
         self._config = {}

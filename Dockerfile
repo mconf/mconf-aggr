@@ -12,7 +12,7 @@ RUN apk update && \
     apk add postgresql-libs && \
     apk add --virtual .build-deps gcc musl-dev postgresql-dev
 
-RUN pip install --install-option="--prefix=/install" -r /requirements.txt
+RUN pip install --prefix=/install -r /requirements.txt
 
 RUN apk --purge del .build-deps
 

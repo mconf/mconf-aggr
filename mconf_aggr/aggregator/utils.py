@@ -3,7 +3,7 @@ from contextlib import contextmanager
 
 
 @contextmanager
-def time_logger(logger_func, msg, **kw_format):
+def time_logger(logger_func, msg, extra=dict(), **kw_format):
     """Provide a log for the elapsed time in the context block.
     """
     start_time = time.time()
@@ -14,7 +14,7 @@ def time_logger(logger_func, msg, **kw_format):
     kw_format.update({'elapsed': elapsed_time})
 
     try:
-        logger_func(msg.format(**kw_format))
+        logger_func(msg.format(**kw_format), extra=extra)
     except Exception as err:
         kw = ", ".join(["{}: {}".format(k, v) for k, v in kw_format.items()])
         print("Error while logging elapsed time: {} ({})."

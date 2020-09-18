@@ -3,6 +3,7 @@
 It will receive, validate, parse and send the parsed data to be processed.
 """
 import logging
+import logaugment
 
 import falcon
 import sqlalchemy
@@ -36,8 +37,7 @@ class ProbeListener:
             If not supplied, it will instantiate a new logger from __name__.
         """
         self.logger = logger or logging.getLogger(__name__)
-
-        #_init()
+        logaugment.set(self.logger, code="", site="ProbeListener", server="", event="", keywords="null")
 
     def on_get(self, req, resp):
         """Handle GET requests.
@@ -74,10 +74,16 @@ class LivenessProbeListener(ProbeListener):
         -------
         bool : True if the application is running correctly. False otherwise.
         """
+        logging_extra = {
+            "code": "Endpoint listener",
+            "site": "LivenessProbeListener._ok",
+            "keywords": ["listener", "endpoint", "health"]
+        }
+
         try:
             _ping_database()
         except DatabaseNotReadyError as err:
-            self.logger.warn(str(err))
+            self.logger.warn(str(err), extra=logging_extra)
 
             return False
 
@@ -96,10 +102,16 @@ class ReadinessProbeListener(ProbeListener):
         bool : True if the service is ready to handle requests adequately.
         False otherwise.
         """
+        logging_extra = {
+            "code": "Endpoint listener",
+            "site": "ReadinessProbeListener._ok",
+            "keywords": ["listener", "endpoint", "ready"]
+        }
+
         try:
             _ping_database()
         except DatabaseNotReadyError as err:
-            self.logger.warn(str(err))
+            self.logger.warn(str(err), extra=logging_extra)
 
             return False
 

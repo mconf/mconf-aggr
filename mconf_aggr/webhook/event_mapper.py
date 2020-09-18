@@ -2,6 +2,7 @@
 """
 import collections
 import logging
+import logaugment
 
 from mconf_aggr.webhook.exceptions import InvalidWebhookMessageError, InvalidWebhookEventError
 
@@ -167,13 +168,25 @@ def map_webhook_event(event):
         It encapsulates both the event type and the event itself.
     """
     logger = logging.getLogger(__name__)
+    logaugment.set(logger, code="", site="map_webhook_event",  server="", event="", keywords="null")
+
+    logging_extra = {
+        "code": "Webhook mapping",
+        "keywords": ["webhook", "map", "event", "data structure", "data"]
+    }
 
     try:
         event_type = event["data"]["id"]
         server_url = event["server_url"]
     except (KeyError, TypeError) as err:
-        logger.warn("Webhook message dos not contain a valid id: {}".format(err))
+        logging_extra["code"] = "Invalid message id"
+        logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
+        logger.warn("Webhook message dos not contain a valid id: {}".format(err), extra=logging_extra)
         raise InvalidWebhookMessageError("Webhook message dos not contain a valid id")
+
+    logging_extra["server"] = server_url
+    logging_extra["event"] = event_type
+    logger.debug("Mapping event", extra=logging_extra)
 
     if event_type == "meeting-created":
         mapped_event = _map_create_event(event, event_type, server_url)
@@ -207,8 +220,7 @@ def map_webhook_event(event):
                 "rap-post-process-started", "rap-post-process-ended"]):
         mapped_event = _map_rap_process_event(event, event_type, server_url)
 
-    elif(event_type in ["rap-archive-started",
-                "rap-sanity-started", "rap-sanity-ended",
+    elif(event_type in ["rap-sanity-started", "rap-sanity-ended",
                 "rap-post-archive-started", "rap-post-archive-ended"]):
         mapped_event = _map_rap_event(event, event_type, server_url)
 
@@ -220,9 +232,14 @@ def map_webhook_event(event):
 
     elif(event_type == "rap-deleted"):
         mapped_event = _map_rap_deleted_event(event, event_type, server_url)
+    
+    elif(event_type == 'rap-archive-started'):
+        mapped_event = _map_rap_archive_started(event, event_type, server_url)
 
     else:
-        logger.warn("Webhook event id is not valid: '{}'".format(event_type))
+        logging_extra["code"] = "Invalid webhook event id"
+        logging_extra["keywords"] += ["warning"]
+        logger.warn("Webhook event id is not valid: '{}'".format(event_type), extra=logging_extra)
         raise InvalidWebhookEventError("Webhook event '{}' is not valid".format(event_type))
 
     return mapped_event
@@ -429,6 +446,11 @@ def _map_rap_event(event, event_type, server_url):
     webhook_event = WebhookEvent(event_type, rap_event, server_url)
 
     return webhook_event
+
+def _map_rap_archive_started(event, event_type, server_url):
+    """Map `rap-archive-started` event to internal representation.
+    """
+    raise NotImplementedError()
 
 
 def _get_nested(d, keys, default):
