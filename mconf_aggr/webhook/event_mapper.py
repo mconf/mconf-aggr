@@ -3,6 +3,7 @@
 import collections
 import logging
 import logaugment
+import json
 
 from mconf_aggr.webhook.exceptions import InvalidWebhookMessageError, InvalidWebhookEventError
 
@@ -181,12 +182,12 @@ def map_webhook_event(event):
     except (KeyError, TypeError) as err:
         logging_extra["code"] = "Invalid message id"
         logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
-        logger.warn("Webhook message dos not contain a valid id: {}".format(err), extra=logging_extra)
+        logger.warn("Webhook message dos not contain a valid id: {}".format(err), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
         raise InvalidWebhookMessageError("Webhook message dos not contain a valid id")
 
     logging_extra["server"] = server_url
     logging_extra["event"] = event_type
-    logger.debug("Mapping event", extra=logging_extra)
+    logger.debug("Mapping event", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
     if event_type == "meeting-created":
         mapped_event = _map_create_event(event, event_type, server_url)
@@ -239,7 +240,7 @@ def map_webhook_event(event):
     else:
         logging_extra["code"] = "Invalid webhook event id"
         logging_extra["keywords"] += ["warning"]
-        logger.warn("Webhook event id is not valid: '{}'".format(event_type), extra=logging_extra)
+        logger.warn("Webhook event id is not valid: '{}'".format(event_type), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
         raise InvalidWebhookEventError("Webhook event '{}' is not valid".format(event_type))
 
     return mapped_event
