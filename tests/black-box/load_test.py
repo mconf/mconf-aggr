@@ -69,7 +69,7 @@ def main(argv):
     try:
         threads = []
         for i in range(0, simultaneously):
-            threads.append(Sender(i, f"Sender_Thread_{i}", randomize, interval, times))
+            threads.append(Sender(i, f"Sender_Thread_{i}", randomize, interval, int(times/simultaneously)))
 
         if forever:
             while True:
