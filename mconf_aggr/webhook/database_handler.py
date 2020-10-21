@@ -994,6 +994,9 @@ class RapPublishHandler(DatabaseEventHandler):
                 records_table.end_time = event.end_time or end_time
                 records_table.size = event.size or 0
                 records_table.raw_size = event.raw_size
+                # If meta_data field exists, simply merge the new meta_data, without overwriting currently saved meta_data.
+                if records_table.meta_data:
+                    event.meta_data.update(records_table.meta_data)
                 records_table.meta_data = event.meta_data
                 records_table.download = event.download
                 records_table.current_step = event.current_step
