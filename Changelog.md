@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.2
+* Update metadata recording logic, merging only the new metadata
+* Fix logging keywords to be a valid json
+
 ## 1.3.1
 * Add check for external meeting id when creating a meeting
 
