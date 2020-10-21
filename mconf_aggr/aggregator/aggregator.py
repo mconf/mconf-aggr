@@ -12,6 +12,7 @@ this module.
 import itertools
 import logging
 import logaugment
+import json
 import queue
 import reprlib
 import threading
@@ -159,7 +160,7 @@ class SubscriberThread(threading.Thread):
         self.logger.debug(
             "Running thread with callback {}"
             .format(self.subscriber.callback),
-            extra=logging_extra
+            extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))
         )
         while not self._stopevent.is_set():
             try:
@@ -170,7 +171,7 @@ class SubscriberThread(threading.Thread):
             except CallbackError:
                 logging_extra["keywords"] = ["run", "thread", "subscriber", "callback", "exception", "error"]
 
-                self.logger.info("An error occurred while running a subscriber.", extra=logging_extra)
+                self.logger.info("An error occurred while running a subscriber.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
                 #self._errorevent.set()
 
         return
@@ -195,7 +196,7 @@ class SubscriberThread(threading.Thread):
         self.logger.debug(
             "Thread with callback {} exited with success."
             .format(self.subscriber.callback),
-            extra=logging_extra
+            extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))
         )
 
 
@@ -235,12 +236,12 @@ class Channel:
             "keywords": ["close", "signal", "queue", f"channel={self.name}"]
         }
 
-        self.logger.debug("Closing channel {}.".format(self.name), extra=logging_extra)
+        self.logger.debug("Closing channel {}.".format(self.name), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
         if not self.empty():
             logging_extra["keywords"] += ["warning"] if("warning" not in logging_extra["keywords"]) else []
             self.logger.warn("There are data not consumed in channel {}."
                              .format(self.name),
-                             extra=logging_extra)
+                             extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
         self.queue.put(None)
 
     def publish(self, data):
@@ -257,11 +258,11 @@ class Channel:
             "keywords": ["publish", "data", "queue", f"channel={self.name}"]
         }
 
-        self.logger.debug("Putting data into the channel.", extra=logging_extra)
+        self.logger.debug("Putting data into the channel.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
         self.queue.put(data)
         self.logger.debug("Channel {} has {} element(s)."
                           .format(self.name, self.qsize()),
-                          extra=logging_extra)
+                          extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
     def pop(self):
         """Pop data from the channel.
@@ -286,13 +287,13 @@ class Channel:
             "keywords": ["pop", "data", "queue", f"channel={self.name}"]
         }
 
-        self.logger.debug("Popping data from the channel.", extra=logging_extra)
+        self.logger.debug("Popping data from the channel.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
         data = self.queue.get()
 
         if data is None:
             self.logger.debug("Signaling closing channel {} for clients "
                               "waiting for data.".format(self.name),
-                              extra=logging_extra)
+                              extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
             raise ChannelClosed()
 
         self.queue.task_done()
@@ -367,7 +368,7 @@ class Publisher:
             "keywords": ["update", "channel", "subscriber"]
         }
 
-        self.logger.debug("Updating channels in publisher.", extra=logging_extra)
+        self.logger.debug("Updating channels in publisher.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
         self.channels = channels
 
     def publish(self, data, channel='default'):
@@ -396,11 +397,11 @@ class Publisher:
         }
         
         if self._running:
-            self.logger.debug("Publishing data to subscribers.", extra=logging_extra)
+            self.logger.debug("Publishing data to subscribers.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
             if self.channels is None:
                 logging_extra["keywords"] += ["error", "exception"]
-                self.logger.exception("No channel was found for this publisher.", extra=logging_extra)
+                self.logger.exception("No channel was found for this publisher.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
                 raise PublishError()
 
             for subscriber in self.channels[channel]:
@@ -416,7 +417,7 @@ class Publisher:
             "site": "Publisher.stop",
             "keywords": ["Publisher", "stop"]
         }
-        self.logger.debug("Stopping the publisher.", extra=logging_extra)
+        self.logger.debug("Stopping the publisher.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
         self._running = False
 
     def __repr__(self):
@@ -473,7 +474,7 @@ class Aggregator:
             "keywords": ["aggregator", "init", "data structure", "controller"]
         }
 
-        self.logger.info("Aggregator created.", extra=logging_extra)
+        self.logger.info("Aggregator created.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
     def setup(self):
         """Set up the aggregator and its components.
@@ -493,7 +494,7 @@ class Aggregator:
             "keywords": ["aggregator", "setup", "subscriber", "callback"]
         }
 
-        self.logger.info("Setting up aggregator.", extra=logging_extra)
+        self.logger.info("Setting up aggregator.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
         logging_extra["code"] = "Callback setup"
         for subscriber in self.subscribers:
@@ -502,7 +503,7 @@ class Aggregator:
                 self.logger.debug(
                     "Setting up callback {}."
                     .format(subscriber.callback),
-                    extra=logging_extra
+                    extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))
                 )
                 subscriber.callback.setup()
             except NotImplementedError:
@@ -510,7 +511,7 @@ class Aggregator:
                 self.logger.warn(
                     "setup() not implemented for callback {}."
                     .format(subscriber.callback),
-                    extra=logging_extra
+                    extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))
                 )
                 continue
             except Exception:
@@ -518,7 +519,7 @@ class Aggregator:
                 self.logger.exception(
                     "Something went wrong while setting up callback {}."
                     .format(subscriber.callback),
-                    extra=logging_extra
+                    extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))
                 )
                 self.remove_callback(subscriber.callback)
                 continue
@@ -558,7 +559,7 @@ class Aggregator:
             "keywords": ["aggregator", "start", "subscriber", "callback", "thread"]
         }
 
-        self.logger.info("Starting threads for callbacks.", extra=logging_extra)
+        self.logger.info("Starting threads for callbacks.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
         self._error_thread.start()
 
@@ -567,8 +568,8 @@ class Aggregator:
             for thread in self.threads:
                 thread.start()
         except RuntimeError:
-            logging_extra["keywords"] += ["error", "exception"]
-            self.logger.exception("Error while starting thread. Cleaning up.", extra=logging_extra)
+            logging_extra["keywords"] = ["aggregator", "start", "subscriber", "callback", "thread", "error", "exception"]
+            self.logger.exception("Error while starting thread. Cleaning up.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
             for thread in self.threads:
                 if thread.is_alive():
                     thread.exit()
@@ -577,13 +578,13 @@ class Aggregator:
 
         if all([thread.is_alive() for thread in self.threads]):
             logging_extra["code"] = "Aggregator start"
-            logging_extra["keywords"] += ["success"]
-            self.logger.info("All threads started with success.", extra=logging_extra)
+            logging_extra["keywords"] = ["aggregator", "start", "subscriber", "callback", "thread", "success"]
+            self.logger.info("All threads started with success.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
         self._running = True
 
         logging_extra["code"] = "Aggregator is running"
-        self.logger.info("Aggregator running.", extra=logging_extra)
+        self.logger.info("Aggregator running.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
     def stop(self):
         """Stop the aggregator.
@@ -599,20 +600,20 @@ class Aggregator:
         }
 
         if not self._running:
-            self.logger.info("Aggregator already stopped.", extra=logging_extra)
+            self.logger.info("Aggregator already stopped.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
             return
 
-        self.logger.info("Stopping aggregator.", extra=logging_extra)
+        self.logger.info("Stopping aggregator.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
         logging_extra["code"] = "Tear down callbacks"
         logging_extra["keywords"] += ["tear down"]
-        self.logger.info("Tearing down callbacks.", extra=logging_extra)
+        self.logger.info("Tearing down callbacks.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
         for subscriber in self.subscribers:
             try:
                 self.logger.debug(
                     "Tearing down callback {}."
-                    .format(subscriber.callback), extra=logging_extra
+                    .format(subscriber.callback), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))
                 )
                 subscriber.callback.teardown()
             except NotImplementedError:
@@ -620,7 +621,7 @@ class Aggregator:
                 self.logger.warn(
                     "teardown() not implemented for callback {}."
                     .format(subscriber.callback),
-                    extra=logging_extra
+                    extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))
                 )
                 logging_extra["keywords"] = ["aggregator", "stop", "subscriber", "callback", "thread", "tear down"]
                 continue
@@ -629,27 +630,27 @@ class Aggregator:
                 self.logger.exception(
                     "Something went wrong while tearing down callback {}."
                     .format(subscriber.callback),
-                    extra=logging_extra
+                    extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))
                 )
                 logging_extra["keywords"] = ["aggregator", "stop", "subscriber", "callback", "thread", "tear down"]
                 continue
 
         logging_extra["code"] = "Threads exit"
         logging_extra["keywords"] += ["exit"]
-        self.logger.info("Exiting threads.", extra=logging_extra)
+        self.logger.info("Exiting threads.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
         for thread in self.threads:
             thread.exit()
 
         if not any([thread.is_alive() for thread in self.threads]):
             logging_extra["keywords"] += ["sucess"]
-            self.logger.info("All threads exited with success.", extra=logging_extra)
+            self.logger.info("All threads exited with success.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
         self.publisher.stop()
 
         self._running = False
 
         logging_extra["keywords"] = ["aggregator", "stop", "subscriber", "callback", "thread", "finished"]
-        self.logger.info("Aggregator finished with success.", extra=logging_extra)
+        self.logger.info("Aggregator finished with success.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
     def register_callback(self, callback, channel='default'):
         """Register a new callback.
@@ -671,18 +672,18 @@ class Aggregator:
             "keywords": ["aggregator", "callback", "register"]
         }
 
-        self.logger.debug("Registering new callback {}.".format(callback), extra=logging_extra)
+        self.logger.debug("Registering new callback {}.".format(callback), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
         try:
             subscribers = self.channels[channel]
         except KeyError:
             logging_extra["code"] = "Channel create"
-            logging_extra["keywords"] += ["subscribers", f"channel={channel}"]
+            logging_extra["keywords"] = ["aggregator", "callback", "register", "subscribers", f"channel={channel}"]
 
             self.logger.debug(
                 "Creating new list of subscribers for channel {}."
                 .format(channel),
-                extra=logging_extra
+                extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))
             )
             subscribers = []
 
@@ -707,7 +708,7 @@ class Aggregator:
         self.logger.debug(
             "Removing callback {} from subscribers."
             .format(callback),
-            extra=logging_extra
+            extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))
         )
         for channel, subscribers in self.channels.items():
             filtered_subscribers = list(filter(lambda subscriber:
