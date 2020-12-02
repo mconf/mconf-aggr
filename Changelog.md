@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.3.3
+* Add fallback for `external_meeting_id` and `internal_meeting_id` when handling rap events.
+* Add logs showing when this error occurs.
+
 ## 1.3.2
 * Update metadata recording logic, merging only the new metadata
 * Fix logging keywords to be a valid json
