@@ -91,8 +91,6 @@ class Meetings(Base):
     meeting_event_id = Column(Integer, ForeignKey("meetings_events.id"))
     meeting_event = relationship("MeetingsEvents")
 
-    #meeting_event = relationship("MeetingsEvents", backref=backref("meetings", uselist=False))
-
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
@@ -344,8 +342,8 @@ class Recordings(Base):
     updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     record_id = Column(String(255), unique=True)
-    meeting_event_id = Column(Integer)
-    server_id = Column(Integer)
+    meeting_event_id = Column(Integer, ForeignKey("meetings_events.id"))
+    server_id = Column(Integer, ForeignKey("servers.id"))
 
     name = Column(String(255))
     status = Column(status_enum)
@@ -382,6 +380,7 @@ class Recordings(Base):
             + ", created_at=" + str(self.created_at)
             + ", updated_at=" + str(self.updated_at)
             + ", record_id=" + str(self.record_id)
+            + ", meeting_event_id=" + str(self.meeting_event_id)
             + ", server_id=" + str(self.server_id)
             + ", name=" + str(self.name)
             + ", status=" + str(self.status)
@@ -441,8 +440,6 @@ class UsersEvents(Base):
     meeting_event_id = Column(Integer, ForeignKey("meetings_events.id"))
     meeting_event = relationship("MeetingsEvents")
 
-    #meeting_event = relationship("MeetingsEvents", backref=backref("users_events", uselist=False))
-
     created_at = Column(DateTime, default=datetime.datetime.now)
     updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
@@ -501,7 +498,7 @@ class Servers(Base):
 
     id = Column(Integer, primary_key=True)
     guid = Column(String, unique=True)
-    institution_guid = Column(String, unique=True)
+    institution_guid = Column(String, ForeignKey("institutions.guid"), unique=True)
     name = Column(String(50))
     secret = Column(String(50))
     ip = Column(String(15))
@@ -554,7 +551,7 @@ class SharedSecrets(Base):
 
     id = Column(Integer, primary_key=True)
     guid = Column(String, unique=True)
-    institution_guid = Column(String, unique=True)
+    institution_guid = Column(String, ForeignKey("institutions.guid"), unique=True)
     name = Column(String)
     secret = Column(String)
     scope = Column(String)

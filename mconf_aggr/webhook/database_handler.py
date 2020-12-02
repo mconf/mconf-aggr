@@ -669,9 +669,11 @@ class RapArchiveHandler(DatabaseEventHandler):
                 records_table.end_time = meetings_events_table.end_time
                 records_table.r_shared_secret_guid = meetings_events_table.shared_secret_guid
                 records_table.r_institution_guid = meetings_events_table.institution_guid
+                records_table.external_meeting_id = meetings_events_table.external_meeting_id
+                records_table.internal_meeting_id = meetings_events_table.internal_meeting_id
             else:
                 logging_extra["code"] = "Meeting not found",
-                logging_extra["keywords"]=  ["meeting not found", "warning", "event handler", "database", f"internal-meeting-id={event.internal_meeting_id}"]
+                logging_extra["keywords"]=  ["meeting not found", "warning", "event handler", "database", f"internal-meeting-id={event.internal_meeting_id}", f"data={event}"]
 
                 self.logger.warn(f"No meeting found for recording '{event.record_id}'.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
@@ -762,9 +764,11 @@ class RapHandler(DatabaseEventHandler):
             records_table.end_time = meetings_events_table.end_time
             records_table.r_shared_secret_guid = meetings_events_table.shared_secret_guid
             records_table.r_institution_guid = meetings_events_table.institution_guid
+            records_table.external_meeting_id = meetings_events_table.external_meeting_id
+            records_table.internal_meeting_id = meetings_events_table.internal_meeting_id
         else:
             logging_extra["code"] = "Meeting not found"
-            logging_extra["keywords"] = ["meeting not found", "warning", "event handler", "database", f"record={event.record_id}", f"internal-meeting-id={event.internal_meeting_id}"]
+            logging_extra["keywords"] = ["meeting not found", "warning", "event handler", "database", f"record={event.record_id}", f"internal-meeting-id={event.internal_meeting_id}", f"data={event}"]
             self.logger.warn(f"No meeting found for recording '{event.record_id}'.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
         records_table.current_step = event.current_step

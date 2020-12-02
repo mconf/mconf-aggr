@@ -423,6 +423,8 @@ def _map_rap_publish_ended_event(event, event_type, server_url):
 
 
 def _map_rap_archive_event(event, event_type, server_url):
+    """Map `rap-archive-*` event to internal representation.
+    """
     rap_event = RapArchiveEvent(
                     external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                     internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
