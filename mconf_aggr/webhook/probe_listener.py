@@ -4,6 +4,7 @@ It will receive, validate, parse and send the parsed data to be processed.
 """
 import logging
 import logaugment
+import json
 
 import falcon
 import sqlalchemy
@@ -83,7 +84,7 @@ class LivenessProbeListener(ProbeListener):
         try:
             _ping_database()
         except DatabaseNotReadyError as err:
-            self.logger.warn(str(err), extra=logging_extra)
+            self.logger.warn(str(err), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
             return False
 
@@ -111,7 +112,7 @@ class ReadinessProbeListener(ProbeListener):
         try:
             _ping_database()
         except DatabaseNotReadyError as err:
-            self.logger.warn(str(err), extra=logging_extra)
+            self.logger.warn(str(err), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
             return False
 
