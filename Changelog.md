@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.3.4
+* Fix requirements after greenlet update.
+
 ## 1.3.3
 * Add fallback for `external_meeting_id` and `internal_meeting_id` when handling rap events.
 * Add logs showing when this error occurs.
