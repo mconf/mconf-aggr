@@ -38,3 +38,30 @@ def create_session_scope(Session):
             session.close()
 
     return session_scope
+
+
+def signal_handler(aggregator, liveness_probe, signal):
+    """Unix signals handler.
+
+    Handle signals, closing the application gracefully if the signal is a SIGTERM.
+
+    Parameters
+    ----------
+    aggregator : Aggregator
+        The aggregator object which this thread monitors errors for.
+    liveness_probe : LivenessProbeListener
+        The probe listener which handles the /health route.
+    signal : signal
+        The signal which was spawned in the main thread.
+    """
+
+    if signal == signal.SIGTERM:
+        liveness_probe.close()
+
+        # Wait aggregator handle with all the received events before close it
+        while any([not x.channel.empty() for x in aggregator.subscribers]):
+            print("There are events to handle yet.")
+            continue
+
+        aggregator.stop()
+        exit(0)

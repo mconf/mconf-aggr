@@ -68,6 +68,18 @@ class LivenessProbeListener(ProbeListener):
     """Listener for the endpoint /health.
     """
 
+    def __init_(self):
+        """Constructor of LivenessProbeListener
+        """
+        self._is_running = True
+
+    def close(self):
+        """Close the ProbeListener.
+        
+        Set a flag to notify kubernetes that the service is no longer available.
+        """
+        self._is_running = False
+
     def _ok(self):
         """Implements endpoint-specific logic of /health.
 
@@ -81,14 +93,17 @@ class LivenessProbeListener(ProbeListener):
             "keywords": ["listener", "endpoint", "health"]
         }
 
-        try:
-            _ping_database()
-        except DatabaseNotReadyError as err:
-            self.logger.warn(str(err), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+        if self._is_running:
+            try:
+                _ping_database()
+            except DatabaseNotReadyError as err:
+                self.logger.warn(str(err), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
+                return False
+
+            return True
+        else:
             return False
-
-        return True
 
 
 class ReadinessProbeListener(ProbeListener):
@@ -96,7 +111,7 @@ class ReadinessProbeListener(ProbeListener):
     """
 
     def _ok(self):
-        """Implements endpoint-specific logic of /health.
+        """Implements endpoint-specific logic of /ready.
 
         Returns
         -------
