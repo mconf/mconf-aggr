@@ -431,7 +431,7 @@ class UsersEvents(Base):
         Internal user ID of the user.
     external_user_id : Column of type String
         External user ID of the user.
-    metadata : Column of type JSON
+    userdata : Column of type JSON
         Information about the user metadata.
     """
     __tablename__ = "users_events"
@@ -450,7 +450,7 @@ class UsersEvents(Base):
     internal_user_id = Column(String(255), unique=True)
     external_user_id = Column(String(255))
 
-    meta_data = Column("metadata", JSON) # Name metadata is used by Base class.
+    userdata = Column("userdata", JSON)
 
     @validates('name')
     def validate_code(self, key, value):
@@ -471,7 +471,7 @@ class UsersEvents(Base):
                 + ", leave_time=" + str(self.leave_time)
                 + ", internal_user_id=" + str(self.internal_user_id)
                 + ", external_user_id=" + str(self.external_user_id)
-                + ", meta_data=" + str(self.meta_data)
+                + ", userdata=" + str(self.userdata)
                 + ")>")
 
 
