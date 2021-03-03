@@ -954,6 +954,8 @@ class RapPublishHandler(DatabaseEventHandler):
         event_type = event.event_type
         server_url = event.server_url
         event = event.event
+
+        
         
 
         logging_extra = {
