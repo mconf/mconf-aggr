@@ -308,7 +308,7 @@ class UserJoinedHandler(DatabaseEventHandler):
         attendee = {
             "external_user_id" : event.external_user_id,
             "internal_user_id" : event.internal_user_id,
-            "full_name" : str(event.name),
+            "full_name" : event.name,
             "role" : event.role,
             "is_presenter" : event.is_presenter,
             "is_listening_only" : False,
@@ -856,7 +856,7 @@ class RapPublishUnpublishHandler(DatabaseEventHandler):
         """
         event_type = event.event_type
         event = event.event
-        
+
         logging_extra = {
             "code": "Publishing recording event handler",
             "site": "RapPublishUnpublishHandler.handle",
@@ -951,11 +951,10 @@ class RapPublishHandler(DatabaseEventHandler):
         event : event_mapper.WebhookEvent
             Event to be handled and written to database.
         """
-
         event_type = event.event_type
         server_url = event.server_url
         event = event.event
-        
+
         logging_extra = {
             "code": "Publishing recording event handler",
             "site": "RapPublishHandler.handle",
@@ -994,7 +993,7 @@ class RapPublishHandler(DatabaseEventHandler):
 
                 records_table.status = Status.PUBLISHED
                 records_table.published = True
-                records_table.name = str(event.name)
+                records_table.name = event.name
                 records_table.is_breakout = event.is_breakout
                 records_table.start_time = event.start_time or start_time
                 records_table.end_time = event.end_time or end_time
