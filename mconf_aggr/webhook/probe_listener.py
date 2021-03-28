@@ -68,7 +68,7 @@ class LivenessProbeListener(ProbeListener):
     """Listener for the endpoint /health.
     """
 
-    def __init_(self):
+    def __init__(self):
         """Constructor of LivenessProbeListener
         """
         self._is_running = True
