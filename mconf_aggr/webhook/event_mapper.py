@@ -54,7 +54,7 @@ UserJoinedEvent = collections.namedtuple('UserJoinedEvent',
                                                 'external_meeting_id',
                                                 'join_time',
                                                 'is_presenter',
-                                                'meta_data'
+                                                'userdata'
                                          ])
 
 
@@ -65,7 +65,7 @@ UserLeftEvent = collections.namedtuple('UserLeftEvent',
                                                 'internal_meeting_id',
                                                 'external_meeting_id',
                                                 'leave_time',
-                                                'meta_data'
+                                                'userdata'
                                        ])
 
 UserVoiceEnabledEvent = collections.namedtuple('UserVoiceEnabledEvent',
@@ -317,7 +317,7 @@ def _map_user_joined_event(event, event_type, server_url):
                      external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                      join_time=_get_nested(event, ["data", "event", "ts"], ""),
                      is_presenter=_get_nested(event, ["data", "attributes", "user", "presenter"], True),
-                     meta_data=_get_nested(event, ["data", "attributes", "user", "metadata"], {}))
+                     userdata=_get_nested(event, ["data", "attributes", "user", "userdata"], {}))
 
     webhook_event = WebhookEvent(event_type, user_event, server_url)
 
@@ -332,7 +332,7 @@ def _map_user_left_event(event, event_type, server_url):
                      internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
                      external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                      leave_time=_get_nested(event, ["data", "event", "ts"], ""),
-                     meta_data=_get_nested(event, ["data", "attributes", "user", "metadata"], {}))
+                     userdata=_get_nested(event, ["data", "attributes", "user", "userdata"], {}))
 
     webhook_event = WebhookEvent(event_type, user_event, server_url)
 
