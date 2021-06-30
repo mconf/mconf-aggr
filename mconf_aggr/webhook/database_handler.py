@@ -698,6 +698,14 @@ class RapHandler(DatabaseEventHandler):
         server_url = event.server_url
         event = event.event
 
+        print("AAAAAAAAAAAAAAAAAAAAAAAAA")
+        print("AAAAAAAAAAAAAAAAAAAAAAAAA")
+        print("AAAAAAAAAAAAAAAAAAAAAAAAA")
+        print("AAAAAAAAAAAAAAAAAAAAAAAAA")
+        print("AAAAAAAAAAAAAAAAAAAAAAAAA")
+        print(event)
+
+
         logging_extra = {
             "code": "General recording event handler",
             "site": "RapHandler.handle",
@@ -767,6 +775,7 @@ class RapHandler(DatabaseEventHandler):
             records_table.r_institution_guid = meetings_events_table.institution_guid
             records_table.external_meeting_id = meetings_events_table.external_meeting_id
             records_table.internal_meeting_id = meetings_events_table.internal_meeting_id
+            records_table.parent_id = meetings_events_table.parent_id
         else:
             logging_extra["code"] = "Meeting not found"
             logging_extra["keywords"] = ["meeting not found", "warning", "event handler", "database", f"record={event.record_id}", f"internal-meeting-id={event.internal_meeting_id}", f"data={event}"]
