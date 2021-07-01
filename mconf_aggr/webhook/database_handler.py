@@ -698,14 +698,6 @@ class RapHandler(DatabaseEventHandler):
         server_url = event.server_url
         event = event.event
 
-        print("AAAAAAAAAAAAAAAAAAAAAAAAA")
-        print("AAAAAAAAAAAAAAAAAAAAAAAAA")
-        print("AAAAAAAAAAAAAAAAAAAAAAAAA")
-        print("AAAAAAAAAAAAAAAAAAAAAAAAA")
-        print("AAAAAAAAAAAAAAAAAAAAAAAAA")
-        print(event)
-
-
         logging_extra = {
             "code": "General recording event handler",
             "site": "RapHandler.handle",
