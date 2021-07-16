@@ -235,11 +235,7 @@ def map_webhook_event(event):
         mapped_event = _map_rap_deleted_event(event, event_type, server_url)
     
     elif(event_type == 'rap-archive-started'):
-        logging_extra["code"] = "Rap-Archive-Started event received but not implemented"
-        logging_extra["keywords"] += ["warning"]
-        logger.warn("rap-archive-started event received: '{}'".format(event_type), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
-        raise NotImplementedError("rap-archive-started event received '{}' but not implemented".format(event_type))
-        #mapped_event = _map_rap_archive_started(event, event_type, server_url)
+        mapped_event = _map_rap_archive_started(event, event_type, server_url)
 
     else:
         logging_extra["code"] = "Invalid webhook event id"
