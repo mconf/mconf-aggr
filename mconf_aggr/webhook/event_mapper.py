@@ -457,7 +457,7 @@ def _map_rap_archive_started(event, event_type, server_url):
     logaugment.set(logger, code="", site="map_webhook_event",  server="", event="", keywords="null")
 
     logging_extra = {
-        "code": "Rap-Archive-Started event received but not implemented",
+        "code": "Rap-Archive-Started not implemented",
         "keywords": ["webhook", "map", "event", "data structure", "data"]
     }
 
