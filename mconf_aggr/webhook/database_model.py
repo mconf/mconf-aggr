@@ -223,7 +223,7 @@ class MeetingsEvents(Base):
 
     external_meeting_id = Column(String(255)) # Index?
     internal_meeting_id = Column(String(255), unique=True) # Index?
-    parent_id = Column(String(255)) # Index?
+    parent_meeting_id = Column(String(255)) # Index?
     name = Column(String(255))
     create_time = Column(BigInteger)
     create_date = Column(String(50))
@@ -260,7 +260,7 @@ class MeetingsEvents(Base):
                 + ", updated_at=" + str(self.updated_at)
                 + ", external_meeting_id=" + str(self.external_meeting_id)
                 + ", internal_meeting_id=" + str(self.internal_meeting_id)
-                + ", parent_id=" + str(self.parent_id)
+                + ", parent_meeting_id=" + str(self.parent_meeting_id)
                 + ", name=" + str(self.name)
                 + ", create_time=" + str(self.create_time)
                 + ", create_date=" + str(self.create_date)
@@ -351,7 +351,7 @@ class Recordings(Base):
     status = Column(status_enum)
     internal_meeting_id = Column(String(255), unique=True)
     external_meeting_id = Column(String(255))
-    parent_id = Column(String(255))
+    parent_meeting_id = Column(String(255))
 
     is_breakout = Column(Boolean)
     published = Column(Boolean)
@@ -389,7 +389,7 @@ class Recordings(Base):
             + ", status=" + str(self.status)
             + ", internal_meeting_id=" + str(self.internal_meeting_id)
             + ", external_meeting_id=" + str(self.external_meeting_id)
-            + ", parent_id=" + str(self.parent_id)
+            + ", parent_meeting_id=" + str(self.parent_meeting_id)
             + ", is_breakout=" + str(self.is_breakout)
             + ", published=" + str(self.published)
             + ", start_time=" + str(self.start_time)

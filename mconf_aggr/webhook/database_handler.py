@@ -6,6 +6,8 @@ which event was received by the `update` method on `WebhookDataWriter` and passe
 
 """
 import logging
+
+from sqlalchemy.sql.expression import null
 import logaugment
 
 import sqlalchemy
@@ -126,6 +128,10 @@ class MeetingCreatedHandler(DatabaseEventHandler):
         new_meetings_events.server_guid = metadata.mconf_server_guid
         new_meetings_events.server_url = metadata.mconf_server_url
         new_meetings_events.institution_guid = metadata.mconf_institution_guid
+
+        if new_meetings_events.parent_meeting_id == "bbb-none": 
+            new_meetings_events.parent_meeting_id = None
+
 
         if metadata.mconf_shared_secret_guid and not metadata.mconf_secret_name:
             new_meetings_events.shared_secret_name = (
@@ -767,7 +773,7 @@ class RapHandler(DatabaseEventHandler):
             records_table.r_institution_guid = meetings_events_table.institution_guid
             records_table.external_meeting_id = meetings_events_table.external_meeting_id
             records_table.internal_meeting_id = meetings_events_table.internal_meeting_id
-            records_table.parent_id = meetings_events_table.parent_id
+            records_table.parent_meeting_id = meetings_events_table.parent_meeting_id
             records_table.is_breakout = meetings_events_table.is_breakout
         else:
             logging_extra["code"] = "Meeting not found"
