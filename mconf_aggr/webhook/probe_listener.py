@@ -75,11 +75,6 @@ class LivenessProbeListener(ProbeListener):
         -------
         bool : True if the application is running correctly. False otherwise.
         """
-        logging_extra = {
-            "code": "Endpoint listener",
-            "site": "LivenessProbeListener._ok",
-            "keywords": ["listener", "endpoint", "health"]
-        }
 
         return True
 
