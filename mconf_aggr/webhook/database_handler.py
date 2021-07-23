@@ -132,7 +132,6 @@ class MeetingCreatedHandler(DatabaseEventHandler):
         if new_meetings_events.parent_meeting_id == "bbb-none": 
             new_meetings_events.parent_meeting_id = None
 
-
         if metadata.mconf_shared_secret_guid and not metadata.mconf_secret_name:
             new_meetings_events.shared_secret_name = (
                 self.session.query(SharedSecrets)
