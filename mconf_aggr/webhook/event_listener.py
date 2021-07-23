@@ -179,8 +179,6 @@ class WebhookEventListener:
                          "Processing webhook event took {elapsed}s.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))):
             server_url = req.get_param("domain")
             event = req.get_param("event")
-            print("POR FAVOR FUNCIONA EU IMPLORO")
-            print(event)
 
             logging_extra["server"] = server_url
             self.logger.info("Webhook event received from '{}' (last hop: '{}').".format(server_url, req.host), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
