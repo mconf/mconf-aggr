@@ -179,6 +179,8 @@ class WebhookEventListener:
                          "Processing webhook event took {elapsed}s.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))):
             server_url = req.get_param("domain")
             event = req.get_param("event")
+            print("POR FAVOR FUNCIONA EU IMPLORO")
+            print(event)
 
             logging_extra["server"] = server_url
             self.logger.info("Webhook event received from '{}' (last hop: '{}').".format(server_url, req.host), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
@@ -320,7 +322,6 @@ class WebhookEventHandler:
                     # Instance of WebhookEvent.
                     webhook_event = map_webhook_event(webhook_event)
 
-                    logging_extra["event"] = webhook_event.event_type
                 except Exception as err:
                     logging_extra["code"] = "Mapping error"
                     logging_extra["keywords"] += ["mapper", "warning"]
@@ -329,6 +330,7 @@ class WebhookEventHandler:
                     
                 if webhook_event:
                     try:
+                        logging_extra["event"] = webhook_event.event_type
                         logging_extra["code"] = "Publishing webhook event"
                         logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", f"channel={self.channel}"]
                         self.logger.debug("Publishing event.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
