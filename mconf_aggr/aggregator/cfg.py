@@ -35,6 +35,7 @@ class EnvConfig:
         self._config["MCONF_WEBHOOK_ROUTE"] = os.getenv("MCONF_WEBHOOK_ROUTE") or "/"
         self._config["MCONF_WEBHOOK_AUTH_REQUIRED"] = to_bool(os.getenv("MCONF_WEBHOOK_AUTH_REQUIRED", "True"))
         self._config["MCONF_WEBHOOK_LOG_LEVEL"] = os.getenv("MCONF_WEBHOOK_LOG_LEVEL")
+        self._config["MCONF_WEBHOOK_DEPRECATED_EVENTS"] = os.getenv("MCONF_WEBHOOK_DEPRECATED_EVENTS")
 
     def __getitem__(self, key):
         """Make accessing configurations easier."""

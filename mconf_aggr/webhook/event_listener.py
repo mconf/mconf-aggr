@@ -311,13 +311,15 @@ class WebhookEventHandler:
 
             logging_extra["server"] = server_url
 
+        deprecated_events = cfg.config["MCONF_WEBHOOK_DEPRECATED_EVENTS"].split(",")
+
         # We can handle more than one event at once.
         for webhook_event in decoded_events:
             with time_logger(self.logger.info,
                              "Handling event took {elapsed}s.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))):
                 webhook_event["server_url"] = server_url
                 try:
-                    # Instance of WebhookEvent.
+                    # Instance of WebhookEvent.                    
                     webhook_event = map_webhook_event(webhook_event)
 
                 except Exception as err:
@@ -325,8 +327,13 @@ class WebhookEventHandler:
                     logging_extra["keywords"] += ["mapper", "warning"]
                     self.logger.warning(f"Something went wrong: {err}")
                     webhook_event = None
-                    
-                if webhook_event:
+                
+                if webhook_event in deprecated_events:
+                    logging_extra["code"] = "Not implemented"
+                    logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator"]
+                    self.logger.debug("Event deprecated.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+
+                elif webhook_event:
                     try:
                         logging_extra["event"] = webhook_event.event_type
                         logging_extra["code"] = "Publishing webhook event"

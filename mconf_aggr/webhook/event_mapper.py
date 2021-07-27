@@ -462,6 +462,11 @@ def _map_rap_archive_started(event, event_type, server_url):
     }
 
     logger.info("rap-archive-started event received: '{}'".format(event_type), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+    
+    id = _get_nested(event, ["data", "id"], "")
+    
+    return id
+
 
 
 def _get_nested(d, keys, default):
