@@ -311,7 +311,7 @@ class WebhookEventHandler:
 
             logging_extra["server"] = server_url
 
-        deprecated_events = cfg.config["MCONF_WEBHOOK_DEPRECATED_EVENTS"].split(",")
+        deprecated_events = cfg.config["MCONF_WEBHOOK_DEPRECATED_EVENTS"]
 
         # We can handle more than one event at once.
         for webhook_event in decoded_events:
@@ -319,7 +319,7 @@ class WebhookEventHandler:
                              "Handling event took {elapsed}s.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))):
                 webhook_event["server_url"] = server_url
                 try:
-                    # Instance of WebhookEvent.                    
+                    # Instance of WebhookEvent.          
                     webhook_event = map_webhook_event(webhook_event)
 
                 except Exception as err:
@@ -328,24 +328,27 @@ class WebhookEventHandler:
                     self.logger.warning(f"Something went wrong: {err}")
                     webhook_event = None
                 
-                if webhook_event in deprecated_events:
-                    logging_extra["code"] = "Not implemented"
-                    logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator"]
-                    self.logger.debug("Event deprecated.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
-                elif webhook_event:
-                    try:
-                        logging_extra["event"] = webhook_event.event_type
-                        logging_extra["code"] = "Publishing webhook event"
-                        logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", f"channel={self.channel}"]
-                        self.logger.debug("Publishing event.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+                if webhook_event:
+                    if webhook_event.event in deprecated_events:
+                        logging_extra["code"] = "Not implemented"
+                        logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator"]
+                        self.logger.debug("Event deprecated.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
-                        self.publisher.publish(webhook_event, channel=self.channel)
-                    except PublishError as err:
-                        logging_extra["code"] = "Publish error"
-                        logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", "exception", "error"]
-                        self.logger.error("Something went wrong while publishing.")
-                        continue
+                    else:
+                        try:
+                            logging_extra["event"] = webhook_event.event_type
+                            logging_extra["code"] = "Publishing webhook event"
+                            logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", f"channel={self.channel}"]
+                            self.logger.debug("Publishing event.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+                            self.publisher.publish(webhook_event, channel=self.channel)
+
+                        except PublishError as err:
+                            logging_extra["code"] = "Publish error"
+                            logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", "exception", "error"]
+                            self.logger.error("Something went wrong while publishing.")
+                            continue
+
                 else:
                     logging_extra["code"] = "Not publishing"
                     logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", "warning"]
