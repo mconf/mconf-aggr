@@ -454,7 +454,7 @@ def _map_rap_archive_started(event, event_type, server_url):
     """Map `rap-archive-started` event to internal representation.
     """
     logger = logging.getLogger(__name__)
-    logaugment.set(logger, code="", site="map_webhook_event",  server="", event="", keywords="null")
+    logaugment.set(logger, code="", site="map_webhook_event", keywords="null")
 
     logging_extra = {
         "code": "Rap-Archive-Started not implemented",
