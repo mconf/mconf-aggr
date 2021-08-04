@@ -330,10 +330,11 @@ class WebhookEventHandler:
                 
 
                 if webhook_event:
-                    if webhook_event.event in deprecated_events:
-                        logging_extra["code"] = "Not implemented"
+                    if webhook_event.event_type in deprecated_events:
+                        logging_extra["code"] = "Event deprecated"
+                        logging_extra["event"] = webhook_event.event_type
                         logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator"]
-                        self.logger.debug("Event deprecated.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+                        self.logger.info("Received event is in deprecated event list: '{}'".format(deprecated_events), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
                     else:
                         try:

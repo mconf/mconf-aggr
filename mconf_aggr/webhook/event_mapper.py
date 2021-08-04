@@ -222,7 +222,7 @@ def map_webhook_event(event):
         mapped_event = _map_rap_process_event(event, event_type, server_url)
 
     elif(event_type in ["rap-sanity-started", "rap-sanity-ended",
-                "rap-post-archive-started", "rap-post-archive-ended"]):
+                "rap-post-archive-started", "rap-post-archive-ended", 'rap-archive-started']):
         mapped_event = _map_rap_event(event, event_type, server_url)
 
     elif(event_type in ["rap-archive-ended"]):
@@ -234,9 +234,6 @@ def map_webhook_event(event):
     elif(event_type == "rap-deleted"):
         mapped_event = _map_rap_deleted_event(event, event_type, server_url)
     
-    elif(event_type == 'rap-archive-started'):
-        mapped_event = _map_rap_archive_started(event, event_type, server_url)
-
     else:
         logging_extra["code"] = "Invalid webhook event id"
         logging_extra["keywords"] += ["warning"]
@@ -449,26 +446,6 @@ def _map_rap_event(event, event_type, server_url):
     webhook_event = WebhookEvent(event_type, rap_event, server_url)
 
     return webhook_event
-
-def _map_rap_archive_started(event, event_type, server_url):
-    """Map `rap-archive-started` event to internal representation.
-    """
-    logger = logging.getLogger(__name__)
-    logaugment.set(logger, code="", site="map_webhook_event", server=server_url, event=event, keywords="null")
-
-    logging_extra = {
-        "code": "Rap-Archive-Started not implemented",
-        "keywords": ["webhook", "map", "event", "data structure", "data"]
-    }
-
-    logger.info("rap-archive-started event received: '{}'".format(event_type), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
-    
-    rap_event = _get_nested(event, ["data", "id"], "")
-
-    webhook_event = WebhookEvent(event_type, rap_event, server_url)
-
-    return webhook_event
-
 
 
 def _get_nested(d, keys, default):
