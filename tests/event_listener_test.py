@@ -198,8 +198,7 @@ class TestWebhookEventHandler(unittest.TestCase):
     def test_normalize_server_url(self):
         server_url = "my-server.com"
         self.assertEqual(_normalize_server_url(server_url), "https://my-server.com")
-        normalized = _normalize_server_url(server_url)
-        print(normalized)
+
         server_url = "http://my-server.com"
         self.assertEqual(_normalize_server_url(server_url), "http://my-server.com")
 
