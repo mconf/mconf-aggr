@@ -19,7 +19,7 @@ from mconf_aggr.webhook.event_mapper import (WebhookEvent,
                                              _map_user_event,
                                              _map_rap_publish_ended_event,
                                              _map_rap_event,
-                                             _get_nested)
+                                             _get_nested, RapPublishEvent)
 from mconf_aggr.webhook.exceptions import (InvalidWebhookMessageError,
                                            InvalidWebhookEventError)
 
@@ -54,7 +54,8 @@ class TestMapping(unittest.TestCase):
                         "ts": 1502810164922
                     }
                 }
-            }
+            },
+            "server_url": "mocked-server"
         }
 
         with self.assertRaises(InvalidWebhookEventError):
@@ -127,6 +128,7 @@ class TestMapping(unittest.TestCase):
 
     def test_map_end_event(self):
         event = {
+            "server_url": "mocked-server",
             "data": {
                 "type": "event",
                 "id": "meeting-ended",
@@ -144,7 +146,7 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="meeting-ended",
-            server_url="localhost",
+            server_url="mocked-server",
             event=MeetingEndedEvent(
                 external_meeting_id="mock_e",
                 internal_meeting_id="mock_i",
@@ -155,7 +157,7 @@ class TestMapping(unittest.TestCase):
         with mock.patch("mconf_aggr.webhook.event_mapper._map_end_event") \
             as _map_end_event_mock:
             map_webhook_event(event)
-            _map_end_event_mock.assert_called_with(event, "meeting-ended")
+            _map_end_event_mock.assert_called_with(event, "meeting-ended", "mocked-server")
 
         got = map_webhook_event(event)
 
@@ -164,6 +166,7 @@ class TestMapping(unittest.TestCase):
 
     def test_map_user_joined_event(self):
         event = {
+            "server_url": "mocked-server",
             "data": {
                 "type": "event",
                 "id": "user-joined",
@@ -188,7 +191,7 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="user-joined",
-            server_url="localhost",
+            server_url="mocked-server",
             event=UserJoinedEvent(
                 name="madeup-user",
                 role="MODERATOR",
@@ -198,14 +201,14 @@ class TestMapping(unittest.TestCase):
                 external_meeting_id="madeup-external-meeting-id",
                 join_time=1502810164922,
                 is_presenter=True,
-                meta_data={}
+                userdata={}
             )
         )
 
         with mock.patch("mconf_aggr.webhook.event_mapper._map_user_joined_event") \
             as _map_user_joined_event_mock:
             map_webhook_event(event)
-            _map_user_joined_event_mock.assert_called_with(event, "user-joined")
+            _map_user_joined_event_mock.assert_called_with(event, "user-joined", "mocked-server")
 
         got = map_webhook_event(event)
 
@@ -213,6 +216,7 @@ class TestMapping(unittest.TestCase):
 
     def test_map_user_left_event(self):
         event = {
+            "server_url": "mocked-server",
             "data": {
                 "type": "event",
                 "id": "user-left",
@@ -234,21 +238,21 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="user-left",
-            server_url="localhost",
+            server_url="mocked-server",
             event=UserLeftEvent(
                 internal_user_id="madeup-internal-user-id",
                 external_user_id="madeup-external-user-id",
                 internal_meeting_id="madeup-internal-meeting-id",
                 external_meeting_id="madeup-external-meeting-id",
                 leave_time=1502810164922,
-                meta_data={}
+                userdata={}
             )
         )
 
         with mock.patch("mconf_aggr.webhook.event_mapper._map_user_left_event") \
             as _map_user_left_event_mock:
             map_webhook_event(event)
-            _map_user_left_event_mock.assert_called_with(event, "user-left")
+            _map_user_left_event_mock.assert_called_with(event, "user-left", "mocked-server")
 
         got = map_webhook_event(event)
 
@@ -256,6 +260,7 @@ class TestMapping(unittest.TestCase):
 
     def test_map_user_voice_enabled_event(self):
         event = {
+            "server_url": "mocked-server",
             "data": {
                 "type": "event",
                 "id": "user-audio-voice-enabled",
@@ -279,7 +284,7 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="user-audio-voice-enabled",
-            server_url="localhost",
+            server_url="mocked-server",
             event=UserVoiceEnabledEvent(
                 internal_user_id="madeup-internal-user-id",
                 external_user_id="madeup-external-user-id",
@@ -294,7 +299,7 @@ class TestMapping(unittest.TestCase):
         with mock.patch("mconf_aggr.webhook.event_mapper._map_user_voice_enabled_event") \
             as _map_user_voice_enabled_event_mock:
             map_webhook_event(event)
-            _map_user_voice_enabled_event_mock.assert_called_with(event, "user-audio-voice-enabled", "localhost")
+            _map_user_voice_enabled_event_mock.assert_called_with(event, "user-audio-voice-enabled", "mocked-server")
 
         got = map_webhook_event(event)
 
@@ -302,6 +307,7 @@ class TestMapping(unittest.TestCase):
 
     def test_map_user_event(self):
         event = {
+            "server_url": "mocked-server",
             "data": {
                 "type": "event",
                 "id": "user-audio-voice-disabled",
@@ -323,7 +329,7 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="user-audio-voice-disabled",
-            server_url="localhost",
+            server_url="mocked-server",
             event=UserEvent(
                 internal_user_id="madeup-internal-user-id",
                 external_user_id="madeup-external-user-id",
@@ -336,7 +342,7 @@ class TestMapping(unittest.TestCase):
         with mock.patch("mconf_aggr.webhook.event_mapper._map_user_event") \
             as _map_user_event_mock:
             map_webhook_event(event)
-            _map_user_event_mock.assert_called_with(event, "user-audio-voice-disabled")
+            _map_user_event_mock.assert_called_with(event, "user-audio-voice-disabled", "mocked-server")
 
         got = map_webhook_event(event)
 
@@ -344,6 +350,7 @@ class TestMapping(unittest.TestCase):
 
     def test_map_rap_publish_ended_event(self):
         event = {
+            "server_url": "mocked-server",
             "data": {
             "type": "event",
             "id": "rap-publish-ended",
@@ -392,7 +399,7 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="rap-publish-ended",
-            server_url="localhost",
+            server_url="mocked-server",
             event=RapPublishEndedEvent(
                 name="madeup-recording-name",
                 is_breakout=False,
@@ -420,6 +427,7 @@ class TestMapping(unittest.TestCase):
                     "size": 213541
                 },
                 download={},
+                workflow={},
                 external_meeting_id="madeup-external-meeting-id",
                 internal_meeting_id="madeup-internal-meeting-id",
                 current_step="rap-publish-ended")
@@ -428,7 +436,7 @@ class TestMapping(unittest.TestCase):
         with mock.patch("mconf_aggr.webhook.event_mapper._map_rap_publish_ended_event") \
             as _map_rap_publish_ended_event_mock:
             map_webhook_event(event)
-            _map_rap_publish_ended_event_mock.assert_called_with(event, "rap-publish-ended")
+            _map_rap_publish_ended_event_mock.assert_called_with(event, "rap-publish-ended", "mocked-server")
 
         got = map_webhook_event(event)
 
@@ -436,6 +444,7 @@ class TestMapping(unittest.TestCase):
 
     def test_map_rap_event(self):
         event = {
+            "server_url": "mocked-server",
             "data": {
                 "type": "event",
                 "id": "rap-publish-started",
@@ -453,19 +462,20 @@ class TestMapping(unittest.TestCase):
 
         expected = WebhookEvent(
             event_type="rap-publish-started",
-            server_url="localhost",
-            event=RapEvent(
+            server_url="mocked-server",
+            event=RapPublishEvent(
                 external_meeting_id="madeup-external-meeting-id",
                 internal_meeting_id="madeup-internal-meeting-id",
                 record_id="madeup-internal-meeting-id",
-                current_step="rap-publish-started"
+                current_step="rap-publish-started",
+                workflow={}
             )
         )
 
-        with mock.patch("mconf_aggr.webhook.event_mapper._map_rap_event") \
+        with mock.patch("mconf_aggr.webhook.event_mapper._map_rap_publish_event") \
             as _map_rap_event_mock:
             map_webhook_event(event)
-            _map_rap_event_mock.assert_called_with(event, "rap-publish-started")
+            _map_rap_event_mock.assert_called_with(event, "rap-publish-started", "mocked-server")
 
         got = map_webhook_event(event)
 
