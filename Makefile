@@ -19,6 +19,12 @@ up:
 	MCONF_AGGR_WEBHOOK_IMAGE_VERSION=webhook-$(IMAGE_VERSION) \
 	docker-compose -f production.yml up
 
+up-dev:
+	docker-compose -f development.yml up
+
+up-debug:
+	docker-compose -f debug.yml up
+
 start:
 	docker-compose -f production.yml start ${SERVICE}
 
@@ -35,6 +41,11 @@ docker-build:
 docker-build-dev:
 	docker build -f Dockerfile.dev -t $(IMAGE_NAME):dev .
 	docker tag $(IMAGE_NAME):dev $(IMAGE_NAME):dev-latest
+	docker image rm `docker images -f dangling=true -a -q`
+
+docker-build-debug:
+	docker build -f Dockerfile.debug -t $(IMAGE_NAME):debug .
+	docker tag $(IMAGE_NAME):debug $(IMAGE_NAME):debug-latest
 	docker image rm `docker images -f dangling=true -a -q`
 
 docker-run:
