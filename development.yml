@@ -1,7 +1,7 @@
 version: "3"
 services:
   mconf-aggr-webhook:
-    image: mconf/mconf-aggr:dev
+    image: mconf/mconf-aggr:dev-latest
     ports:
       - "8000:8000"
     networks:
