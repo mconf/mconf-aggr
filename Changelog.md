@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.4.0
+* Rename metadata's field of UsersEvents table to `userdata`.
+
+## 1.3.4
+* Fix requirements after greenlet update.
+* Fix error when meeting name is not a string.
+
 ## 1.3.3
 * Add fallback for `external_meeting_id` and `internal_meeting_id` when handling rap events.
 * Add logs showing when this error occurs.
