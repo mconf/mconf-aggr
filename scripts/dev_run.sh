@@ -5,24 +5,14 @@ SHOULD_REGISTER=false
 GENERATE=false
 NGROK=false
 
-while getopts 'gdlr:n:h' c
+while getopts 'gdlrnh' c
 do
   case $c in
     g) 	GENERATE=true;;
     d)  ACTION=DOCKER;;
     l)  ACTION=LOCAL;;
-    r)  if [[ $OPTARG == "false" || $OPTARG == "true" ]]; then
-          SHOULD_REGISTER=$OPTARG
-        else
-          echo "-r parameter accepts only 'false' or 'true'."
-          exit 1
-        fi;;
-    n)  if [[ $OPTARG == "false" || $OPTARG == "true" ]]; then
-          NGROK=$OPTARG
-        else
-          echo "-n parameter accepts only 'false' or 'true'."
-          exit 1
-        fi;;
+    r)  SHOULD_REGISTER=true;;
+    n)  NGROK=true;;
     h)  echo $(cat README.md); exit 0;;
     *)  echo $(cat README.md); exit 1;;
   esac
