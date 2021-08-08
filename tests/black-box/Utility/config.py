@@ -12,10 +12,6 @@ class Config:
         self.record_id = get_random_alpha_numeric_string(40) + "-" + get_random_alpha_numeric_string(13)
         self.external_meeting_id = "random-" + get_random_numeric_string(7)
         self.internal_user_id = get_random_alpha_string(1) + "_" + get_random_alpha_numeric_string(12)
-        self.domain = "fake-live.mconf.com"
-        self.url_endpoint = "http://localhost:8000"
-        self.content_type = "application/x-www-form-urlencoded"
-        self.authorization = "Bearer 12345678901234567890123456789012"
         
     def read_configuration(self, file_path):
         try:
