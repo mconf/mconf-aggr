@@ -19,6 +19,12 @@ up:
 	MCONF_AGGR_WEBHOOK_IMAGE_VERSION=webhook-$(IMAGE_VERSION) \
 	docker-compose -f production.yml up
 
+up-dev:
+	docker-compose -f development.yml up
+
+up-debug:
+	docker-compose -f debugging.yml up
+
 start:
 	docker-compose -f production.yml start ${SERVICE}
 
@@ -37,6 +43,11 @@ docker-build-dev:
 	docker tag $(IMAGE_NAME):dev $(IMAGE_NAME):dev-latest
 	docker image rm `docker images -f dangling=true -a -q`
 
+docker-build-debug:
+	docker build -f Dockerfile.debug -t $(IMAGE_NAME):debug .
+	docker tag $(IMAGE_NAME):debug $(IMAGE_NAME):debug-latest
+	docker image rm `docker images -f dangling=true -a -q`
+
 docker-run:
 	docker run --rm \
 	-v $(AGGR_PATH)/$(LOGGING_PATH):$(IMAGE_WORKDIR)/$(LOGGING_PATH) \
@@ -49,6 +60,12 @@ docker-run-dev:
 	IMAGE_NAME=$(IMAGE_NAME):dev \
 	MCONF_AGGR_WEBHOOK_IMAGE_VERSION=dev \
 	docker-compose -f development.yml up
+
+docker-run-debug:
+	AGGR_PATH=$(AGGR_PATH) \
+	IMAGE_NAME=$(IMAGE_NAME):debug \
+	MCONF_AGGR_WEBHOOK_IMAGE_VERSION=debug \
+	docker-compose -f debugging.yml up
 
 docker-tag:
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-$(NUMBER_VERSION)
@@ -109,7 +126,7 @@ test:
 	@python tests.py
 
 dep:
-	@pip install -r requirements_webhook.txt
+	@pip install -r requirements.txt
 
 html:
 	@make -C docs/ html

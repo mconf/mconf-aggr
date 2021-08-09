@@ -12,7 +12,7 @@ import falcon
 
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
-from mconf_aggr.aggregator.utils import time_logger
+from mconf_aggr.aggregator.utils import time_logger, RequestTimeLogger
 from mconf_aggr.webhook.database_handler import WebhookDataWriter, AuthenticationHandler
 from mconf_aggr.webhook.event_mapper import map_webhook_event
 from mconf_aggr.webhook.exceptions import WebhookError, RequestProcessingError
@@ -175,7 +175,7 @@ class WebhookEventListener:
             "keywords": ["https", "falcon", "POST", "requests", "domain", "webhook", "listener"]
         }
 
-        with time_logger(self.logger.info,
+        with RequestTimeLogger.time_logger_requests(self.logger.info,
                          "Processing webhook event took {elapsed}s.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))):
             server_url = req.get_param("domain")
             event = req.get_param("event")

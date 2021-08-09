@@ -14,7 +14,7 @@ def main(argv):
     forever = False
     interval = 0
     try:
-        opts, args = getopt.getopt(argv, "he:r:t:s:b:", ["ever=", "randomize=", "times=", "simultaneously=", "between="])
+        opts, args = getopt.getopt(argv, "hert:s:b:", ["ever=", "randomize=", "times=", "simultaneously=", "between="])
     except getopt.GetoptError as e:
         print(f"Error: {e}")
         print("Try 'load_test.py -h' to read which parameters can be used.")
@@ -27,13 +27,9 @@ def main(argv):
             print(" -b|--between:<integer>: represents the interval in milliseconds between requests.")
             print("     Accepts only integers.")
             print("     Default is '0'.")
-            print(" -e|--ever:<boolean>: only stops to send requests with KeyboardInterrupt exception ('CTRL+C').")
-            print("     Accepts only 'false' or 'true'.")
-            print("     Default is 'false'.")
+            print(" -e|--ever: only stops to send requests with KeyboardInterrupt exception ('CTRL+C').")
             print(" -h: show this message.")
-            print(" -r|--randomize=<boolean>: randomize meeting's information as internal meeting id, record id, etc.")
-            print("     Accepts only 'false' or 'true'.")
-            print("     Default is 'true'.")
+            print(" -r|--randomize: randomize meeting's information as internal meeting id, record id, etc.")
             print(" -s|--simultaneously=<integer>: how many meetings will be sent simultaneously to aggregator.")
             print("     Accepts only integers.")
             print("     Default is '1'.")
@@ -42,23 +38,9 @@ def main(argv):
             print("     Default is '1'.")
             sys.exit()
         elif opt in ['-e', '--ever']:
-            arg = arg.lower()
-            if(arg == "false"):
-                forever = False
-            elif(arg == "true"):
-                forever = True
-            else:
-                print("--ever parameter accepts only 'true' or 'false'")
-                sys.exit(3)
+            forever = True
         elif opt in ['-r', '--randomize']:
-            arg = arg.lower()
-            if(arg == "false"):
-                randomize = False
-            elif(arg == "true"):
-                randomize = True
-            else:
-                print("--randomize parameter accepts only 'true' or 'false'")
-                sys.exit(4)
+            randomize = True
         elif opt in ['-t', '--times']:
             times = int(arg)
         elif opt in ['-s', '--simultaneously']:
