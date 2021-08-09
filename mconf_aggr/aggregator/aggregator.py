@@ -642,7 +642,7 @@ class Aggregator:
             thread.exit()
 
         if not any([thread.is_alive() for thread in self.threads]):
-            logging_extra["keywords"] += ["sucess"]
+            logging_extra["keywords"] += ["success"]
             self.logger.info("All threads exited with success.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
         self.publisher.stop()

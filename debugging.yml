@@ -1,15 +1,16 @@
 version: "3"
 services:
   mconf-aggr-webhook:
-    image: mconf/mconf-aggr:dev-latest
+    image: mconf/mconf-aggr:debug-latest
     ports:
       - "8000:8000"
+      - "5678:5678"
     networks:
       - mconf-net-dev
     env_file:
       - ${MCONF_AGGR_WEBHOOK_ENV_FILE}
     volumes:
-      - ${AGGR_PATH}:/usr/src/mconf-aggr
+      - ./:/usr/src/mconf-aggr
 
 networks:
   mconf-net-dev:
