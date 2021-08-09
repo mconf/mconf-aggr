@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.2
+* Fix error when calling `/health` route:
+    - There was a typo in `__init__` method of _LivenessProbeListener_ throwing an exception.
+
 ## 1.5.1
 * Fix exception when trying to close _LivenessProbeListener_:
     - Add `is_running` attribute.
