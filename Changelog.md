@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.1
+* Fix exception when trying to close _LivenessProbeListener_:
+    - Add `is_running` attribute.
+
 ## 1.5.0
 * Add partial graceful shutdown support:
     - The application waits for all the current requests to be responded and all the events in the aggregator's channels be handled;
