@@ -36,4 +36,5 @@ echo "MCONF_WEBHOOK_DATABASE_PORT=5432" >> webhook-env-file.env
 echo "MCONF_WEBHOOK_ROUTE=/" >> webhook-env-file.env
 echo "MCONF_WEBHOOK_AUTH_REQUIRED=true" >> webhook-env-file.env
 echo "MCONF_WEBHOOK_LOG_LEVEL=DEBUG" >> webhook-env-file.env
+echo "MCONF_WEBHOOK_DEPRECATED_EVENTS=rap-archive-started" >> webhook-env-file.env
 popd

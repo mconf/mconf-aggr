@@ -311,34 +311,46 @@ class WebhookEventHandler:
 
             logging_extra["server"] = server_url
 
+        deprecated_events = cfg.config["MCONF_WEBHOOK_DEPRECATED_EVENTS"]
+
         # We can handle more than one event at once.
         for webhook_event in decoded_events:
             with time_logger(self.logger.info,
                              "Handling event took {elapsed}s.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))):
                 webhook_event["server_url"] = server_url
                 try:
-                    # Instance of WebhookEvent.
+                    # Instance of WebhookEvent.          
                     webhook_event = map_webhook_event(webhook_event)
 
-                    logging_extra["event"] = webhook_event.event_type
                 except Exception as err:
                     logging_extra["code"] = "Mapping error"
                     logging_extra["keywords"] += ["mapper", "warning"]
                     self.logger.warning(f"Something went wrong: {err}")
                     webhook_event = None
-                    
-                if webhook_event:
-                    try:
-                        logging_extra["code"] = "Publishing webhook event"
-                        logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", f"channel={self.channel}"]
-                        self.logger.debug("Publishing event.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+                
 
-                        self.publisher.publish(webhook_event, channel=self.channel)
-                    except PublishError as err:
-                        logging_extra["code"] = "Publish error"
-                        logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", "exception", "error"]
-                        self.logger.error("Something went wrong while publishing.")
-                        continue
+                if webhook_event:
+                    if webhook_event.event_type in deprecated_events:
+                        logging_extra["code"] = "Event deprecated"
+                        logging_extra["event"] = webhook_event.event_type
+                        logging_extra["server"] = webhook_event.server_url
+                        logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator"]
+                        self.logger.info("Received event is in deprecated event list: '{}'".format(deprecated_events), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+
+                    else:
+                        try:
+                            logging_extra["event"] = webhook_event.event_type
+                            logging_extra["code"] = "Publishing webhook event"
+                            logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", f"channel={self.channel}"]
+                            self.logger.debug("Publishing event.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+                            self.publisher.publish(webhook_event, channel=self.channel)
+
+                        except PublishError as err:
+                            logging_extra["code"] = "Publish error"
+                            logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", "exception", "error"]
+                            self.logger.error("Something went wrong while publishing.")
+                            continue
+
                 else:
                     logging_extra["code"] = "Not publishing"
                     logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", "warning"]
