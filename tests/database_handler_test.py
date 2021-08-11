@@ -420,13 +420,11 @@ class TestWebhookDataWriter(unittest.TestCase):
             )
 
     def test_run_called_with_data(self):
-        self.connector_mock.update = mock.MagicMock()
-
-        self.webhook_data_writer.run(self.event)
-        self.connector_mock.update.assert_called_with({})
-
-        self.webhook_data_writer.run(None)
-        self.connector_mock.update.assert_called_with(None)
+        with mock.patch('mconf_aggr.webhook.database_handler.DataProcessor') as data_processor_mock:
+            data_processor_mock.update = mock.MagicMock()
+            with self.assertRaises(CallbackError):
+                self.webhook_data_writer.run({})
+                data_processor_mock.update.assert_called_with({})
 
     def test_run_operational_error(self):
         self.connector_mock.update = mock.MagicMock(side_effect=sqlalchemy.exc.OperationalError(None, None, None))
