@@ -398,26 +398,6 @@ class TestWebhookDataWriter(unittest.TestCase):
     def setUp(self):
         self.connector_mock = mock.Mock()
         self.webhook_data_writer = WebhookDataWriter(connector=self.connector_mock)
-        self.event = MeetingCreatedEvent(
-                server_url="localhost",
-                external_meeting_id="mock_e",
-                internal_meeting_id="mock_i",
-                name="mock_n",
-                create_time=0000000,
-                create_date="Mock Date",
-                voice_bridge="",
-                dial_number="000-000-0000",
-                attendee_pw="",
-                moderator_pw="mp",
-                duration=0,
-                recording=False,
-                max_users=0,
-                is_breakout=False,
-                meta_data={
-                    "mock_data": "mock",
-                    "another_mock": "mocked"
-                }
-            )
 
     def test_run_called_with_data(self):
         with mock.patch('mconf_aggr.webhook.database_handler.DataProcessor') as data_processor_mock:
