@@ -11,6 +11,7 @@ from mconf_aggr.webhook.event_mapper import *
 from mconf_aggr.webhook.exceptions import WebhookDatabaseError, InvalidWebhookEventError
 from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents
 
+
 class SessionMock(mock.Mock):
     @property
     def get_first_add_arg(self):
@@ -22,6 +23,7 @@ class SessionMock(mock.Mock):
         args, kwargs = self.delete.call_args
 
         return args[0]
+
 
 class TestMeetingCreatedHandler(unittest.TestCase):
     def setUp(self):
@@ -359,13 +361,13 @@ class TestDataProcessor(unittest.TestCase):
 
     def test_select_user_presenter_(self):
         for event_type in ["rap-archive-started",
-                    "rap-sanity-started", "rap-sanity-ended",
-                    "rap-post-archive-started", "rap-post-archive-ended",
-                    "rap-post-process-started", "rap-post-process-ended",
-                    "rap-post-publish-started", "rap-post-publish-ended"]:
-                    event_handler = self.data_processor._select_handler(event_type)
+                           "rap-sanity-started", "rap-sanity-ended",
+                           "rap-post-archive-started", "rap-post-archive-ended",
+                           "rap-post-process-started", "rap-post-process-ended",
+                           "rap-post-publish-started", "rap-post-publish-ended"]:
+            event_handler = self.data_processor._select_handler(event_type)
 
-                    self.assertIsInstance(event_handler, RapHandler)
+            self.assertIsInstance(event_handler, RapHandler)
 
     def test_select_invalid_event_type(self):
         with self.assertRaises(InvalidWebhookEventError):
@@ -388,51 +390,61 @@ class TestDataProcessor(unittest.TestCase):
 
         handler_mock.handle.assert_called_once_with(event)
 
+    # The WebhookDataWriter class doesn't seem to be used by the aggregator. Check with the team to see if there is
+    # use for it.
 
-#  The WebhookDataWriter class doesn't seem to be used by the aggregator. Check with the team to see if there is use for it.
-# class TestWebhookDataWriter(unittest.TestCase):
-#     def setUp(self):
-#         self.connector_mock = mock.Mock()
-#         self.webhook_data_writer = WebhookDataWriter(connector=self.connector_mock)
-#
-#     def test_setup_connect(self):
-#         self.webhook_data_writer.connector.connect = mock.MagicMock()
-#         self.webhook_data_writer.setup()
-#
-#         self.webhook_data_writer.connector.connect.assert_called_once_with()
-#
-#     def test_teardown_close(self):
-#         self.webhook_data_writer.connector.close = mock.MagicMock()
-#         self.webhook_data_writer.teardown()
-#
-#         self.webhook_data_writer.connector.close.assert_called_once_with()
-#
-#     def test_run_called_with_data(self):
-#         self.connector_mock.update = mock.MagicMock()
-#
-#         self.webhook_data_writer.run({})
-#         self.connector_mock.update.assert_called_with({})
-#
-#         self.webhook_data_writer.run(None)
-#         self.connector_mock.update.assert_called_with(None)
-#
-#     def test_run_operational_error(self):
-#         self.connector_mock.update = mock.MagicMock(side_effect=sqlalchemy.exc.OperationalError(None, None, None))
-#
-#         with self.assertRaises(CallbackError):
-#             self.webhook_data_writer.run(None)
-#
-#     def test_run_webhook_database_error(self):
-#         self.connector_mock.update = mock.MagicMock(side_effect=WebhookDatabaseError)
-#
-#         with self.assertRaises(CallbackError):
-#             self.webhook_data_writer.run(None)
-#
-#     def test_run_exception(self):
-#         self.connector_mock.update = mock.MagicMock(side_effect=Exception)
-#
-#         with self.assertRaises(CallbackError):
-#             self.webhook_data_writer.run(None)
+
+class TestWebhookDataWriter(unittest.TestCase):
+    def setUp(self):
+        self.connector_mock = mock.Mock()
+        self.webhook_data_writer = WebhookDataWriter(connector=self.connector_mock)
+        self.event = MeetingCreatedEvent(
+                server_url="localhost",
+                external_meeting_id="mock_e",
+                internal_meeting_id="mock_i",
+                name="mock_n",
+                create_time=0000000,
+                create_date="Mock Date",
+                voice_bridge="",
+                dial_number="000-000-0000",
+                attendee_pw="",
+                moderator_pw="mp",
+                duration=0,
+                recording=False,
+                max_users=0,
+                is_breakout=False,
+                meta_data={
+                    "mock_data": "mock",
+                    "another_mock": "mocked"
+                }
+            )
+
+    def test_run_called_with_data(self):
+        self.connector_mock.update = mock.MagicMock()
+
+        self.webhook_data_writer.run(self.event)
+        self.connector_mock.update.assert_called_with({})
+
+        self.webhook_data_writer.run(None)
+        self.connector_mock.update.assert_called_with(None)
+
+    def test_run_operational_error(self):
+        self.connector_mock.update = mock.MagicMock(side_effect=sqlalchemy.exc.OperationalError(None, None, None))
+
+        with self.assertRaises(CallbackError):
+            self.webhook_data_writer.run(None)
+
+    def test_run_webhook_database_error(self):
+        self.connector_mock.update = mock.MagicMock(side_effect=WebhookDatabaseError)
+
+        with self.assertRaises(CallbackError):
+            self.webhook_data_writer.run(None)
+
+    def test_run_exception(self):
+        self.connector_mock.update = mock.MagicMock(side_effect=Exception)
+
+        with self.assertRaises(CallbackError):
+            self.webhook_data_writer.run(None)
 
 
 class TestPostgresConnector(unittest.TestCase):
