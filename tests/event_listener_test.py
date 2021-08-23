@@ -13,6 +13,7 @@ from mconf_aggr.webhook.event_listener import (WebhookEventListener,
                                                _normalize_server_url)
 from mconf_aggr.webhook.exceptions import WebhookError, RequestProcessingError
 
+
 class TestListener(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -20,6 +21,10 @@ class TestListener(unittest.TestCase):
         cls.channel = 'webhooks'
         cls.event_handler = WebhookEventHandler(publisher_mock, cls.channel)
         cls.event_listener = WebhookEventListener(cls.event_handler)
+
+    def setUp(self):
+        cfg.config = {"webhook": {"auth": {"required": True, "tokens": ["123456"]}},
+                      "MCONF_WEBHOOK_AUTH_REQUIRED": False}
 
     def test_listener_on_post_get_params(self):
         req_mock = mock.Mock()
@@ -93,7 +98,8 @@ class TestResponse(unittest.TestCase):
 
 class TestAuthMiddleware(unittest.TestCase):
     def setUp(self):
-        cfg.config = {"webhook": {"auth": {"required": True, "tokens": ["123456"]}}}
+        cfg.config = {"webhook": {"auth": {"required": True, "tokens": ["123456"]}},
+                      "MCONF_WEBHOOK_AUTH_REQUIRED": True}
         self.auth_middleware = AuthMiddleware()
 
         self.req_mock = mock.Mock()
@@ -165,11 +171,9 @@ class TestWebhookEventHandler(unittest.TestCase):
 
     def test_server_is_normalized(self):
         self.event = '[]'
-        self.event_handler._normalize_server_url = mock.MagicMock()
-
-        self.event_handler.process_event("localhost", self.event)
-
-        self.event_handler._normalize_server_url.assert_called_with("localhost")
+        with mock.patch("mconf_aggr.webhook.event_listener._normalize_server_url") as normalizer_mock:
+            self.event_handler.process_event("localhost", self.event)
+            normalizer_mock.assert_called_with("localhost")
 
     def test_map_fails_publish_not_called(self):
         mapper_mock = mock.MagicMock(side_effect=Exception)

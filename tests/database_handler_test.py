@@ -11,7 +11,9 @@ from mconf_aggr.webhook.event_mapper import *
 from mconf_aggr.webhook.exceptions import WebhookDatabaseError, InvalidWebhookEventError
 from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents
 
+
 class SessionMock(mock.Mock):
+    @property
     def get_first_add_arg(self):
         args, kwargs = self.add.call_args
 
@@ -21,6 +23,7 @@ class SessionMock(mock.Mock):
         args, kwargs = self.delete.call_args
 
         return args[0]
+
 
 class TestMeetingCreatedHandler(unittest.TestCase):
     def setUp(self):
@@ -54,9 +57,14 @@ class TestMeetingCreatedHandler(unittest.TestCase):
         )
 
     def test_meeting_created_handle(self):
+        server = MagicMock()
+        server.name = "mocked-server"
+        server.guid = "mocked-guid"
+        self.handler.session.query().filter().first.side_effect = [False, 'mocked-secret', server, False]
+
         self.handler.handle(self.event)
 
-        meetings = self.handler.session.get_first_add_arg()
+        meetings = self.handler.session.get_first_add_arg
         meetings_events = meetings.meeting_event
 
         self.handler.session.add.assert_called_once()
@@ -73,7 +81,7 @@ class TestMeetingCreatedHandler(unittest.TestCase):
         self.assertEqual(meetings.moderator_count, 0)
         self.assertEqual(meetings.attendees, [])
 
-        self.assertEqual(meetings_events.server_url, "localhost")
+        self.assertEqual(meetings_events.server_url, "mocked-server")
         self.assertEqual(meetings_events.external_meeting_id, "mock_e")
         self.assertEqual(meetings_events.internal_meeting_id, "mock_i")
         self.assertEqual(meetings_events.name, "mock_n")
@@ -132,9 +140,7 @@ class TestMeetingEndedHandler(unittest.TestCase):
             meta_data={"mock_data": "mock", "another_mock": "mocked"}
         )
 
-        self.handler.session.query().filter().first.return_value = meetings_events
-        self.handler.session.query().get.return_value = meetings_events
-        self.handler.session.query().join().filter().first.return_value = None
+        self.handler.session.query().filter().first.side_effect = [meetings_events, None]
 
         self.handler.handle(self.event)
 
@@ -175,7 +181,7 @@ class TestMeetingEndedHandler(unittest.TestCase):
 
         self.handler.handle(self.event)
 
-        meetings_events = self.handler.session.get_first_add_arg()
+        meetings_events = self.handler.session.get_first_add_arg
         meetings = self.handler.session.get_first_delete_arg()
 
         self.assertEqual(meetings_events.end_time, self.event.event.end_time)
@@ -202,7 +208,7 @@ class TestUserJoinedHandler(unittest.TestCase):
                 external_meeting_id="madeup-external-meeting-id",
                 join_time=1502810164922,
                 is_presenter=True,
-                meta_data={}
+                userdata={}
             )
         )
 
@@ -244,9 +250,7 @@ class TestUserJoinedHandler(unittest.TestCase):
             meta_data={"mock_data": "mock", "another_mock": "mocked"}
         )
 
-        self.handler.session.query().filter().first.return_value = meetings_events
-
-        self.handler.session.query().join().filter().first.return_value = None
+        self.handler.session.query().filter().first.side_effect = [meetings_events, None]
 
         with self.assertRaises(WebhookDatabaseError):
             self.handler.handle(self.event)
@@ -281,8 +285,7 @@ class TestUserJoinedHandler(unittest.TestCase):
             attendees=[]
         )
 
-        self.handler.session.query().filter().first.return_value = meetings_events
-        self.handler.session.query().join().filter().first.return_value = meetings
+        self.handler.session.query().filter().first.side_effect = [meetings_events, meetings]
         self.handler.session.query().get.return_value = meetings
 
         self.handler.handle(self.event)
@@ -357,16 +360,14 @@ class TestDataProcessor(unittest.TestCase):
         self.assertIsInstance(event_handler, UserPresenterUnassignedHandler)
 
     def test_select_user_presenter_(self):
-        for event_type in ["rap-archive-started", "rap-archive-ended",
-                    "rap-sanity-started", "rap-sanity-ended",
-                    "rap-post-archive-started", "rap-post-archive-ended",
-                    "rap-process-started", "rap-process-ended",
-                    "rap-post-process-started", "rap-post-process-ended",
-                    "rap-publish-started", "rap-publish-ended",
-                    "rap-post-publish-started", "rap-post-publish-ended"]:
-                    event_handler = self.data_processor._select_handler(event_type)
+        for event_type in ["rap-archive-started",
+                           "rap-sanity-started", "rap-sanity-ended",
+                           "rap-post-archive-started", "rap-post-archive-ended",
+                           "rap-post-process-started", "rap-post-process-ended",
+                           "rap-post-publish-started", "rap-post-publish-ended"]:
+            event_handler = self.data_processor._select_handler(event_type)
 
-                    self.assertIsInstance(event_handler, RapHandler)
+            self.assertIsInstance(event_handler, RapHandler)
 
     def test_select_invalid_event_type(self):
         with self.assertRaises(InvalidWebhookEventError):
@@ -389,32 +390,21 @@ class TestDataProcessor(unittest.TestCase):
 
         handler_mock.handle.assert_called_once_with(event)
 
+    # The WebhookDataWriter class doesn't seem to be used by the aggregator. Check with the team to see if there is
+    # use for it.
+
 
 class TestWebhookDataWriter(unittest.TestCase):
     def setUp(self):
         self.connector_mock = mock.Mock()
         self.webhook_data_writer = WebhookDataWriter(connector=self.connector_mock)
 
-    def test_setup_connect(self):
-        self.webhook_data_writer.connector.connect = mock.MagicMock()
-        self.webhook_data_writer.setup()
-
-        self.webhook_data_writer.connector.connect.assert_called_once_with()
-
-    def test_teardown_close(self):
-        self.webhook_data_writer.connector.close = mock.MagicMock()
-        self.webhook_data_writer.teardown()
-
-        self.webhook_data_writer.connector.close.assert_called_once_with()
-
     def test_run_called_with_data(self):
-        self.connector_mock.update = mock.MagicMock()
-
-        self.webhook_data_writer.run({})
-        self.connector_mock.update.assert_called_with({})
-
-        self.webhook_data_writer.run(None)
-        self.connector_mock.update.assert_called_with(None)
+        with mock.patch('mconf_aggr.webhook.database_handler.DataProcessor') as data_processor_mock:
+            data_processor_mock.update = mock.MagicMock()
+            with self.assertRaises(CallbackError):
+                self.webhook_data_writer.run({})
+                data_processor_mock.update.assert_called_with({})
 
     def test_run_operational_error(self):
         self.connector_mock.update = mock.MagicMock(side_effect=sqlalchemy.exc.OperationalError(None, None, None))
@@ -439,41 +429,19 @@ class TestPostgresConnector(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cfg.config = {
-            "webhook": {
-                "database": {
-                    "user": "madeup-user",
-                    "password": "madeup-password",
-                    "host": "madeup-host",
-                    "database": "madeup-database"
-                }
-            }
+            "MCONF_WEBHOOK_DATABASE_USER": "madeup-user",
+            "MCONF_WEBHOOK_DATABASE_PASSWORD": "madeup-password",
+            "MCONF_WEBHOOK_DATABASE_HOST": "madeup-host",
+            "MCONF_WEBHOOK_DATABASE_DATABASE": "madeup-database",
+            "MCONF_WEBHOOK_DATABASE_PORT": "madeup-port"
+
         }
 
     def setUp(self):
-        self.postgres_connector = PostgresConnector()
-
-    def test_update_fails(self):
-        data_processor_mock = mock.Mock()
-        data_processor_mock.update = mock.MagicMock(side_effect=Exception)
-        DataProcessor_mock = mock.Mock(return_value=data_processor_mock)
-
-        with mock.patch("mconf_aggr.webhook.database_handler.DataProcessor", DataProcessor_mock):
-            with self.assertRaises(Exception):
-                self.postgres_connector.update(None)
-                data_processor_mock.update.assert_called_once_with(None)
-
-    def test_update_succeeds(self):
-        data_processor_mock = mock.Mock()
-        data_processor_mock.update = mock.Mock()
-        data_processor_mock.update.return_value = True
-        DataProcessor_mock = mock.Mock(return_value=data_processor_mock)
-
-        with mock.patch("mconf_aggr.webhook.database_handler.DataProcessor", DataProcessor_mock):
-            self.postgres_connector.update(None)
-            data_processor_mock.update.assert_called_once_with(None)
+        self.postgres_connector = DatabaseConnector()
 
     def test_build_uri(self):
         self.assertEqual(
-            "postgresql://madeup-user:madeup-password@madeup-host/madeup-database",
+            "postgresql://madeup-user:madeup-password@madeup-host:madeup-port/madeup-database",
             self.postgres_connector._build_uri()
         )

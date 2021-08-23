@@ -10,19 +10,28 @@ class WebhookRegisterTest(unittest.TestCase):
         cls.this_server = "this-server.com"
         cls.single_server = {"https://server1.com": "123"}
         cls.two_servers = {"https://server1.com": "123", "https://server2.com":"234"}
+        cls.single_server_return = ['https://server1.com']
+        cls.two_servers_return = ['https://server1.com', 'https://server2.com']
 
         cls.success_response_xml = r"<response><returncode>SUCCESS</returncode><hookID>1</hookID><permanentHook>false</permanentHook><rawData>false</rawData></response>"
         cls.failed_response_xml = r"<response><returncode>FAILED</returncode><messageKey>missingParamCallbackURL</messageKey><message>You must specify a callbackURL in the parameters.</message></response>"
 
     def test_create_register_empty_servers(self):
-        register = WebhookRegister(callback_url=self.this_server, servers=[])
+        def populate_servers(cls):
+            cls._servers = {}
 
-        self.assertEquals({}, register.servers)
+        with mock.patch("mconf_aggr.webhook.hook_register.WebhookRegister._fetch_servers_from_database") as fetch_servers_mock:
+            fetch_servers_mock.return_value = True
+            fetch_servers_mock.side_effect = populate_servers(WebhookRegister)
+
+            register = WebhookRegister(callback_url=self.this_server, servers=[])
+
+        self.assertEqual({}, register.servers)
 
     def test_create_register_single_server(self):
         register = WebhookRegister(callback_url=self.this_server, servers=self.single_server)
 
-        self.assertEquals(self.single_server, register.servers)
+        self.assertEqual(self.single_server, register.servers)
 
     def test_create_single_hook(self):
         register = WebhookRegister(callback_url=self.this_server, servers=self.single_server)
@@ -33,8 +42,8 @@ class WebhookRegisterTest(unittest.TestCase):
             success_servers = register.success_servers
             failed_servers = register.failed_servers
 
-        self.assertEquals(self.single_server, success_servers)
-        self.assertEquals([], failed_servers)
+        self.assertEqual(self.single_server_return, success_servers)
+        self.assertEqual([], failed_servers)
 
     def test_create_two_hooks(self):
         register = WebhookRegister(callback_url=self.this_server, servers=self.two_servers)
@@ -45,8 +54,8 @@ class WebhookRegisterTest(unittest.TestCase):
             success_servers = register.success_servers
             failed_servers = register.failed_servers
 
-        self.assertEquals(self.two_servers, success_servers)
-        self.assertEquals([], failed_servers)
+        self.assertEqual(self.two_servers_return, success_servers)
+        self.assertEqual([], failed_servers)
 
     def test_create_two_hooks_failed(self):
         register = WebhookRegister(callback_url=self.this_server, servers=self.two_servers)
@@ -58,8 +67,8 @@ class WebhookRegisterTest(unittest.TestCase):
             success_servers = register.success_servers
             failed_servers = register.failed_servers
 
-        self.assertEquals([], success_servers)
-        self.assertEquals(self.two_servers, failed_servers)
+        self.assertEqual([], success_servers)
+        self.assertEqual(self.two_servers_return, failed_servers)
 
     def test_build_create_hook_url(self):
         server_addr = next(iter(self.single_server))
@@ -67,7 +76,7 @@ class WebhookRegisterTest(unittest.TestCase):
 
         create_hook_url = server._build_create_hook_url()
 
-        self.assertEquals(server_addr + "/bigbluebutton/api/hooks/create", create_hook_url)
+        self.assertEqual(server_addr + "/bigbluebutton/api/hooks/create", create_hook_url)
 
     def test_create_get_request_succeeded(self):
         import requests
@@ -80,7 +89,7 @@ class WebhookRegisterTest(unittest.TestCase):
             server = WebhookServer(server_addr, "")
             r = server.create_hook(callback_url=self.this_server)
 
-        self.assertEquals(r.status_code, requests.codes.ok)
+        self.assertEqual(r.status_code, requests.codes.ok)
 
     def test_get_request_failed(self):
         import requests
