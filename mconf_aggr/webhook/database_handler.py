@@ -6,6 +6,8 @@ which event was received by the `update` method on `WebhookDataWriter` and passe
 
 """
 import logging
+from mconf_aggr.webhook.event_mapper import MeetingTransferEvent
+from typing import Collection, Counter
 import logaugment
 
 import sqlalchemy
@@ -1028,9 +1030,53 @@ class RapPublishHandler(DatabaseEventHandler):
             self.logger.warn(f"No recording found with meeting id '{int_id}'.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
 
+class MeetingTransferHandler(DatabaseEventHandler):
+    """This class handles meeting transfer events.
+    """
+
+    def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
+
+        event_type = event.event_type
+        event = event.event
+
+        logging_extra = {
+            "code": "Meeting Transfer event handler",
+            "site": "MeetingTransferHandler.handle",
+            "server": getattr(event, "server_url", ""),
+            "event": event_type,
+            "keywords": ["meeting transfer", "event handler", "database", f"internal-meeting-id={event.internal_meeting_id}"]
+        }
+
+        int_id = event.internal_meeting_id
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+
+        transfer_table = (
+            self.session.query(Meetings).
+            filter(Meetings.int_meeting_id == int_id).
+            first()
+        )
+
+        if transfer_table:
+            transfer_table.meeting_transfer = event_type
+            self.session.add(transfer_table)
+        else:
+            logging_extra["code"] = "Meeting not found"
+            logging_extra["keywords"] = ["meeting not found", "event handler", "database", f"internal-meeting-id={event.internal_meeting_id}"]
+            self.logger.warn(f"No meeting found with meeting id '{int_id}'.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+
+
+
 def _update_meeting(meetings_table):
     """Common updates on table meetings.
     """
+
     meetings_table.participant_count = len(meetings_table.attendees)
     meetings_table.has_user_joined = meetings_table.participant_count != 0
     meetings_table.moderator_count = sum(1 for attendee in meetings_table.attendees if attendee["role"] == "MODERATOR")
@@ -1166,6 +1212,9 @@ class DataProcessor:
 
         elif(event_type == 'rap-deleted'):
             event_handler = RapDeleteHandler(self.session)
+        
+        elif(event_type == 'meeting-transfer-enabled', 'meeting-transfer-disabled'):
+            event_handler = MeetingTransferHandler(self.session)
 
         else:
             logging_extra["code"] = "Unknown event"

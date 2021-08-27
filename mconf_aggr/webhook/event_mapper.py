@@ -151,6 +151,13 @@ RapArchiveEvent = collections.namedtuple('RapArchiveEvent',
                                                 'current_step',
                                   ])
 
+MeetingTransferEvent = collections.namedtuple('MeetingTransferEvent',
+                                  [
+                                                'external_meeting_id',
+                                                'internal_meeting_id',
+                                                'event_name'
+                                  ])
+
 
 def map_webhook_event(event):
     """Map from a webhook event received to the corresponding data structure.
@@ -233,6 +240,9 @@ def map_webhook_event(event):
 
     elif(event_type == "rap-deleted"):
         mapped_event = _map_rap_deleted_event(event, event_type, server_url)
+    
+    elif(event_type == "meeting-transfer-enabled", "meeting-transfer-disabled"):
+        mapped_event = _map_transfer_event(event, event_type, server_url)
     
     else:
         logging_extra["code"] = "Invalid webhook event id"
@@ -430,6 +440,20 @@ def _map_rap_archive_event(event, event_type, server_url):
                     current_step=event_type)
 
     webhook_event = WebhookEvent(event_type, rap_event, server_url)
+
+    return webhook_event
+
+
+def _map_transfer_event(event, event_type, server_url):
+    """Map `rap-*` event to internal representation (except for process and publish).
+    """
+    transfer_event = MeetingTransferEvent(
+                    external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
+                    internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
+                    event_name=event_type)
+    
+
+    webhook_event = WebhookEvent(event_type, transfer_event, server_url)
 
     return webhook_event
 

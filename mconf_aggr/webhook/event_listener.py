@@ -319,7 +319,7 @@ class WebhookEventHandler:
                              "Handling event took {elapsed}s.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))):
                 webhook_event["server_url"] = server_url
                 try:
-                    # Instance of WebhookEvent.          
+                    # Instance of WebhookEvent. 
                     webhook_event = map_webhook_event(webhook_event)
 
                 except Exception as err:
