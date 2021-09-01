@@ -445,7 +445,7 @@ def _map_rap_archive_event(event, event_type, server_url):
 
 
 def _map_transfer_event(event, event_type, server_url):
-    """Map `rap-*` event to internal representation (except for process and publish).
+    """Map `meeting-transfer-*` event to internal representation.
     """
     transfer_event = MeetingTransferEvent(
                     external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
