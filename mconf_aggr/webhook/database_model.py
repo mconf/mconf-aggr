@@ -107,7 +107,9 @@ class Meetings(Base):
     m_institution_guid = Column(String)
     ext_meeting_id = Column(String)
     int_meeting_id = Column(String)
-    meeting_transfer = Column(String)
+    transfer = Column(Boolean)
+    transfer_count = Column(Integer)
+
 
     def __repr__(self):
      return ("<Meetings("
@@ -126,7 +128,8 @@ class Meetings(Base):
             + ", m_institution_guid=" + str(self.m_institution_guid)
             + ", ext_meeting_id=" + str(self.ext_meeting_id)
             + ", int_meeting_id=" + str(self.int_meeting_id)
-            + ", meeting_transfer=" + str(self.meeting_transfer)
+            + ", transfer=" + str(self.transfer)
+            + ", transfer_count=" + str(self.transfer_count)
             + ")>")
 
 

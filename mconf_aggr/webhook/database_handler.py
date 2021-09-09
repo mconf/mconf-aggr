@@ -6,8 +6,6 @@ which event was received by the `update` method on `WebhookDataWriter` and passe
 
 """
 import logging
-from mconf_aggr.webhook.event_mapper import MeetingTransferEvent
-from typing import Collection, Counter
 import logaugment
 
 import sqlalchemy
@@ -1045,6 +1043,9 @@ class MeetingTransferHandler(DatabaseEventHandler):
 
         event_type = event.event_type
         event = event.event
+        transfer_status = False
+        if event_type == 'meeting-transfer-enabled':
+            transfer_status = True
 
         logging_extra = {
             "code": "Meeting Transfer event handler",
@@ -1064,7 +1065,7 @@ class MeetingTransferHandler(DatabaseEventHandler):
         )
 
         if transfer_table:
-            transfer_table.meeting_transfer = event_type
+            transfer_table.transfer = transfer_status
             self.session.add(transfer_table)
         else:
             logging_extra["code"] = "Meeting not found"
@@ -1077,9 +1078,11 @@ def _update_meeting(meetings_table):
     """Common updates on table meetings.
     """
 
-    meetings_table.participant_count = len(meetings_table.attendees)
+    meetings_table.transfer_count = sum(1 for attendee in meetings_table.attendees if attendee["role"] == "TRANSFER")
+    meetings_table.participant_count = len(meetings_table.attendees) - meetings_table.transfer_count
     meetings_table.has_user_joined = meetings_table.participant_count != 0
     meetings_table.moderator_count = sum(1 for attendee in meetings_table.attendees if attendee["role"] == "MODERATOR")
+    meetings_table.transfer_count = sum(1 for attendee in meetings_table.attendees if attendee["role"] == "TRANSFER")
     meetings_table.listener_count = sum(1 for attendee in meetings_table.attendees if attendee["is_listening_only"])
     meetings_table.voice_participant_count = sum(1 for attendee in meetings_table.attendees if attendee["has_joined_voice"])
     meetings_table.video_count = sum(1 for a in meetings_table.attendees if a["has_video"])
