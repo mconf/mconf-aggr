@@ -1216,7 +1216,7 @@ class DataProcessor:
         elif(event_type == 'rap-deleted'):
             event_handler = RapDeleteHandler(self.session)
         
-        elif(event_type == 'meeting-transfer-enabled', 'meeting-transfer-disabled'):
+        elif(event_type in ['meeting-transfer-enabled', 'meeting-transfer-disabled']):
             event_handler = MeetingTransferHandler(self.session)
 
         else:

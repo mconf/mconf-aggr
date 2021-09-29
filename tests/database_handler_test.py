@@ -61,6 +61,7 @@ class TestMeetingCreatedHandler(unittest.TestCase):
         server.name = "mocked-server"
         server.guid = "mocked-guid"
         self.handler.session.query().filter().first.side_effect = [False, 'mocked-secret', server, False]
+        
 
         self.handler.handle(self.event)
 
@@ -190,6 +191,126 @@ class TestMeetingEndedHandler(unittest.TestCase):
         self.handler.session.delete.assert_called_once_with(meetings)
 
 
+class TestMeetingTransferHandler(unittest.TestCase):
+    def setUp(self):
+        session_mock = SessionMock()
+
+        self.handler = MeetingTransferHandler(session_mock)
+        
+        self.enableEvent = WebhookEvent(
+            event_type="meeting-transfer-enabled",
+            server_url="localhost",
+            event=MeetingTransferEvent(
+                external_meeting_id="mock_e",
+                internal_meeting_id="mock_i",
+                event_name="meeting_transfer_enabled"
+                
+            )
+        )
+
+        self.disableEvent = WebhookEvent(
+            event_type="meeting-transfer-disabled",
+            server_url="localhost",
+            event=MeetingTransferEvent(
+                external_meeting_id="mock_e",
+                internal_meeting_id="mock_i",
+                event_name="meeting_transfer_disabled"
+                
+            )
+        )
+
+
+    def test_meeting_transfer_enable(self):
+        meetings_events = MeetingsEvents(
+            server_url="localhost",
+            external_meeting_id="mock_e",
+            internal_meeting_id="mock_i",
+            name="mock_n",
+            create_time=0,
+            create_date="Mock Date",
+            voice_bridge="",
+            dial_number="000-000-0000",
+            attendee_pw="",
+            moderator_pw="mp",
+            duration=0,
+            recording=False,
+            max_users=0,
+            is_breakout=False,
+            meta_data={"mock_data": "mock", "another_mock": "mocked"}
+        )
+
+        meetings = Meetings(
+            running=False,
+            has_user_joined=False,
+            transfer=False,
+            participant_count=0,
+            listener_count=0,
+            voice_participant_count=0,
+            video_count=0,
+            moderator_count=0,
+            attendees=[]
+        )
+
+        self.handler.session.query().filter().first.return_value = meetings_events
+        self.handler.session.query().get = mock.Mock(side_effect=[meetings_events, meetings])
+
+        self.handler.handle(self.enableEvent)
+
+        meetings = self.handler.session.get_first_add_arg
+        self.handler.session.add.assert_called_once()
+
+
+        self.assertEqual(meetings.transfer, True)
+
+        self.handler.session.add.assert_called_once_with(meetings)
+    
+    def test_meeting_transfer_disable(self):
+        meetings_events = MeetingsEvents(
+            server_url="localhost",
+            external_meeting_id="mock_e",
+            internal_meeting_id="mock_i",
+            name="mock_n",
+            create_time=0,
+            create_date="Mock Date",
+            voice_bridge="",
+            dial_number="000-000-0000",
+            attendee_pw="",
+            moderator_pw="mp",
+            duration=0,
+            recording=False,
+            max_users=0,
+            is_breakout=False,
+            meta_data={"mock_data": "mock", "another_mock": "mocked"}
+        )
+
+        meetings = Meetings(
+            running=False,
+            has_user_joined=False,
+            transfer=True,
+            participant_count=0,
+            listener_count=0,
+            voice_participant_count=0,
+            video_count=0,
+            moderator_count=0,
+            attendees=[]
+        )
+
+        self.handler.session.query().filter().first.return_value = meetings_events
+        self.handler.session.query().get = mock.Mock(side_effect=[meetings_events, meetings])
+
+        self.handler.handle(self.disableEvent)
+
+        meetings = self.handler.session.get_first_add_arg
+        self.handler.session.add.assert_called_once()
+
+
+        self.assertEqual(meetings.transfer, False)
+
+        self.handler.session.add.assert_called_once_with(meetings)
+    
+
+
+
 class TestUserJoinedHandler(unittest.TestCase):
     def setUp(self):
         session_mock = SessionMock()
@@ -202,6 +323,22 @@ class TestUserJoinedHandler(unittest.TestCase):
             event=UserJoinedEvent(
                 name="madeup-user",
                 role="MODERATOR",
+                internal_user_id="madeup-internal-user-id",
+                external_user_id="madeup-external-user-id",
+                internal_meeting_id="madeup-internal-meeting-id",
+                external_meeting_id="madeup-external-meeting-id",
+                join_time=1502810164922,
+                is_presenter=True,
+                userdata={}
+            )
+        )
+
+        self.transferEvent = WebhookEvent(
+            event_type="user-joined",
+            server_url="localhost",
+            event=UserJoinedEvent(
+                name="madeup-user",
+                role="TRANSFER",
                 internal_user_id="madeup-internal-user-id",
                 external_user_id="madeup-external-user-id",
                 internal_meeting_id="madeup-internal-meeting-id",
@@ -291,6 +428,49 @@ class TestUserJoinedHandler(unittest.TestCase):
         self.handler.handle(self.event)
 
         self.assertEqual(self.handler.session.add.call_count, 3)
+        self.handler.session.flush.assert_called_once()
+
+    def test_user_joined_succeeds_transfer(self):
+        meetings_events = MeetingsEvents(
+            server_url="localhost",
+            external_meeting_id="mock_e",
+            internal_meeting_id="mock_i",
+            name="mock_n",
+            create_time=0,
+            create_date="Mock Date",
+            voice_bridge="",
+            dial_number="000-000-0000",
+            attendee_pw="",
+            moderator_pw="mp",
+            duration=0,
+            recording=False,
+            max_users=0,
+            is_breakout=False,
+            meta_data={"mock_data": "mock", "another_mock": "mocked"}
+        )
+
+        meetings = Meetings(
+            running=False,
+            transfer=True,
+            transfer_count=0,
+            has_user_joined=False,
+            participant_count=0,
+            listener_count=0,
+            voice_participant_count=0,
+            video_count=0,
+            moderator_count=0,
+            attendees=[]
+        )
+
+        self.handler.session.query().filter().first.side_effect = [meetings_events, meetings]
+        self.handler.session.query().get.return_value = meetings
+
+        self.handler.handle(self.transferEvent)
+        self.handler.session.add.call_args_list
+
+        self.assertEqual(self.handler.session.add.call_count, 3)
+        self.assertEqual(meetings.transfer_count, 1)
+        self.assertEqual(meetings.participant_count, 0)
         self.handler.session.flush.assert_called_once()
 
 

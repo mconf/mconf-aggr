@@ -241,9 +241,9 @@ def map_webhook_event(event):
     elif(event_type == "rap-deleted"):
         mapped_event = _map_rap_deleted_event(event, event_type, server_url)
     
-    elif(event_type == "meeting-transfer-enabled", "meeting-transfer-disabled"):
+    elif(event_type in ["meeting-transfer-enabled", "meeting-transfer-disabled"]):
         mapped_event = _map_transfer_event(event, event_type, server_url)
-    
+
     else:
         logging_extra["code"] = "Invalid webhook event id"
         logging_extra["keywords"] += ["warning"]
