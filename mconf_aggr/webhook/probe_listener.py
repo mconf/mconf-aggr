@@ -55,7 +55,7 @@ class ProbeListener:
             resp.body = "OK"
             resp.status = falcon.HTTP_200 # OK.
         else:
-            resp.body = ""
+            resp.body = "NOT OK"
             resp.status = falcon.HTTP_503 # Service unavailable.
 
     def _ok(self):
@@ -68,6 +68,18 @@ class LivenessProbeListener(ProbeListener):
     """Listener for the endpoint /health.
     """
 
+    def __init__(self):
+        """Constructor of LivenessProbeListener
+        """
+        self._is_running = True
+
+    def close(self):
+        """Close the ProbeListener.
+        
+        Set a flag to notify kubernetes that the service is no longer available.
+        """
+        self._is_running = False
+
     def _ok(self):
         """Implements endpoint-specific logic of /health.
 
@@ -75,20 +87,8 @@ class LivenessProbeListener(ProbeListener):
         -------
         bool : True if the application is running correctly. False otherwise.
         """
-        logging_extra = {
-            "code": "Endpoint listener",
-            "site": "LivenessProbeListener._ok",
-            "keywords": ["listener", "endpoint", "health"]
-        }
 
-        try:
-            _ping_database()
-        except DatabaseNotReadyError as err:
-            self.logger.warn(str(err), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
-
-            return False
-
-        return True
+        return self._is_running
 
 
 class ReadinessProbeListener(ProbeListener):
@@ -96,7 +96,7 @@ class ReadinessProbeListener(ProbeListener):
     """
 
     def _ok(self):
-        """Implements endpoint-specific logic of /health.
+        """Implements endpoint-specific logic of /ready.
 
         Returns
         -------
