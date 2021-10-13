@@ -84,6 +84,10 @@ class Meetings(Base):
         External meeting id of the meeting.
     int_meeting_id : Column of type String
         Internal meeting id of the meeting.
+    transfer : Column of type Boolean
+        Indicates if it is in transfer mode.
+    transfer_count : Column of type Integer
+        Number of trasnfer users on the meeting.
     """
     __tablename__ = "meetings"
 
@@ -107,6 +111,9 @@ class Meetings(Base):
     m_institution_guid = Column(String)
     ext_meeting_id = Column(String)
     int_meeting_id = Column(String)
+    transfer = Column(Boolean)
+    transfer_count = Column(Integer)
+
 
     def __repr__(self):
      return ("<Meetings("
@@ -125,6 +132,8 @@ class Meetings(Base):
             + ", m_institution_guid=" + str(self.m_institution_guid)
             + ", ext_meeting_id=" + str(self.ext_meeting_id)
             + ", int_meeting_id=" + str(self.int_meeting_id)
+            + ", transfer=" + str(self.transfer)
+            + ", transfer_count=" + str(self.transfer_count)
             + ")>")
 
 

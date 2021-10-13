@@ -111,6 +111,44 @@ def post_rap_archive_started(internal_meeting_id, external_meeting_id, record_id
 
     post_event(rap_archive_started_json)
 
+def post_meeting_transfer_enabled(internal_meeting_id, external_meeting_id):
+    meeting_transfer_enabled_json = {
+        "data": {
+            "type": "event",
+            "id": "meeting-transfer-enabled",
+            "attributes": {
+                    "meeting": {
+                        "internal-meeting-id": internal_meeting_id,
+                        "external-meeting-id": external_meeting_id
+                    },
+            },
+            "event": {
+                "ts": timestamp_now()
+            }
+        }
+    }
+
+    post_event(meeting_transfer_enabled_json)
+
+def post_meeting_transfer_disabled(internal_meeting_id, external_meeting_id):
+    meeting_transfer_enabled_json = {
+        "data": {
+            "type": "event",
+            "id": "meeting-transfer-disabled",
+            "attributes": {
+                    "meeting": {
+                        "internal-meeting-id": internal_meeting_id,
+                        "external-meeting-id": external_meeting_id
+                    },
+            },
+            "event": {
+                "ts": timestamp_now()
+            }
+        }
+    }
+
+    post_event(meeting_transfer_disabled_json)
+
 def post_rap_post_publish_ended(internal_meeting_id, external_meeting_id, record_id):
     rap_post_publish_ended_json = {
         "data": {

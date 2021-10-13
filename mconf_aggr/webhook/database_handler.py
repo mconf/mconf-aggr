@@ -210,7 +210,9 @@ class MeetingCreatedHandler(DatabaseEventHandler):
                                m_shared_secret_guid=new_meetings_events.shared_secret_guid,
                                m_institution_guid=new_meetings_events.institution_guid,
                                ext_meeting_id=new_meetings_events.external_meeting_id,
-                               int_meeting_id=new_meetings_events.internal_meeting_id)
+                               int_meeting_id=new_meetings_events.internal_meeting_id,
+                               transfer=False,
+                               transfer_count=0)
         new_meeting.meeting_event = new_meetings_events
 
         self.session.add(new_meeting)
@@ -1028,12 +1030,61 @@ class RapPublishHandler(DatabaseEventHandler):
             self.logger.warn(f"No recording found with meeting id '{int_id}'.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
 
+class MeetingTransferHandler(DatabaseEventHandler):
+    """This class handles meeting transfer events.
+    """
+
+    def handle(self, event):
+        """Implementation of abstract handle method from DatabaseEventHandler.
+
+        Parameters
+        ----------
+        event : event_mapper.WebhookEvent
+            Event to be handled and written to database.
+        """
+
+        event_type = event.event_type
+        event = event.event
+        transfer_status = False
+        if event_type == 'meeting-transfer-enabled':
+            transfer_status = True
+
+        logging_extra = {
+            "code": "Meeting Transfer event handler",
+            "site": "MeetingTransferHandler.handle",
+            "server": getattr(event, "server_url", ""),
+            "event": event_type,
+            "keywords": ["meeting transfer", "event handler", "database", f"internal-meeting-id={event.internal_meeting_id}"]
+        }
+
+        int_id = event.internal_meeting_id
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+
+        transfer_table = (
+            self.session.query(Meetings).
+            filter(Meetings.int_meeting_id == int_id).
+            first()
+        )
+
+        if transfer_table:
+            transfer_table.transfer = transfer_status
+            self.session.add(transfer_table)
+        else:
+            logging_extra["code"] = "Meeting not found"
+            logging_extra["keywords"] = ["meeting not found", "event handler", "database", f"internal-meeting-id={event.internal_meeting_id}"]
+            self.logger.warn(f"No meeting found with meeting id '{int_id}'.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+
+
+
 def _update_meeting(meetings_table):
     """Common updates on table meetings.
     """
-    meetings_table.participant_count = len(meetings_table.attendees)
+
+    meetings_table.transfer_count = sum(1 for attendee in meetings_table.attendees if attendee["role"] == "TRANSFER")
+    meetings_table.participant_count = len(meetings_table.attendees) - meetings_table.transfer_count
     meetings_table.has_user_joined = meetings_table.participant_count != 0
     meetings_table.moderator_count = sum(1 for attendee in meetings_table.attendees if attendee["role"] == "MODERATOR")
+    meetings_table.transfer_count = sum(1 for attendee in meetings_table.attendees if attendee["role"] == "TRANSFER")
     meetings_table.listener_count = sum(1 for attendee in meetings_table.attendees if attendee["is_listening_only"])
     meetings_table.voice_participant_count = sum(1 for attendee in meetings_table.attendees if attendee["has_joined_voice"])
     meetings_table.video_count = sum(1 for a in meetings_table.attendees if a["has_video"])
@@ -1166,6 +1217,9 @@ class DataProcessor:
 
         elif(event_type == 'rap-deleted'):
             event_handler = RapDeleteHandler(self.session)
+        
+        elif(event_type in ['meeting-transfer-enabled', 'meeting-transfer-disabled']):
+            event_handler = MeetingTransferHandler(self.session)
 
         else:
             logging_extra["code"] = "Unknown event"

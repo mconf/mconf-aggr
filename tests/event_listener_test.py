@@ -157,6 +157,7 @@ class TestAuthMiddleware(unittest.TestCase):
 
 class TestWebhookEventHandler(unittest.TestCase):
     def setUp(self):
+        cfg.config = {"MCONF_WEBHOOK_DEPRECATED_EVENTS": []}
         self.channel_mock = mock.Mock()
         self.publisher_mock = mock.Mock()
         self.publisher_mock.publish = mock.MagicMock()

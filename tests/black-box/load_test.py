@@ -110,6 +110,10 @@ def run_meeting(cfg, interval):
     time.sleep(interval)
     events.post_meeting_recording_changed(cfg.internal_meeting_id, cfg.external_meeting_id)
     time.sleep(interval)
+    events.post_meeting_transfer_enabled(cfg.internal_meeting_id, cfg.external_meeting_id)
+    time.sleep(interval)
+    events.post_meeting_transfer_disabled(cfg.internal_meeting_id, cfg.external_meeting_id)
+    time.sleep(interval)
     events.post_meeting_ended(cfg.internal_meeting_id, cfg.external_meeting_id)
 
 def run_recording(cfg, interval):
