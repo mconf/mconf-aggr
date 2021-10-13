@@ -68,6 +68,18 @@ class LivenessProbeListener(ProbeListener):
     """Listener for the endpoint /health.
     """
 
+    def __init__(self):
+        """Constructor of LivenessProbeListener
+        """
+        self._is_running = True
+
+    def close(self):
+        """Close the ProbeListener.
+        
+        Set a flag to notify kubernetes that the service is no longer available.
+        """
+        self._is_running = False
+
     def _ok(self):
         """Implements endpoint-specific logic of /health.
 
@@ -76,7 +88,7 @@ class LivenessProbeListener(ProbeListener):
         bool : True if the application is running correctly. False otherwise.
         """
 
-        return True
+        return self._is_running
 
 
 class ReadinessProbeListener(ProbeListener):
