@@ -210,7 +210,9 @@ class MeetingCreatedHandler(DatabaseEventHandler):
                                m_shared_secret_guid=new_meetings_events.shared_secret_guid,
                                m_institution_guid=new_meetings_events.institution_guid,
                                ext_meeting_id=new_meetings_events.external_meeting_id,
-                               int_meeting_id=new_meetings_events.internal_meeting_id)
+                               int_meeting_id=new_meetings_events.internal_meeting_id,
+                               transfer=False,
+                               transfer_count=0)
         new_meeting.meeting_event = new_meetings_events
 
         self.session.add(new_meeting)

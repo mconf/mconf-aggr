@@ -84,6 +84,10 @@ class Meetings(Base):
         External meeting id of the meeting.
     int_meeting_id : Column of type String
         Internal meeting id of the meeting.
+    transfer : Column of type Boolean
+        Indicates if it is in transfer mode.
+    transfer_count : Column of type Integer
+        Number of trasnfer users on the meeting.
     """
     __tablename__ = "meetings"
 
