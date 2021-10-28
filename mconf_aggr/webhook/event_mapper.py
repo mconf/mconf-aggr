@@ -23,6 +23,7 @@ MeetingCreatedEvent = collections.namedtuple('MeetingCreatedEvent',
                                                 'server_url',
                                                 'external_meeting_id',
                                                 'internal_meeting_id',
+                                                "parent_meeting_id",
                                                 'name',
                                                 'create_time',
                                                 'create_date',
@@ -256,10 +257,12 @@ def map_webhook_event(event):
 def _map_create_event(event, event_type, server_url):
     """Map `meeting-created` event to internal representation
     """
+    
     create_event = MeetingCreatedEvent(
                        server_url=event.get("server_url", ""),
                        external_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "external-meeting-id"], ""),
                        internal_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "internal-meeting-id"], ""),
+                       parent_meeting_id=_get_nested(event, ["data", "attributes", "meeting", "parent-id"], ""),
                        name=_get_nested(event, ["data", "attributes", "meeting", "name"], ""),
                        create_time=_get_nested(event, ["data", "attributes", "meeting", "create-time"], 0),
                        create_date=_get_nested(event, ["data", "attributes", "meeting", "create-date"], None),
