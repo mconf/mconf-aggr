@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.6.0
+* Add transfer mode support:
+    - Add `transfer` and `transfer_count` fields in `Meetings` class;
+    - Add `MeetingTransferHandler` to handle `meeting-transfer-*` events;
+    - Add `MeetingTransferEvent` tuple containing all the necessary fields to handle these `transfer` events; 
+    - Add tests cases for the new handler and for `user-joined` events when the meeting is in `transfer mode`.
+
 ## 1.5.2
 * Fix error when calling `/health` route:
     - There was a typo in `__init__` method of _LivenessProbeListener_ throwing an exception.
