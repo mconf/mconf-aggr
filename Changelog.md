@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.0
+* Add parent meeting information on breakout rooms:
+    - Add `parent_meeting_id` attribute on `MeetingsEvents` and `Recordings` classes.
+
 ## 1.6.0
 * Add transfer mode support:
     - Add `transfer` and `transfer_count` fields in `Meetings` class;
