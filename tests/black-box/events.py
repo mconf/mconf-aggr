@@ -131,7 +131,7 @@ def post_meeting_transfer_enabled(internal_meeting_id, external_meeting_id):
     post_event(meeting_transfer_enabled_json)
 
 def post_meeting_transfer_disabled(internal_meeting_id, external_meeting_id):
-    meeting_transfer_enabled_json = {
+    meeting_transfer_disabled_json = {
         "data": {
             "type": "event",
             "id": "meeting-transfer-disabled",
