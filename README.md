@@ -382,6 +382,41 @@ $ make docker-build
 > You actually have to this to use the Makefile commands below since it is configured to
 build the final images from the dockerized base images.
 
+## Debugging with VSCode
+
+To debug with vscode you must set launch.json which is the config file for debugging in vscode.
+
+To debug aggregator, for example:
+
+
+```
+"version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Tests",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/tests.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: Anexar",
+            "type": "python",
+            "request": "attach",
+            "port": 5678,
+            "host": "localhost",
+            "pathMappings": [
+                {
+                    "localRoot": "${workspaceFolder}",
+                    "remoteRoot": "."
+                }
+            ]
+        }
+    ]
+```
+
+When it's done, make sure the image is built and run the container with makefile. After the container is up, the debugger will wait the attach to start running the service. Just click on "Start debugging" and a debug console should appears on your panel.
+
 ## Makefile
 
 Some tasks can be done using the `make` utility. The most important ones are
