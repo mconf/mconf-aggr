@@ -71,6 +71,8 @@ class AuthMiddleware:
             "keywords": ["https", "falcon", "requests", "domain"]
         }
 
+        self.logger.info("Received request with body: '{}'".format(req.get_param("event")), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+
         auth_required = cfg.config["MCONF_WEBHOOK_AUTH_REQUIRED"]
 
         if auth_required:
