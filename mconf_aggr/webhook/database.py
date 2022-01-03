@@ -29,7 +29,7 @@ class DatabaseConnector:
         It is responsible for creating an engine for the URI provided and
         configure the session.
         """
-        engine = create_engine(cls._build_uri(), echo=False)
+        engine = create_engine(cls._build_uri(), echo=False, isolation_level='SERIALIZABLE')
         cls.Session = sessionmaker()
         cls.Session.configure(bind=engine)
 
