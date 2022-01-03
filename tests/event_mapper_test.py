@@ -99,6 +99,7 @@ class TestMapping(unittest.TestCase):
                 server_url="localhost",
                 external_meeting_id="mock_e",
                 internal_meeting_id="mock_i",
+                parent_meeting_id="",
                 name="mock_n",
                 create_time=0000000,
                 create_date="Mock Date",
