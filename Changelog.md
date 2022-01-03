@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.8.0
+* Log all requests for event handling.
+
 ## 1.7.0
 * Add parent meeting information on breakout rooms:
     - Add `parent_meeting_id` attribute on `MeetingsEvents` and `Recordings` classes.
