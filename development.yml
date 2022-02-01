@@ -9,7 +9,7 @@ services:
     env_file:
       - ${MCONF_AGGR_WEBHOOK_ENV_FILE}
     volumes:
-      - ${AGGR_PATH}:/usr/src/mconf-aggr
+      - ./:/usr/src/mconf-aggr
 
 networks:
   mconf-net-dev:

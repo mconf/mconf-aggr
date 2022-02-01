@@ -1,0 +1,617 @@
+[
+    {
+        "data": {
+            "type": "event",
+            "id": "meeting-created",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533",
+                    "name": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533",
+                    "is-breakout": false,
+                    "duration": 0,
+                    "create-time": 1643033345870,
+                    "create-date": "Thu Oct 24 13:28:12 EDT 2019",
+                    "moderator-pass": "mp",
+                    "viewer-pass": "ap",
+                    "record": true,
+                    "voice-conf": "75393",
+                    "dial-number": "613-555-1234",
+                    "max-users": 0,
+                    "metadata": {
+                        "foo": "bar"
+                    }
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "meeting-ended",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "meeting-recording-changed",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-archive-ended",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "success": true,
+                "step-time": 843,
+                "recorded": true,
+                "duration": 3655
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-archive-started",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870"
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "meeting-transfer-enabled",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "meeting-transfer-disabled",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-post-publish-ended",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "success": true,
+                "step-time": 182,
+                "workflow": "post_publish_recording_ready_callback"
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-post-publish-started",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "workflow": "post_publish_recording_ready_callback"
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-process-ended",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "success": true,
+                "step-time": 167,
+                "workflow": "presentation_video"
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-process-ended",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "success": true,
+                "step-time": 2511,
+                "workflow": "presentation"
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-process-started",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "workflow": "presentation_video"
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-process-started",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "workflow": "presentation"
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-publish-ended",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "success": true,
+                "step-time": 193,
+                "workflow": "presentation_video",
+                "recording": {
+                    "name": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533",
+                    "is-breakout": "false",
+                    "start-time": 1571938092195,
+                    "end-time": 1571938108441,
+                    "size": 18683,
+                    "raw-size": 4225033,
+                    "metadata": {
+                        "isBreakout": "false",
+                        "meetingId": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533",
+                        "meetingName": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                    },
+                    "playback": {
+                        "format": "presentation_video",
+                        "link": "https://fake-live.mconf.com/presentation_video/7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870/video.mp4",
+                        "processing_time": 2511,
+                        "duration": 3655,
+                        "extensions": {
+                            "preview": {
+                                "images": {
+                                    "image": [
+                                        {
+                                            "attributes": {
+                                                "width": 176,
+                                                "height": 136,
+                                                "alt": ""
+                                            },
+                                            "value": "https://fake-live.mconf.com/presentation/7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870/presentation/d2d9a672040fbde2a47a10bf6c37b6a4b5ae187f-1571938092218/thumbnails/thumb-1.png"
+                                        },
+                                        {
+                                            "attributes": {
+                                                "width": 176,
+                                                "height": 136,
+                                                "alt": ""
+                                            },
+                                            "value": "https://fake-live.mconf.com/presentation/7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870/presentation/d2d9a672040fbde2a47a10bf6c37b6a4b5ae187f-1571938092218/thumbnails/thumb-2.png"
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "size": 18683
+                    },
+                    "download": {}
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-publish-ended",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "success": true,
+                "step-time": 193,
+                "workflow": "presentation_video",
+                "recording": {
+                    "name": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533",
+                    "is-breakout": "false",
+                    "start-time": 1571938092195,
+                    "end-time": 1571938108441,
+                    "size": 18683,
+                    "raw-size": 4225033,
+                    "metadata": {
+                        "isBreakout": "false",
+                        "meetingId": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533",
+                        "meetingName": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533",
+                        "bbb-aws-published-time": 1571938392493,
+                        "bbb-aws-original-link-presentation-video": "https://fake-live.mconf.com/presentation_video/7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870/video.mp4"
+                    },
+                    "playback": {
+                        "format": "presentation_video",
+                        "link": "https://fake-rec.mconf.com/presentation_video/7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870/video.mp4",
+                        "processing_time": 2511,
+                        "duration": 3655,
+                        "extensions": {
+                            "preview": {
+                                "images": {
+                                    "image": [
+                                        "https://fake-rec.mconf.com/presentation/7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870/presentation/d2d9a672040fbde2a47a10bf6c37b6a4b5ae187f-1571938092218/thumbnails/thumb-1.png",
+                                        "https://fake-rec.mconf.com/presentation/7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870/presentation/d2d9a672040fbde2a47a10bf6c37b6a4b5ae187f-1571938092218/thumbnails/thumb-2.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "size": 18683
+                    },
+                    "download": {}
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-publish-ended",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "success": true,
+                "step-time": 346,
+                "workflow": "presentation",
+                "recording": {
+                    "name": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533",
+                    "is-breakout": "false",
+                    "start-time": 1571938092195,
+                    "end-time": 1571938108441,
+                    "size": 1204266,
+                    "raw-size": 4225033,
+                    "metadata": {
+                        "isBreakout": "false",
+                        "meetingId": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533",
+                        "meetingName": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533",
+                        "bbb-aws-published-time": 1571938385358,
+                        "bbb-aws-original-link-presentation": "https://fake-live.mconf.com/playback/presentation/2.0/playback.html?meetingId=7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870"
+                    },
+                    "playback": {
+                        "format": "presentation",
+                        "link": "https://fake-rec.mconf.com/playback/presentation/2.0/playback.html?meetingId=7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                        "processing_time": 2511,
+                        "duration": 3655,
+                        "extensions": {
+                            "preview": {
+                                "images": {
+                                    "image": [
+                                        "https://fake-rec.mconf.com/presentation/7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870/presentation/d2d9a672040fbde2a47a10bf6c37b6a4b5ae187f-1571938092218/thumbnails/thumb-1.png",
+                                        "https://fake-rec.mconf.com/presentation/7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870/presentation/d2d9a672040fbde2a47a10bf6c37b6a4b5ae187f-1571938092218/thumbnails/thumb-2.png"
+                                    ]
+                                }
+                            }
+                        },
+                        "size": 1204266
+                    },
+                    "download": {}
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-publish-ended",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "success": true,
+                "step-time": 346,
+                "workflow": "presentation",
+                "recording": {
+                    "name": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533",
+                    "is-breakout": "false",
+                    "start-time": 1571938092195,
+                    "end-time": 1571938108441,
+                    "size": 1204266,
+                    "raw-size": 4225033,
+                    "metadata": {
+                        "isBreakout": "false",
+                        "meetingId": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533",
+                        "meetingName": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                    },
+                    "playback": {
+                        "format": "presentation",
+                        "link": "https://fake-live.mconf.com/playback/presentation/2.0/playback.html?meetingId=7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                        "processing_time": 2511,
+                        "duration": 3655,
+                        "extensions": {
+                            "preview": {
+                                "images": {
+                                    "image": [
+                                        {
+                                            "attributes": {
+                                                "width": 176,
+                                                "height": 136,
+                                                "alt": ""
+                                            },
+                                            "value": "https://fake-live.mconf.com/presentation/7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870/presentation/d2d9a672040fbde2a47a10bf6c37b6a4b5ae187f-1571938092218/thumbnails/thumb-1.png"
+                                        },
+                                        {
+                                            "attributes": {
+                                                "width": 176,
+                                                "height": 136,
+                                                "alt": ""
+                                            },
+                                            "value": "https://fake-live.mconf.com/presentation/7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870/presentation/d2d9a672040fbde2a47a10bf6c37b6a4b5ae187f-1571938092218/thumbnails/thumb-2.png"
+                                        }
+                                    ]
+                                }
+                            }
+                        },
+                        "size": 1204266
+                    },
+                    "download": {}
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-publish-started",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "workflow": "presentation_video"
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-publish-started",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "workflow": "presentation"
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-sanity-ended",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "success": true,
+                "step-time": 183
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-sanity-started",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870"
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "user-audio-voice-enabled",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "user": {
+                    "internal-user-id": "w_kzhu5jtzceh9",
+                    "external-user-id": "w_kzhu5jtzceh9",
+                    "sharing-mic": true,
+                    "listening-only": false
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "user-joined",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "user": {
+                    "internal-user-id": "w_kzhu5jtzceh9",
+                    "external-user-id": "w_kzhu5jtzceh9",
+                    "name": "User 780365",
+                    "role": "MODERATOR",
+                    "presenter": false
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "user-presenter-assigned",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "user": {
+                    "internal-user-id": "w_kzhu5jtzceh9",
+                    "external-user-id": "w_kzhu5jtzceh9"
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "user-presenter-unassigned",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "user": {
+                    "internal-user-id": "w_kzhu5jtzceh9",
+                    "external-user-id": "w_kzhu5jtzceh9",
+                    "name": "User 780365"
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    }
+]

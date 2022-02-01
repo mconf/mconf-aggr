@@ -23,6 +23,9 @@
         },
         "urllib3": {
             "propagate": false
+        },
+        "kafka": {
+            "propagate": false
         }
     },
 

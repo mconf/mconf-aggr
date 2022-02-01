@@ -1237,7 +1237,7 @@ class DataProcessor:
         return event_handler
 
 
-class WebhookDataWriter(AggregatorCallback):
+class WebhookDataWriter():
     """Writer of data retrieved from webhooks.
 
     This class implements the AggregatorCallback which means its `run()` method
