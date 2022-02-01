@@ -69,15 +69,15 @@ class RequestTimeLogger:
 
         RequestTimeLogger.current_requests_count -= 1
 
-def signal_handler(aggregator, liveness_probe, signal):
+def signal_handler(liveness_probe, consumer, signal):
     """Unix signals handler.
 
     Handle signals, closing the application gracefully if the signal is a SIGTERM.
 
     Parameters
     ----------
-    aggregator : Aggregator
-        The aggregator object which this thread monitors errors for.
+    consumer : KafkaEventConsumer
+        The event consumer object which this thread monitors errors for.
     liveness_probe : LivenessProbeListener
         The probe listener which handles the /health route.
     signal : signal
@@ -87,9 +87,7 @@ def signal_handler(aggregator, liveness_probe, signal):
     if signal == signal.SIGTERM:
         liveness_probe.close()
 
-        # Wait aggregator handle with all the received events before close it
-        while any([not x.channel.empty() for x in aggregator.subscribers]) or RequestTimeLogger.current_requests_count > 0:
-            print("There are events to handle yet.")
+        consumer.stop()
+        consumer.join()
 
-        aggregator.stop()
         exit(0)

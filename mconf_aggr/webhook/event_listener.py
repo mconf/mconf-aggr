@@ -14,7 +14,6 @@ from kafka import KafkaConsumer
 import falcon
 
 import mconf_aggr.aggregator.cfg as cfg
-from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
 from mconf_aggr.aggregator.utils import time_logger, RequestTimeLogger
 from mconf_aggr.webhook.database_handler import WebhookDataWriter, AuthenticationHandler
 from mconf_aggr.webhook.event_mapper import map_webhook_event
@@ -184,23 +183,30 @@ class KafkaEventConsumer(threading.Thread):
 
         self.logger.info("KafkaEventConsumer start running", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
-        for msg in self.consumer:
-            with RequestTimeLogger.time_logger_requests(self.logger.info,
-                            "Processing webhook event took {elapsed}s.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))):
-                event = msg.value
-                server_url = dict(msg.headers)["server"].decode('utf-8')
-                try:
-                    logging_extra["code"] = "Processing webhook event"
-                    self.logger.debug("Processing event", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
-                    self.event_handler.process_event(server_url, event)
-                except WebhookError as err:
-                    logging_extra["code"] = "Webhook error"
-                    logging_extra["keywords"] += ["exception", "error"]
-                    self.logger.error(f"An error occurred while processing event: {err}", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
-                except Exception as err:
-                    logging_extra["code"] = "Unexpected error"
-                    logging_extra["keywords"] += ["exception", "error"]
-                    self.logger.error(f"An unexpected error occurred while processing event: {err}", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+        while self.is_running:
+            for msg in self.consumer:
+                with RequestTimeLogger.time_logger_requests(self.logger.info,
+                                "Processing webhook event took {elapsed}s.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))):
+                    event = msg.value
+                    server_url = dict(msg.headers)["server"].decode('utf-8')
+                    try:
+                        logging_extra["code"] = "Processing webhook event"
+                        self.logger.debug("Processing event", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+                        self.event_handler.process_event(server_url, event)
+                    except WebhookError as err:
+                        logging_extra["code"] = "Webhook error"
+                        logging_extra["keywords"] += ["exception", "error"]
+                        self.logger.error(f"An error occurred while processing event: {err}", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+                    except Exception as err:
+                        logging_extra["code"] = "Unexpected error"
+                        logging_extra["keywords"] += ["exception", "error"]
+                        self.logger.error(f"An unexpected error occurred while processing event: {err}", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+
+    def stop(self):
+        """Stops the loop to consume messages from Kafka.
+        """
+        self.is_running = False
+
 
 class WebhookResponse:
     """Basic response.
@@ -335,10 +341,11 @@ class KafkaEventHandler:
                         self.logger.debug("Publishing event.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
                         self.writer.run(webhook_event)
 
-                    except PublishError as err:
-                        logging_extra["code"] = "Publish error"
+                    except Exception as err:
+                        logging_extra["code"] = "Writing error"
                         logging_extra["keywords"] = ["WebhookEventHandler", "parse", "publish", "data", "process", "to aggregator", "exception", "error"]
                         self.logger.error("Something went wrong while publishing.")
+                        raise
 
             else:
                 logging_extra["code"] = "Not publishing"

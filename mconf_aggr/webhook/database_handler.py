@@ -19,7 +19,6 @@ from sqlalchemy import update
 import json
 
 from mconf_aggr.aggregator import cfg
-from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger, create_session_scope
 from mconf_aggr.webhook.database import DatabaseConnector
 from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings, UsersEvents, Servers, SharedSecrets, Institutions
@@ -1312,19 +1311,19 @@ class WebhookDataWriter():
             logging_extra["keywords"] = ["not persisting data", "error", "run", "thread", "hook", "database"]
             self.logger.error(f"Operational error on database. Not persisting data: {err}", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
-            raise CallbackError() from err
+            raise
         except WebhookDatabaseError as err:
             logging_extra["keywords"] = ["not persisting data", "error", "run", "thread", "hook", "database"]
 
             self.logger.error(f"An error occurred while persisting data. Not persisting data: {err}", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
-            raise CallbackError() from err
+            raise
         except Exception as err:
             logging_extra["keywords"] = ["not persisting data", "error", "run", "thread", "hook", "database"]
 
             self.logger.error(f"Unknown error on database handler. Not persisting data: {err}", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
 
-            raise CallbackError() from err
+            raise
 
 
 class AuthenticationHandler:

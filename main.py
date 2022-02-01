@@ -17,7 +17,6 @@ from mconf_aggr.webhook.database_handler import WebhookDataWriter
 from mconf_aggr.webhook.event_listener import KafkaEventHandler, KafkaEventConsumer, AuthMiddleware
 from mconf_aggr.webhook.probe_listener import LivenessProbeListener, ReadinessProbeListener
 from mconf_aggr.webhook.hook_register import WebhookRegister
-from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
 from mconf_aggr.aggregator.utils import signal_handler
 
 
@@ -31,31 +30,14 @@ app = falcon.API()
 req_opt = app.req_options
 req_opt.auto_parse_form_urlencoded = True
 
-
-route = cfg.config["MCONF_WEBHOOK_ROUTE"]
-
-channel = "webhooks"
 webhook_writer = WebhookDataWriter()
-aggregator = Aggregator()
 
 database = DatabaseConnector()
 
 database.connect()
 
-aggregator.register_callback(webhook_writer, channel=channel)
-
 livenessProbe = LivenessProbeListener()
 readinessProbe = ReadinessProbeListener()
-
-try:
-    aggregator.setup()
-
-    # Create the signal handling for graceful shutdown
-    gevent.signal_handler(signal.SIGTERM, signal_handler, aggregator, livenessProbe, signal.SIGTERM)
-except SetupError:
-    sys.exit(1)
-
-publisher = aggregator.publisher
 
 event_handler = KafkaEventHandler(webhook_writer)
 
@@ -76,5 +58,7 @@ if should_register:
     webhook_register.create_hooks()
 
 hook.start()
+
+gevent.signal_handler(signal.SIGTERM, signal_handler, hook, livenessProbe, signal.SIGTERM)
 
 database.close()
