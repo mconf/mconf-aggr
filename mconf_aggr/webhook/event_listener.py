@@ -206,6 +206,7 @@ class KafkaEventConsumer(threading.Thread):
         """Stops the loop to consume messages from Kafka.
         """
         self.is_running = False
+        self.consumer.close()
 
 
 class WebhookResponse:
