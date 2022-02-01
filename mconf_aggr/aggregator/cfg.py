@@ -36,6 +36,10 @@ class EnvConfig:
         self._config["MCONF_WEBHOOK_AUTH_REQUIRED"] = to_bool(os.getenv("MCONF_WEBHOOK_AUTH_REQUIRED", "True"))
         self._config["MCONF_WEBHOOK_LOG_LEVEL"] = os.getenv("MCONF_WEBHOOK_LOG_LEVEL")
         self._config["MCONF_WEBHOOK_DEPRECATED_EVENTS"] = os.getenv("MCONF_WEBHOOK_DEPRECATED_EVENTS", "").replace(",", " ").split()
+        self._config["MCONF_WEBHOOK_KAFKA_HOST"] = os.getenv("MCONF_WEBHOOK_KAFKA_HOST")
+        self._config["MCONF_WEBHOOK_KAFKA_PORT"] = os.getenv("MCONF_WEBHOOK_KAFKA_PORT", "9092")
+        self._config["MCONF_WEBHOOK_KAFKA_GROUP"] = os.getenv("MCONF_WEBHOOK_KAFKA_GROUP", "mconf-aggr-webhook")
+        self._config["MCONF_WEBHOOK_KAFKA_TOPIC"] = os.getenv("MCONF_WEBHOOK_KAFKA_TOPIC", "mconf-webhook-events")
 
     def __getitem__(self, key):
         """Make accessing configurations easier."""
