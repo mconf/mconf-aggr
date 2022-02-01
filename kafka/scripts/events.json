@@ -31,11 +31,78 @@
     {
         "data": {
             "type": "event",
-            "id": "meeting-ended",
+            "id": "user-joined",
             "attributes": {
                 "meeting": {
                     "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
                     "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "user": {
+                    "internal-user-id": "w_kzhu5jtzceh9",
+                    "external-user-id": "w_kzhu5jtzceh9",
+                    "name": "User 780365",
+                    "role": "MODERATOR",
+                    "presenter": false
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "user-presenter-assigned",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "user": {
+                    "internal-user-id": "w_kzhu5jtzceh9",
+                    "external-user-id": "w_kzhu5jtzceh9"
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "user-audio-voice-enabled",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "user": {
+                    "internal-user-id": "w_kzhu5jtzceh9",
+                    "external-user-id": "w_kzhu5jtzceh9",
+                    "sharing-mic": true,
+                    "listening-only": false
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "user-presenter-unassigned",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "user": {
+                    "internal-user-id": "w_kzhu5jtzceh9",
+                    "external-user-id": "w_kzhu5jtzceh9",
+                    "name": "User 780365"
                 }
             },
             "event": {
@@ -52,42 +119,6 @@
                     "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
                     "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
                 }
-            },
-            "event": {
-                "ts": 1643033345870
-            }
-        }
-    },
-    {
-        "data": {
-            "type": "event",
-            "id": "rap-archive-ended",
-            "attributes": {
-                "meeting": {
-                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
-                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
-                },
-                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
-                "success": true,
-                "step-time": 843,
-                "recorded": true,
-                "duration": 3655
-            },
-            "event": {
-                "ts": 1643033345870
-            }
-        }
-    },
-    {
-        "data": {
-            "type": "event",
-            "id": "rap-archive-started",
-            "attributes": {
-                "meeting": {
-                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
-                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
-                },
-                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870"
             },
             "event": {
                 "ts": 1643033345870
@@ -118,6 +149,57 @@
                     "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
                     "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
                 }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "meeting-ended",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                }
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-archive-started",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870"
+            },
+            "event": {
+                "ts": 1643033345870
+            }
+        }
+    },
+    {
+        "data": {
+            "type": "event",
+            "id": "rap-archive-ended",
+            "attributes": {
+                "meeting": {
+                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
+                },
+                "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
+                "success": true,
+                "step-time": 843,
+                "recorded": true,
+                "duration": 3655
             },
             "event": {
                 "ts": 1643033345870
@@ -526,88 +608,6 @@
                     "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
                 },
                 "record-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870"
-            },
-            "event": {
-                "ts": 1643033345870
-            }
-        }
-    },
-    {
-        "data": {
-            "type": "event",
-            "id": "user-audio-voice-enabled",
-            "attributes": {
-                "meeting": {
-                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
-                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
-                },
-                "user": {
-                    "internal-user-id": "w_kzhu5jtzceh9",
-                    "external-user-id": "w_kzhu5jtzceh9",
-                    "sharing-mic": true,
-                    "listening-only": false
-                }
-            },
-            "event": {
-                "ts": 1643033345870
-            }
-        }
-    },
-    {
-        "data": {
-            "type": "event",
-            "id": "user-joined",
-            "attributes": {
-                "meeting": {
-                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
-                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
-                },
-                "user": {
-                    "internal-user-id": "w_kzhu5jtzceh9",
-                    "external-user-id": "w_kzhu5jtzceh9",
-                    "name": "User 780365",
-                    "role": "MODERATOR",
-                    "presenter": false
-                }
-            },
-            "event": {
-                "ts": 1643033345870
-            }
-        }
-    },
-    {
-        "data": {
-            "type": "event",
-            "id": "user-presenter-assigned",
-            "attributes": {
-                "meeting": {
-                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
-                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
-                },
-                "user": {
-                    "internal-user-id": "w_kzhu5jtzceh9",
-                    "external-user-id": "w_kzhu5jtzceh9"
-                }
-            },
-            "event": {
-                "ts": 1643033345870
-            }
-        }
-    },
-    {
-        "data": {
-            "type": "event",
-            "id": "user-presenter-unassigned",
-            "attributes": {
-                "meeting": {
-                    "internal-meeting-id": "7cc5a7fbea42f1f8d016f3359f071a0b0630dcf0-1643033345870",
-                    "external-meeting-id": "f921ebdc-296c-4591-98d3-ef1e4b07fc7f-1525456533"
-                },
-                "user": {
-                    "internal-user-id": "w_kzhu5jtzceh9",
-                    "external-user-id": "w_kzhu5jtzceh9",
-                    "name": "User 780365"
-                }
             },
             "event": {
                 "ts": 1643033345870
