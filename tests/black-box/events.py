@@ -1,6 +1,6 @@
-from Utility.utils import timestamp_now, post_event
+from utility.utils import timestamp_now, post_event
 
-def post_meeting_created(internal_meeting_id, external_meeting_id):
+def post_meeting_created(internal_meeting_id, external_meeting_id, shared_secret, institution):
     createJSON = {
         "data": {
             "type": "event",
@@ -20,7 +20,13 @@ def post_meeting_created(internal_meeting_id, external_meeting_id):
                             "voice-conf": "75393",
                             "dial-number": "613-555-1234",
                             "max-users": 0,
-                            "metadata": {"foo": "bar"}
+                            "metadata": {
+                                "foo": "bar",
+                                "mconf-secret-name": shared_secret.name,
+                                "mconf-shared-secret-guid": shared_secret.guid,
+                                "mconf-institution-name": institution.name,
+                                "mconf-institution-guid": institution.guid
+                            }
                         }
                     },
             "event": {"ts": timestamp_now()}
@@ -305,7 +311,7 @@ def post_rap_publish_ended_pv(internal_meeting_id, external_meeting_id, record_i
                         "metadata": {
                             "isBreakout": "false",
                             "meetingId": external_meeting_id,
-                            "meetingName": external_meeting_id
+                            "meetingName": external_meeting_id,
                         },
                         "playback": {
                             "format": "presentation_video",
@@ -465,7 +471,7 @@ def post_rap_publish_ended_rec(internal_meeting_id, external_meeting_id, record_
 
     post_event(rap_publish_ended_rec_json)
 
-def post_rap_publish_ended(internal_meeting_id, external_meeting_id, record_id):
+def post_rap_publish_ended(internal_meeting_id, external_meeting_id, record_id, shared_secret, institution):
     rap_publish_ended_json = {
         "data": {
             "type": "event",
@@ -489,7 +495,11 @@ def post_rap_publish_ended(internal_meeting_id, external_meeting_id, record_id):
                         "metadata": {
                             "isBreakout": "false",
                             "meetingId": external_meeting_id,
-                            "meetingName": external_meeting_id
+                            "meetingName": external_meeting_id,
+                            "mconf-secret-name": shared_secret.name,
+                            "mconf-shared-secret-guid": shared_secret.guid,
+                            "mconf-institution-name": institution.name,
+                            "mconf-institution-guid": institution.guid
                         },
                         "playback": {
                             "format": "presentation",
