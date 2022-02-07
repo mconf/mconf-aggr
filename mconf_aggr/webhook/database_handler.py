@@ -1098,6 +1098,9 @@ def _update_meeting(meetings_table):
 
 
 def _upsert_playback(records_table, event_playback):
+    if len(event_playback) == 0:
+        return records_table.playback
+
     playbacks = records_table.playback[:]
 
     for i, playback in enumerate(playbacks):
