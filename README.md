@@ -6,7 +6,7 @@
 
 > Note: You only have to do this once.
 
-This project is meant to work with version 3.6.0 of Python. Before we even start,
+This project is meant to work with version 3.9.10 of Python. Before we even start,
 we have to make sure that the right version is set. We highly suggest you to use
 a version manager such as `pyenv`. For instructions on how to
 install `pyenv`, check
@@ -18,12 +18,12 @@ Once `pyenv` is installed, do the following (considering you're in the
 project's root directory):
 
 ```
-$ pyenv install 3.6.0
-$ pyenv local 3.6.0
+$ pyenv install 3.9.10
+$ pyenv local 3.9.10
 $ pyenv rehash
 ```
 
-There should be now a file called `.python-version` with the content '_3.6.0_'.
+There should be now a file called `.python-version` with the content '_3.9.10_'.
 It is always good to check if the Python version has switched correctly:
 
 ```
@@ -33,7 +33,7 @@ $ python --version
 You should see an output like this:
 
 ```
-Python 3.6.0
+Python 3.9.10
 ```
 
 From now on, every Python-related command you use in this project (outside a virtual
