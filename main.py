@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 # falcon.API instances are callable WSGI apps.
 #app = falcon.API(middleware=AuthMiddleware())
-app = falcon.API()
+app = falcon.App()
 
 # Consume and merge request's contents into params.
 req_opt = app.req_options
