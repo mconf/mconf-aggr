@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.9.0
+* Update Python version to v3.9.10:
+    - Update modules with the latest versions.
+* Update load testing to support institutions and secrets:
+    - Rename some files out of the PEP 8 style guide;
+    - Update the configuration file to use JSON;
+    - Add institution and secret for a few events:
+        - `rap-publish-ended`
+        - `meeting-created`
+    - Remove configuration of identifiers:
+        - `internal_meeting_id`
+        - `external_meeting_id`
+        - `record_id`
+        - `internal_user_id`
+* Fix error which adds empty playbacks into database.
+
 ## 1.8.0
 * Log all requests for event handling.
 
