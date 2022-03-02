@@ -1,11 +1,11 @@
+from random import choice
 import sys
 import getopt
-import json
 import events
 import threading
 import time
 
-from Utility.config import Config
+from utility.config import Config
 
 def main(argv):
     times = 1
@@ -98,16 +98,17 @@ def send_load(randomize, interval):
 
 
 def run_meeting(cfg, interval):
-    events.post_meeting_created(cfg.internal_meeting_id, cfg.external_meeting_id)
+    events.post_meeting_created(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.shared_secret, cfg.institution)
     time.sleep(interval)
-    events.post_user_presenter_assigned(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.internal_user_id)
-    time.sleep(interval)
-    events.post_user_joined(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.internal_user_id)
-    time.sleep(interval)
-    events.post_user_presenter_unassigned(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.internal_user_id)
-    time.sleep(interval)
-    events.post_user_audio_voice_enabled(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.internal_user_id)
-    time.sleep(interval)
+    for _ in range(choice(range(5))):
+        events.post_user_presenter_assigned(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.internal_user_id)
+        time.sleep(interval)
+        events.post_user_joined(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.internal_user_id)
+        time.sleep(interval)
+        events.post_user_presenter_unassigned(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.internal_user_id)
+        time.sleep(interval)
+        events.post_user_audio_voice_enabled(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.internal_user_id)
+        time.sleep(interval)
     events.post_meeting_recording_changed(cfg.internal_meeting_id, cfg.external_meeting_id)
     time.sleep(interval)
     events.post_meeting_transfer_enabled(cfg.internal_meeting_id, cfg.external_meeting_id)
@@ -135,7 +136,7 @@ def run_recording(cfg, interval):
     time.sleep(interval)
     events.post_rap_publish_started(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
     time.sleep(interval)
-    events.post_rap_publish_ended(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
+    events.post_rap_publish_ended(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id, cfg.shared_secret, cfg.institution)
     time.sleep(interval)
     events.post_rap_post_publish_started(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
     time.sleep(interval)
