@@ -92,7 +92,7 @@ class AuthMiddleware:
 
             server_url = _normalize_server_url(server_url)
             token = req.get_header("Authorization")
-            www_authentication = ["Bearer realm=\"mconf-aggregator\""]
+            www_authentication = {'Bearer realm': '"mconf-aggregator"'}
 
             logging_extra["server"] = server_url
             if token is None:
