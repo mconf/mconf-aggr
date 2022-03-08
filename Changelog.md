@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.9.1
+* Fix error which doesn't handle the HTTPUnauthorized exception when the request is not authorized.
+
 ## 1.9.0
 * Update Python version to v3.9.10:
     - Update modules with the latest versions.
