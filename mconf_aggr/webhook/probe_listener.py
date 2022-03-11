@@ -52,10 +52,10 @@ class ProbeListener:
         resp : falcon.Response
         """
         if (self._ok()):
-            resp.body = "OK"
+            resp.text = "OK"
             resp.status = falcon.HTTP_200 # OK.
         else:
-            resp.body = "NOT OK"
+            resp.text = "NOT OK"
             resp.status = falcon.HTTP_503 # Service unavailable.
 
     def _ok(self):
