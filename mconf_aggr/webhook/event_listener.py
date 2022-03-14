@@ -86,8 +86,8 @@ class AuthMiddleware:
                     extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))
                 )
                 raise falcon.HTTPUnauthorized(
-                    "Domain required for authentication",
-                    "Provide a valid domain as part of the request"
+                    title="Domain required for authentication",
+                    description="Provide a valid domain as part of the request"
                 )
 
             server_url = _normalize_server_url(server_url)
@@ -103,9 +103,9 @@ class AuthMiddleware:
                     extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))
                 )
                 raise falcon.HTTPUnauthorized(
-                    "Authentication required",
-                    "Provide an authentication token as part of the request",
-                    www_authentication
+                    title="Authentication required",
+                    description="Provide an authentication token as part of the request",
+                    headers=www_authentication
                 )
 
             if not self._token_is_valid(server_url, token):
@@ -117,9 +117,9 @@ class AuthMiddleware:
                     extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"]))
                 )
                 raise falcon.HTTPUnauthorized(
-                    "Unable to validate authentication token",
-                    "The provided authentication token could not be validate",
-                    www_authentication
+                    title="Unable to validate authentication token",
+                    description="The provided authentication token could not be validate",
+                    headers=www_authentication
                 )
 
     def _token_is_valid(self, host, token, handler=None):
