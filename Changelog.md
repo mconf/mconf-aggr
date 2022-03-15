@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.9.2
+* Fix Falcon warnings about usage of deprecated methods:
+    - `falcon.HTTPUnauthorized` method updated to use keyword arguments instead of positional ones;
+    - Assignment on `falcon.response.body` property updated to `falcon.response.text`.
+
 ## 1.9.1
 * Fix error which doesn't handle the HTTPUnauthorized exception when the request is not authorized.
 
