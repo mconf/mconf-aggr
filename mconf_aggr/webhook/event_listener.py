@@ -196,18 +196,18 @@ class WebhookEventListener:
                 logging_extra["keywords"] += ["exception", "error"]
                 self.logger.error(f"An error occurred while processing event: {err}", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
                 response = WebhookResponse(str(err))
-                resp.body = json.dumps(response.error)
+                resp.text = json.dumps(response.error)
                 resp.status = falcon.HTTP_200
             except Exception as err:
                 logging_extra["code"] = "Unexpected error"
                 logging_extra["keywords"] += ["exception", "error"]
                 self.logger.error(f"An unexpected error occurred while processing event: {err}", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
                 response = WebhookResponse(str(err))
-                resp.body = json.dumps(response.error)
+                resp.text = json.dumps(response.error)
                 resp.status = falcon.HTTP_200
             else:
                 response = WebhookResponse("Event processed successfully")
-                resp.body = json.dumps(response.success)
+                resp.text = json.dumps(response.success)
                 resp.status = falcon.HTTP_200
 
 
