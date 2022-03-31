@@ -1,5 +1,8 @@
 #!/usr/bin/env python3.6
 
+import gevent
+gevent.monkey.patch_all()
+
 import json
 import logging
 import time
@@ -9,7 +12,6 @@ import os
 import signal
 
 import falcon
-import gevent
 
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.webhook.database import DatabaseConnector
