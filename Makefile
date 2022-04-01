@@ -1,3 +1,6 @@
+include .env
+export
+
 AGGR_PATH=$(shell pwd)
 IMAGE_WORKDIR=/usr/src/mconf-aggr
 LOGGING_PATH?=mconf_aggr/logging.json
@@ -8,8 +11,8 @@ NUMBER_VERSION?=$(shell cat .version | cut -d '-' -f 1)
 MAJOR_VERSION?=$(shell cat .version | cut -d '.' -f 1)
 STAGE_VERSION?=$(shell cat .version | sed -n -r "s/[^-]*-(.+)$$/\1/p")
 REVISION?=$(shell git rev-parse --short HEAD)
-IMAGE_NAME?=$(DOCKER_USERNAME)/$(REPOSITORY)
-IMAGE_VERSION?=$(FULL_VERSION)-$(REVISION)
+IMAGE_NAME=$(DOCKER_USERNAME)/$(REPOSITORY)
+IMAGE_VERSION=$(FULL_VERSION)-$(REVISION)
 
 run:
 	gunicorn main:app --bind=0.0.0.0:8000 --worker-class gevent
@@ -123,10 +126,17 @@ docker-prune:
 docker-clean: docker-rm-dangling docker-rm docker-prune
 
 test:
-	@python tests.py
+	poetry run python tests.py
 
-dep:
-	@pip install -r requirements.txt
+install_requisites_locally:
+	curl -sSL https://install.python-poetry.org | POETRY_HOME="" python3 -
+
+install_requisites_container:
+	curl -sSL https://install.python-poetry.org | python3 -
+	export PATH="${POETRY_HOME}/bin:${PATH}"
+
+install_deps:
+	poetry install --no-root ${INSTALL_DEPS_ARGS}
 
 html:
 	@make -C docs/ html
