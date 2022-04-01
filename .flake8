@@ -1,0 +1,14 @@
+[flake8]
+max-line-length = 88
+
+exclude =
+  __pycache__
+  .git
+  .venv
+  envs
+  log
+  scripts
+
+per-file-ignores =
+  # Ignore E501 (line too long) on tests
+  tests/*: E501

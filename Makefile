@@ -142,7 +142,8 @@ html:
 	@make -C docs/ html
 
 lint:
-	@flake8 --exclude=.tox
+	poetry run isort . --check-only
+	poetry run flake8
 
 .PHONY: clean
 clean: clean-pyc clean-build

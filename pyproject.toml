@@ -24,7 +24,10 @@ SQLAlchemy = "^1.4.31"
 urllib3 = "^1.26.5"
 
 [tool.poetry.dev-dependencies]
+black = "^22.3.0"
 debugpy = "^1.6.0"
+flake8 = "^4.0.1"
+isort = "^5.10.0"
 
 #
 # Tools
