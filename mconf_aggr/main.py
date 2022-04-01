@@ -1,30 +1,28 @@
 #!/usr/bin/env python3.6
 
-import json
 import logging
-import time
-import sys
-from urllib.parse import unquote
-import os
 import signal
+import sys
 
 import falcon
 import gevent
 
 import mconf_aggr.aggregator.cfg as cfg
+from mconf_aggr.aggregator.aggregator import Aggregator, SetupError
+from mconf_aggr.aggregator.utils import signal_handler
 from mconf_aggr.webhook.database import DatabaseConnector
 from mconf_aggr.webhook.database_handler import WebhookDataWriter
-from mconf_aggr.webhook.event_listener import WebhookEventHandler, WebhookEventListener, AuthMiddleware
-from mconf_aggr.webhook.probe_listener import LivenessProbeListener, ReadinessProbeListener
+from mconf_aggr.webhook.event_listener import WebhookEventHandler, WebhookEventListener
 from mconf_aggr.webhook.hook_register import WebhookRegister
-from mconf_aggr.aggregator.aggregator import Aggregator, SetupError, PublishError
-from mconf_aggr.aggregator.utils import signal_handler
-
+from mconf_aggr.webhook.probe_listener import (
+    LivenessProbeListener,
+    ReadinessProbeListener,
+)
 
 logger = logging.getLogger(__name__)
 
 # falcon.API instances are callable WSGI apps.
-#app = falcon.API(middleware=AuthMiddleware())
+# app = falcon.API(middleware=AuthMiddleware())
 app = falcon.App()
 
 # Consume and merge request's contents into params.
@@ -51,7 +49,9 @@ try:
     aggregator.setup()
 
     # Create the signal handling for graceful shutdown
-    gevent.signal_handler(signal.SIGTERM, signal_handler, aggregator, livenessProbe, signal.SIGTERM)
+    gevent.signal_handler(
+        signal.SIGTERM, signal_handler, aggregator, livenessProbe, signal.SIGTERM
+    )
 except SetupError:
     sys.exit(1)
 
