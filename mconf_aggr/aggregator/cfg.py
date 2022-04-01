@@ -1,5 +1,3 @@
-#!/usr/bin/env python3.6
-
 """This module provides a configuration class for aggregator.
 
 In order to be able to share configurations across the different components of
@@ -7,12 +5,12 @@ the aggregator, we provide a ``Config`` class. This class encapsulates all
 external information we need to adjust the aggregator functioning.
 A global object `config` is available for use in other modules.
 """
-import configparser
 import distutils.util
 import json
 import logging
 import logging.config
 import os
+
 
 class EnvConfig:
     def __init__(self):
@@ -25,23 +23,41 @@ class EnvConfig:
 
     def _load_env(self):
         # Default values.
-        self._config["MCONF_WEBHOOK_CALLBACK_URL"] = os.getenv("MCONF_WEBHOOK_CALLBACK_URL")
-        self._config["MCONF_WEBHOOK_SHOULD_REGISTER"] = to_bool(os.getenv("MCONF_WEBHOOK_SHOULD_REGISTER", "True"))
-        self._config["MCONF_WEBHOOK_DATABASE_HOST"] = os.getenv("MCONF_WEBHOOK_DATABASE_HOST")
-        self._config["MCONF_WEBHOOK_DATABASE_USER"] = os.getenv("MCONF_WEBHOOK_DATABASE_USER")
-        self._config["MCONF_WEBHOOK_DATABASE_PASSWORD"] = os.getenv("MCONF_WEBHOOK_DATABASE_PASSWORD")
-        self._config["MCONF_WEBHOOK_DATABASE_DATABASE"] = os.getenv("MCONF_WEBHOOK_DATABASE_DATABASE")
-        self._config["MCONF_WEBHOOK_DATABASE_PORT"] = os.getenv("MCONF_WEBHOOK_DATABASE_PORT") or "5432"
+        self._config["MCONF_WEBHOOK_CALLBACK_URL"] = os.getenv(
+            "MCONF_WEBHOOK_CALLBACK_URL"
+        )
+        self._config["MCONF_WEBHOOK_SHOULD_REGISTER"] = to_bool(
+            os.getenv("MCONF_WEBHOOK_SHOULD_REGISTER", "True")
+        )
+        self._config["MCONF_WEBHOOK_DATABASE_HOST"] = os.getenv(
+            "MCONF_WEBHOOK_DATABASE_HOST"
+        )
+        self._config["MCONF_WEBHOOK_DATABASE_USER"] = os.getenv(
+            "MCONF_WEBHOOK_DATABASE_USER"
+        )
+        self._config["MCONF_WEBHOOK_DATABASE_PASSWORD"] = os.getenv(
+            "MCONF_WEBHOOK_DATABASE_PASSWORD"
+        )
+        self._config["MCONF_WEBHOOK_DATABASE_DATABASE"] = os.getenv(
+            "MCONF_WEBHOOK_DATABASE_DATABASE"
+        )
+        self._config["MCONF_WEBHOOK_DATABASE_PORT"] = (
+            os.getenv("MCONF_WEBHOOK_DATABASE_PORT") or "5432"
+        )
         self._config["MCONF_WEBHOOK_ROUTE"] = os.getenv("MCONF_WEBHOOK_ROUTE") or "/"
-        self._config["MCONF_WEBHOOK_AUTH_REQUIRED"] = to_bool(os.getenv("MCONF_WEBHOOK_AUTH_REQUIRED", "True"))
+        self._config["MCONF_WEBHOOK_AUTH_REQUIRED"] = to_bool(
+            os.getenv("MCONF_WEBHOOK_AUTH_REQUIRED", "True")
+        )
         self._config["MCONF_WEBHOOK_LOG_LEVEL"] = os.getenv("MCONF_WEBHOOK_LOG_LEVEL")
-        self._config["MCONF_WEBHOOK_DEPRECATED_EVENTS"] = os.getenv("MCONF_WEBHOOK_DEPRECATED_EVENTS", "").replace(",", " ").split()
+        self._config["MCONF_WEBHOOK_DEPRECATED_EVENTS"] = (
+            os.getenv("MCONF_WEBHOOK_DEPRECATED_EVENTS", "").replace(",", " ").split()
+        )
 
     def __getitem__(self, key):
         """Make accessing configurations easier."""
         try:
             value = self._config[key]
-        except KeyError as e:
+        except KeyError:
             value = None
             print("Invalid key: {}".format(key))  # Logger is not ready yet.
         finally:
@@ -78,10 +94,11 @@ def setup_logging(log_level, logging_config_file=None):
     """
     path = logging_config_file or _get_config_path("logging.json")
     if os.path.exists(path):
-        with open(path, 'rt') as f:
+        with open(path, "rt") as f:
             log_config = json.load(f)
 
-        if log_level: log_config["root"]["level"] = log_level.upper()
+        if log_level:
+            log_config["root"]["level"] = log_level.upper()
         logging.config.dictConfig(log_config)
     else:
         print(f"WARN: Check the logging filepath: {path}")

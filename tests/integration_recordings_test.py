@@ -10,7 +10,7 @@ class RecordingsTest(unittest.TestCase):
         cls.engine = IntegrationEngine(
             token="my-authorization-token",
             database_uri="postgresql://mconf:postgres@192.168.122.1/mconf",
-            delay=2
+            delay=2,
         )
 
     def test_01_meeting_created(self):
@@ -34,12 +34,10 @@ class RecordingsTest(unittest.TestCase):
                             "voice-conf": "71096",
                             "dial-number": "613-555-1234",
                             "max-users": 0,
-                            "metadata": {}
+                            "metadata": {},
                         }
                     },
-                    "event": {
-                        "ts": 1535121789919
-                    }
+                    "event": {"ts": 1535121789919},
                 }
             }
         ]
@@ -47,9 +45,14 @@ class RecordingsTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]['data']['attributes']['meeting']['internal-meeting-id']
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
+                "internal-meeting-id"
+            ]
 
-            meetings, meetings_events = self.engine.meetings_meetings_events_by_meeting_id(internal_meeting_id)
+            (
+                meetings,
+                meetings_events,
+            ) = self.engine.meetings_meetings_events_by_meeting_id(internal_meeting_id)
 
             self.assertEqual(meetings.running, False)
             self.assertEqual(meetings.has_user_joined, False)
@@ -61,17 +64,43 @@ class RecordingsTest(unittest.TestCase):
             self.assertEqual(meetings.attendees, [])
 
             self.assertEqual(meetings_events.server_url, "https://localhost")
-            self.assertEqual(meetings_events.create_time, event[0]['data']['attributes']['meeting']['create-time'])
-            self.assertEqual(meetings_events.create_date, event[0]['data']['attributes']['meeting']['create-date'])
+            self.assertEqual(
+                meetings_events.create_time,
+                event[0]["data"]["attributes"]["meeting"]["create-time"],
+            )
+            self.assertEqual(
+                meetings_events.create_date,
+                event[0]["data"]["attributes"]["meeting"]["create-date"],
+            )
             self.assertEqual(meetings_events.start_time, None)
             self.assertEqual(meetings_events.end_time, None)
-            self.assertEqual(meetings_events.internal_meeting_id, event[0]['data']['attributes']['meeting']['internal-meeting-id'])
-            self.assertEqual(meetings_events.external_meeting_id, event[0]['data']['attributes']['meeting']['external-meeting-id'])
-            self.assertEqual(meetings_events.name, event[0]['data']['attributes']['meeting']['name'])
-            self.assertEqual(meetings_events.dial_number, event[0]['data']['attributes']['meeting']['dial-number'])
-            self.assertEqual(meetings_events.moderator_pw, event[0]['data']['attributes']['meeting']['moderator-pass'])
-            self.assertEqual(meetings_events.attendee_pw, event[0]['data']['attributes']['meeting']['viewer-pass'])
-            self.assertEqual(meetings_events.recording, event[0]['data']['attributes']['meeting']['record'])
+            self.assertEqual(
+                meetings_events.internal_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"],
+            )
+            self.assertEqual(
+                meetings_events.external_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["external-meeting-id"],
+            )
+            self.assertEqual(
+                meetings_events.name, event[0]["data"]["attributes"]["meeting"]["name"]
+            )
+            self.assertEqual(
+                meetings_events.dial_number,
+                event[0]["data"]["attributes"]["meeting"]["dial-number"],
+            )
+            self.assertEqual(
+                meetings_events.moderator_pw,
+                event[0]["data"]["attributes"]["meeting"]["moderator-pass"],
+            )
+            self.assertEqual(
+                meetings_events.attendee_pw,
+                event[0]["data"]["attributes"]["meeting"]["viewer-pass"],
+            )
+            self.assertEqual(
+                meetings_events.recording,
+                event[0]["data"]["attributes"]["meeting"]["record"],
+            )
             self.assertEqual(meetings_events.has_forcibly_ended, False)
             self.assertEqual(meetings_events.max_users, 0)
             self.assertEqual(meetings_events.is_breakout, False)
@@ -88,12 +117,10 @@ class RecordingsTest(unittest.TestCase):
                     "attributes": {
                         "meeting": {
                             "internal-meeting-id": "de175d1e1882a8c06b5315c075d03ea730ee73af-1535129295864",
-                            "external-meeting-id": "random-1625548"
+                            "external-meeting-id": "random-1625548",
                         }
                     },
-                    "event": {
-                        "ts": 1535122177435
-                    }
+                    "event": {"ts": 1535122177435},
                 }
             }
         ]
@@ -101,16 +128,26 @@ class RecordingsTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]['data']['attributes']['meeting']['internal-meeting-id']
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
+                "internal-meeting-id"
+            ]
 
             meetings = self.engine.meetings_by_meeting_id(internal_meeting_id)
 
             self.assertIsNone(meetings)
 
-            meetings_events = self.engine.meetings_events_by_meeting_id(internal_meeting_id)
+            meetings_events = self.engine.meetings_events_by_meeting_id(
+                internal_meeting_id
+            )
 
-            self.assertEqual(meetings_events.internal_meeting_id, event[0]['data']['attributes']['meeting']['internal-meeting-id'])
-            self.assertEqual(meetings_events.external_meeting_id, event[0]['data']['attributes']['meeting']['external-meeting-id'])
+            self.assertEqual(
+                meetings_events.internal_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"],
+            )
+            self.assertEqual(
+                meetings_events.external_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["external-meeting-id"],
+            )
 
     def test_03_sanity_started(self):
         event = [
@@ -121,12 +158,10 @@ class RecordingsTest(unittest.TestCase):
                     "attributes": {
                         "meeting": {
                             "internal-meeting-id": "de175d1e1882a8c06b5315c075d03ea730ee73af-1535129295864",
-                            "external-meeting-id": "random-1625548"
+                            "external-meeting-id": "random-1625548",
                         }
                     },
-                    "event": {
-                        "ts": 1535140287
-                    }
+                    "event": {"ts": 1535140287},
                 }
             }
         ]
@@ -134,12 +169,20 @@ class RecordingsTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]['data']['attributes']['meeting']['internal-meeting-id']
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
+                "internal-meeting-id"
+            ]
 
             recordings = self.engine.recordings_by_meeting_id(internal_meeting_id)
 
-            self.assertEqual(recordings.internal_meeting_id, event[0]['data']['attributes']['meeting']['internal-meeting-id'])
-            self.assertEqual(recordings.external_meeting_id, event[0]['data']['attributes']['meeting']['external-meeting-id'])
+            self.assertEqual(
+                recordings.internal_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"],
+            )
+            self.assertEqual(
+                recordings.external_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["external-meeting-id"],
+            )
             self.assertEqual(recordings.current_step, "rap-sanity-started")
             self.assertEqual(recordings.published, False)
 
@@ -152,29 +195,34 @@ class RecordingsTest(unittest.TestCase):
                     "attributes": {
                         "meeting": {
                             "internal-meeting-id": "de175d1e1882a8c06b5315c075d03ea730ee73af-1535129295864",
-                            "external-meeting-id": "random-1625548"
+                            "external-meeting-id": "random-1625548",
                         },
                         "success": True,
-                        "step-time": 243
+                        "step-time": 243,
                     },
-                    "event": {
-                        "ts": 1535140288
-                    }
+                    "event": {"ts": 1535140288},
                 }
             }
         ]
 
-
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]['data']['attributes']['meeting']['internal-meeting-id']
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
+                "internal-meeting-id"
+            ]
 
             recordings = self.engine.recordings_by_meeting_id(internal_meeting_id)
 
-            self.assertEqual(recordings.internal_meeting_id, event[0]['data']['attributes']['meeting']['internal-meeting-id'])
-            self.assertEqual(recordings.external_meeting_id, event[0]['data']['attributes']['meeting']['external-meeting-id'])
-            self.assertEqual(recordings.current_step, event[0]['data']['id'])
+            self.assertEqual(
+                recordings.internal_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"],
+            )
+            self.assertEqual(
+                recordings.external_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["external-meeting-id"],
+            )
+            self.assertEqual(recordings.current_step, event[0]["data"]["id"])
             self.assertEqual(recordings.published, False)
 
     def test_05_process_started(self):
@@ -186,30 +234,34 @@ class RecordingsTest(unittest.TestCase):
                     "attributes": {
                         "meeting": {
                             "internal-meeting-id": "de175d1e1882a8c06b5315c075d03ea730ee73af-1535129295864",
-                            "external-meeting-id": "random-1625548"
+                            "external-meeting-id": "random-1625548",
                         }
                     },
-                    "event": {
-                        "ts": 1535140318
-                    }
+                    "event": {"ts": 1535140318},
                 }
             }
         ]
 
-
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]['data']['attributes']['meeting']['internal-meeting-id']
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
+                "internal-meeting-id"
+            ]
 
             recordings = self.engine.recordings_by_meeting_id(internal_meeting_id)
 
-            self.assertEqual(recordings.internal_meeting_id, event[0]['data']['attributes']['meeting']['internal-meeting-id'])
-            self.assertEqual(recordings.external_meeting_id, event[0]['data']['attributes']['meeting']['external-meeting-id'])
-            self.assertEqual(recordings.current_step, event[0]['data']['id'])
+            self.assertEqual(
+                recordings.internal_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"],
+            )
+            self.assertEqual(
+                recordings.external_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["external-meeting-id"],
+            )
+            self.assertEqual(recordings.current_step, event[0]["data"]["id"])
             self.assertEqual(recordings.status, "processing")
             self.assertEqual(recordings.published, False)
-
 
     def test_06_process_ended(self):
         event = [
@@ -220,14 +272,12 @@ class RecordingsTest(unittest.TestCase):
                     "attributes": {
                         "meeting": {
                             "internal-meeting-id": "de175d1e1882a8c06b5315c075d03ea730ee73af-1535129295864",
-                            "external-meeting-id": "random-1625548"
+                            "external-meeting-id": "random-1625548",
                         },
                         "success": True,
-                        "step-time": 2060
+                        "step-time": 2060,
                     },
-                    "event": {
-                        "ts": 1535140320
-                    }
+                    "event": {"ts": 1535140320},
                 }
             }
         ]
@@ -235,16 +285,23 @@ class RecordingsTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]['data']['attributes']['meeting']['internal-meeting-id']
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
+                "internal-meeting-id"
+            ]
 
             recordings = self.engine.recordings_by_meeting_id(internal_meeting_id)
 
-            self.assertEqual(recordings.internal_meeting_id, event[0]['data']['attributes']['meeting']['internal-meeting-id'])
-            self.assertEqual(recordings.external_meeting_id, event[0]['data']['attributes']['meeting']['external-meeting-id'])
-            self.assertEqual(recordings.current_step, event[0]['data']['id'])
+            self.assertEqual(
+                recordings.internal_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"],
+            )
+            self.assertEqual(
+                recordings.external_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["external-meeting-id"],
+            )
+            self.assertEqual(recordings.current_step, event[0]["data"]["id"])
             self.assertEqual(recordings.status, "processed")
             self.assertEqual(recordings.published, False)
-
 
     def test_07_publish_started(self):
         event = [
@@ -255,12 +312,10 @@ class RecordingsTest(unittest.TestCase):
                     "attributes": {
                         "meeting": {
                             "internal-meeting-id": "de175d1e1882a8c06b5315c075d03ea730ee73af-1535129295864",
-                            "external-meeting-id": "random-1625548"
+                            "external-meeting-id": "random-1625548",
                         }
                     },
-                    "event": {
-                        "ts": 1535140355
-                    }
+                    "event": {"ts": 1535140355},
                 }
             }
         ]
@@ -268,13 +323,21 @@ class RecordingsTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]['data']['attributes']['meeting']['internal-meeting-id']
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
+                "internal-meeting-id"
+            ]
 
             recordings = self.engine.recordings_by_meeting_id(internal_meeting_id)
 
-            self.assertEqual(recordings.internal_meeting_id, event[0]['data']['attributes']['meeting']['internal-meeting-id'])
-            self.assertEqual(recordings.external_meeting_id, event[0]['data']['attributes']['meeting']['external-meeting-id'])
-            self.assertEqual(recordings.current_step, event[0]['data']['id'])
+            self.assertEqual(
+                recordings.internal_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"],
+            )
+            self.assertEqual(
+                recordings.external_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["external-meeting-id"],
+            )
+            self.assertEqual(recordings.current_step, event[0]["data"]["id"])
             self.assertEqual(recordings.published, False)
 
     def test_08_publish_ended(self):
@@ -286,7 +349,7 @@ class RecordingsTest(unittest.TestCase):
                     "attributes": {
                         "meeting": {
                             "internal-meeting-id": "de175d1e1882a8c06b5315c075d03ea730ee73af-1535129295864",
-                            "external-meeting-id": "random-1625548"
+                            "external-meeting-id": "random-1625548",
                         },
                         "success": True,
                         "step-time": 480,
@@ -297,7 +360,7 @@ class RecordingsTest(unittest.TestCase):
                             "metadata": {
                                 "meetingId": "random-1625548",
                                 "meetingName": "random-1625548",
-                                "isBreakout": "false"
+                                "isBreakout": "false",
                             },
                             "playback": {
                                 "format": "presentation",
@@ -311,14 +374,12 @@ class RecordingsTest(unittest.TestCase):
                                         }
                                     }
                                 },
-                                "size": 213541
+                                "size": 213541,
                             },
-                            "download": {}
-                        }
+                            "download": {},
+                        },
                     },
-                    "event": {
-                        "ts": 1535140356
-                    }
+                    "event": {"ts": 1535140356},
                 }
             }
         ]
@@ -326,12 +387,20 @@ class RecordingsTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]['data']['attributes']['meeting']['internal-meeting-id']
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
+                "internal-meeting-id"
+            ]
 
             recordings = self.engine.recordings_by_meeting_id(internal_meeting_id)
 
-            self.assertEqual(recordings.internal_meeting_id, event[0]['data']['attributes']['meeting']['internal-meeting-id'])
-            self.assertEqual(recordings.external_meeting_id, event[0]['data']['attributes']['meeting']['external-meeting-id'])
-            self.assertEqual(recordings.current_step, event[0]['data']['id'])
+            self.assertEqual(
+                recordings.internal_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"],
+            )
+            self.assertEqual(
+                recordings.external_meeting_id,
+                event[0]["data"]["attributes"]["meeting"]["external-meeting-id"],
+            )
+            self.assertEqual(recordings.current_step, event[0]["data"]["id"])
             self.assertEqual(recordings.status, "published")
             self.assertEqual(recordings.published, True)

@@ -1,12 +1,9 @@
-import logging
-
 from contextlib import contextmanager
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from mconf_aggr.aggregator import cfg
-from mconf_aggr.webhook.exceptions import DatabaseNotReadyError
 
 
 class DatabaseConnector:
@@ -20,6 +17,7 @@ class DatabaseConnector:
     When finished, one must call `close()` to definitely close the connection
     to the database (currently it does nothing).
     """
+
     Session = None
 
     @classmethod
@@ -45,13 +43,12 @@ class DatabaseConnector:
     def get_session_scope(cls):
         @contextmanager
         def session_scope(raise_exception=True):
-            """Provide a transactional scope around a series of operations.
-            """
+            """Provide a transactional scope around a series of operations."""
             session = cls.Session()
             try:
                 yield session
                 session.commit()
-            except:
+            except RuntimeError:
                 session.rollback()
                 if raise_exception:
                     raise

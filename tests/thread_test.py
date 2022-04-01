@@ -1,14 +1,13 @@
-import threading
 import unittest
 import unittest.mock as mock
 
-from mconf_aggr.aggregator.aggregator import SubscriberThread, Subscriber, Channel
+from mconf_aggr.aggregator.aggregator import Channel, Subscriber, SubscriberThread
 
 
 class TestPublisher(unittest.TestCase):
     def setUp(self):
         callback_mock = mock.Mock()
-        channel = Channel('channel_1')
+        channel = Channel("channel_1")
         subscriber = Subscriber(channel, callback_mock)
         self.thread = SubscriberThread(subscriber=subscriber, errorevent=None)
 
@@ -21,7 +20,7 @@ class TestPublisher(unittest.TestCase):
         try:
             self.assertTrue(self.thread.is_alive())
             self.assertFalse(self.thread._stopevent.is_set())
-        except:
+        except RuntimeError:
             raise
         finally:
             self.thread.exit()
@@ -32,14 +31,14 @@ class TestPublisher(unittest.TestCase):
     def test_run_callback(self):
         self.thread.start()
 
-        data  = "data"
+        data = "data"
         self.thread.subscriber.channel.publish(data)
 
         self.thread.exit()
 
         try:
             self.thread.subscriber.callback.run.assert_called_with(data)
-        except:
+        except RuntimeError:
             raise
         finally:
             self.thread.exit()

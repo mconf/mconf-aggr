@@ -44,8 +44,7 @@ class TestAggregator(unittest.TestCase):
         subscribers_1 = [mock.Mock().callback(cb) for cb in callbacks_1]
         subscribers_2 = [mock.Mock().callback(cb) for cb in callbacks_2]
 
-        self.aggregator.channels = {channel_1: subscribers_1,
-                                    channel_2: subscribers_2}
+        self.aggregator.channels = {channel_1: subscribers_1, channel_2: subscribers_2}
 
         self.assertEqual(len(self.aggregator.channels[channel_1]), 10)
         self.assertEqual(len(self.aggregator.channels[channel_2]), 10)

@@ -1,18 +1,18 @@
 import datetime
 
-from sqlalchemy import (BigInteger,
-                        Boolean,
-                        create_engine,
-                        Column,
-                        DateTime,
-                        ForeignKey,
-                        Integer,
-                        JSON,
-                        String,
-                        Enum)
+from sqlalchemy import (
+    JSON,
+    BigInteger,
+    Boolean,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    String,
+)
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import backref, relationship, validates
-
+from sqlalchemy.orm import relationship, validates
 
 """Base class from which we extend table classes.
 """
@@ -20,7 +20,7 @@ Base = declarative_base()
 
 """Status of a recording life-cycle.
 """
-STATUS = ('processing', 'processed', 'published', 'unpublished', 'deleted')
+STATUS = ("processing", "processed", "published", "unpublished", "deleted")
 
 """New data type in database.
 """
@@ -39,7 +39,8 @@ class Meetings(Base):
     id : Column of type Integer
         Primary key. Identifier of the table.
     meeting_event_id : Column of type Integer
-        Foreign Key. Identifier of the associated MeetingsEvents table (instatiated by id).
+        Foreign Key. Identifier of the associated MeetingsEvents
+        table (instatiated by id).
     created_at : Column of type DateTime
         Datetime of the meeting creation.
     updated_at : Column of type DateTime
@@ -89,6 +90,7 @@ class Meetings(Base):
     transfer_count : Column of type Integer
         Number of trasnfer users on the meeting.
     """
+
     __tablename__ = "meetings"
 
     id = Column(Integer, primary_key=True)
@@ -96,7 +98,9 @@ class Meetings(Base):
     meeting_event = relationship("MeetingsEvents")
 
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+    updated_at = Column(
+        DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
+    )
 
     running = Column(Boolean)
     has_user_joined = Column(Boolean)
@@ -114,27 +118,45 @@ class Meetings(Base):
     transfer = Column(Boolean)
     transfer_count = Column(Integer)
 
-
     def __repr__(self):
-     return ("<Meetings("
-            + "id=" + str(self.id)
-            + ", created_at=" + str(self.created_at)
-            + ", updated_at=" + str(self.updated_at)
-            + ", running=" + str(self.running)
-            + ", has_user_joined=" + str(self.has_user_joined)
-            + ", participant_count=" + str(self.participant_count)
-            + ", listener_count=" + str(self.listener_count)
-            + ", voice_participant_count=" + str(self.voice_participant_count)
-            + ", video_count=" + str(self.video_count)
-            + ", moderator_count=" + str(self.moderator_count)
-            + ", attendees=" + str(self.attendees)
-            + ", m_shared_secret_guid=" + str(self.m_shared_secret_guid)
-            + ", m_institution_guid=" + str(self.m_institution_guid)
-            + ", ext_meeting_id=" + str(self.ext_meeting_id)
-            + ", int_meeting_id=" + str(self.int_meeting_id)
-            + ", transfer=" + str(self.transfer)
-            + ", transfer_count=" + str(self.transfer_count)
-            + ")>")
+        return (
+            "<Meetings("
+            + "id="
+            + str(self.id)
+            + ", created_at="
+            + str(self.created_at)
+            + ", updated_at="
+            + str(self.updated_at)
+            + ", running="
+            + str(self.running)
+            + ", has_user_joined="
+            + str(self.has_user_joined)
+            + ", participant_count="
+            + str(self.participant_count)
+            + ", listener_count="
+            + str(self.listener_count)
+            + ", voice_participant_count="
+            + str(self.voice_participant_count)
+            + ", video_count="
+            + str(self.video_count)
+            + ", moderator_count="
+            + str(self.moderator_count)
+            + ", attendees="
+            + str(self.attendees)
+            + ", m_shared_secret_guid="
+            + str(self.m_shared_secret_guid)
+            + ", m_institution_guid="
+            + str(self.m_institution_guid)
+            + ", ext_meeting_id="
+            + str(self.ext_meeting_id)
+            + ", int_meeting_id="
+            + str(self.int_meeting_id)
+            + ", transfer="
+            + str(self.transfer)
+            + ", transfer_count="
+            + str(self.transfer_count)
+            + ")>"
+        )
 
 
 class MeetingsEvents(Base):
@@ -217,22 +239,25 @@ class MeetingsEvents(Base):
             }
         ]
     """
+
     __tablename__ = "meetings_events"
 
     id = Column(Integer, primary_key=True)
 
-    shared_secret_guid = Column(String) # Index?
+    shared_secret_guid = Column(String)  # Index?
     shared_secret_name = Column(String(50))
     server_guid = Column(String)
     server_url = Column(String(255))
     institution_guid = Column(String)
 
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+    updated_at = Column(
+        DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
+    )
 
-    external_meeting_id = Column(String(255)) # Index?
-    internal_meeting_id = Column(String(255), unique=True) # Index?
-    parent_meeting_id = Column(String(255)) # Index?
+    external_meeting_id = Column(String(255))  # Index?
+    internal_meeting_id = Column(String(255), unique=True)  # Index?
+    parent_meeting_id = Column(String(255))  # Index?
     name = Column(String(255))
     create_time = Column(BigInteger)
     create_date = Column(String(50))
@@ -248,9 +273,9 @@ class MeetingsEvents(Base):
     max_users = Column(Integer)
     is_breakout = Column(Boolean)
     unique_users = Column(Integer)
-    meta_data = Column("metadata", JSON) # Name metadata is used by Base class.
+    meta_data = Column("metadata", JSON)  # Name metadata is used by Base class.
 
-    @validates('name')
+    @validates("name")
     def validate_code(self, key, value):
         max_len = getattr(self.__class__, key).prop.columns[0].type.length
         if value and len(value) > max_len:
@@ -258,35 +283,64 @@ class MeetingsEvents(Base):
         return value
 
     def __repr__(self):
-        return ("<MeetingsEvents("
-                + "id=" + str(self.id)
-                + ", shared_secret_guid=" + str(self. shared_secret_guid)
-                + ", shared_secret_name=" + str(self. shared_secret_name)
-                + ", server_guid=" + str(self. server_guid)
-                + ", server_url=" + str(self.server_url)
-                + ", institution_guid=" + str(self.institution_guid)
-                + ", created_at=" + str(self.created_at)
-                + ", updated_at=" + str(self.updated_at)
-                + ", external_meeting_id=" + str(self.external_meeting_id)
-                + ", internal_meeting_id=" + str(self.internal_meeting_id)
-                + ", parent_meeting_id=" + str(self.parent_meeting_id)
-                + ", name=" + str(self.name)
-                + ", create_time=" + str(self.create_time)
-                + ", create_date=" + str(self.create_date)
-                + ", voice_bridge=" + str(self.voice_bridge)
-                + ", dial_number=" + str(self.dial_number)
-                + ", attendee_pw=" + str(self.attendee_pw)
-                + ", moderator_pw=" + str(self.moderator_pw)
-                + ", duration=" + str(self.duration)
-                + ", recording=" + str(self.recording)
-                + ", has_forcibly_ended=" + str(self.has_forcibly_ended)
-                + ", start_time=" + str(self.start_time)
-                + ", end_time=" + str(self.end_time)
-                + ", max_users=" + str(self.max_users)
-                + ", is_breakout=" + str(self.is_breakout)
-                + ", unique_users=" + str(self.unique_users)
-                + ", meta_data=" + str(self.meta_data)
-                + ")>")
+        return (
+            "<MeetingsEvents("
+            + "id="
+            + str(self.id)
+            + ", shared_secret_guid="
+            + str(self.shared_secret_guid)
+            + ", shared_secret_name="
+            + str(self.shared_secret_name)
+            + ", server_guid="
+            + str(self.server_guid)
+            + ", server_url="
+            + str(self.server_url)
+            + ", institution_guid="
+            + str(self.institution_guid)
+            + ", created_at="
+            + str(self.created_at)
+            + ", updated_at="
+            + str(self.updated_at)
+            + ", external_meeting_id="
+            + str(self.external_meeting_id)
+            + ", internal_meeting_id="
+            + str(self.internal_meeting_id)
+            + ", parent_meeting_id="
+            + str(self.parent_meeting_id)
+            + ", name="
+            + str(self.name)
+            + ", create_time="
+            + str(self.create_time)
+            + ", create_date="
+            + str(self.create_date)
+            + ", voice_bridge="
+            + str(self.voice_bridge)
+            + ", dial_number="
+            + str(self.dial_number)
+            + ", attendee_pw="
+            + str(self.attendee_pw)
+            + ", moderator_pw="
+            + str(self.moderator_pw)
+            + ", duration="
+            + str(self.duration)
+            + ", recording="
+            + str(self.recording)
+            + ", has_forcibly_ended="
+            + str(self.has_forcibly_ended)
+            + ", start_time="
+            + str(self.start_time)
+            + ", end_time="
+            + str(self.end_time)
+            + ", max_users="
+            + str(self.max_users)
+            + ", is_breakout="
+            + str(self.is_breakout)
+            + ", unique_users="
+            + str(self.unique_users)
+            + ", meta_data="
+            + str(self.meta_data)
+            + ")>"
+        )
 
 
 class Recordings(Base):
@@ -345,12 +399,15 @@ class Recordings(Base):
     r_institution_guid : Column of the type String.
         Institution GUID.
     """
+
     __tablename__ = "recordings"
 
     id = Column(Integer, primary_key=True)
 
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+    updated_at = Column(
+        DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
+    )
 
     record_id = Column(String(255), unique=True)
     meeting_event_id = Column(Integer, ForeignKey("meetings_events.id"))
@@ -371,7 +428,7 @@ class Recordings(Base):
     raw_size = Column(BigInteger)
     current_step = Column(String(50))
 
-    meta_data = Column("metadata", JSON) # Name metadata is used by Base class.
+    meta_data = Column("metadata", JSON)  # Name metadata is used by Base class.
     playback = Column(JSON)
     download = Column(JSON)
     workflow = Column(JSON)
@@ -379,7 +436,7 @@ class Recordings(Base):
     r_shared_secret_guid = Column(String)
     r_institution_guid = Column(String)
 
-    @validates('name')
+    @validates("name")
     def validate_code(self, key, value):
         max_len = getattr(self.__class__, key).prop.columns[0].type.length
         if value and len(value) > max_len:
@@ -387,32 +444,58 @@ class Recordings(Base):
         return value
 
     def __repr__(self):
-     return ("<Recordings("
-            + "id=" + str(self.id)
-            + ", created_at=" + str(self.created_at)
-            + ", updated_at=" + str(self.updated_at)
-            + ", record_id=" + str(self.record_id)
-            + ", meeting_event_id=" + str(self.meeting_event_id)
-            + ", server_id=" + str(self.server_id)
-            + ", name=" + str(self.name)
-            + ", status=" + str(self.status)
-            + ", internal_meeting_id=" + str(self.internal_meeting_id)
-            + ", external_meeting_id=" + str(self.external_meeting_id)
-            + ", parent_meeting_id=" + str(self.parent_meeting_id)
-            + ", is_breakout=" + str(self.is_breakout)
-            + ", published=" + str(self.published)
-            + ", start_time=" + str(self.start_time)
-            + ", end_time=" + str(self.end_time)
-            + ", participants=" + str(self.participants)
-            + ", size=" + str(self.size)
-            + ", raw_size=" + str(self.raw_size)
-            + ", current_step=" + str(self.current_step)
-            + ", meta_data=" + str(self. meta_data)
-            + ", playback=" + str(self. playback)
-            + ", download=" + str(self. download)
-            + ", r_shared_secret_guid=" + str(self.r_shared_secret_guid)
-            + ", r_institution_guid=" + str(self.r_institution_guid)
-            + ")>")
+        return (
+            "<Recordings("
+            + "id="
+            + str(self.id)
+            + ", created_at="
+            + str(self.created_at)
+            + ", updated_at="
+            + str(self.updated_at)
+            + ", record_id="
+            + str(self.record_id)
+            + ", meeting_event_id="
+            + str(self.meeting_event_id)
+            + ", server_id="
+            + str(self.server_id)
+            + ", name="
+            + str(self.name)
+            + ", status="
+            + str(self.status)
+            + ", internal_meeting_id="
+            + str(self.internal_meeting_id)
+            + ", external_meeting_id="
+            + str(self.external_meeting_id)
+            + ", parent_meeting_id="
+            + str(self.parent_meeting_id)
+            + ", is_breakout="
+            + str(self.is_breakout)
+            + ", published="
+            + str(self.published)
+            + ", start_time="
+            + str(self.start_time)
+            + ", end_time="
+            + str(self.end_time)
+            + ", participants="
+            + str(self.participants)
+            + ", size="
+            + str(self.size)
+            + ", raw_size="
+            + str(self.raw_size)
+            + ", current_step="
+            + str(self.current_step)
+            + ", meta_data="
+            + str(self.meta_data)
+            + ", playback="
+            + str(self.playback)
+            + ", download="
+            + str(self.download)
+            + ", r_shared_secret_guid="
+            + str(self.r_shared_secret_guid)
+            + ", r_institution_guid="
+            + str(self.r_institution_guid)
+            + ")>"
+        )
 
 
 class UsersEvents(Base):
@@ -427,7 +510,8 @@ class UsersEvents(Base):
     id : Column of type Integer
         Primary key. Identifier of the table.
     meeting_event_id : Column of type Integer
-        Foreign Key. Identifier of the associated MeetingsEvents table (instatiated by id).
+        Foreign Key. Identifier of the associated MeetingsEvents
+        table (instatiated by id).
     created_at : Column of type DateTime
         Datetime of the user creation.
     updated_at : Column of type DateTime
@@ -447,6 +531,7 @@ class UsersEvents(Base):
     userdata : Column of type JSON
         Information about the user metadata.
     """
+
     __tablename__ = "users_events"
 
     id = Column(Integer, primary_key=True)
@@ -454,7 +539,9 @@ class UsersEvents(Base):
     meeting_event = relationship("MeetingsEvents")
 
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+    updated_at = Column(
+        DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
+    )
 
     name = Column(String(255))
     role = Column(String(50))
@@ -465,7 +552,7 @@ class UsersEvents(Base):
 
     userdata = Column("userdata", JSON)
 
-    @validates('name')
+    @validates("name")
     def validate_code(self, key, value):
         max_len = getattr(self.__class__, key).prop.columns[0].type.length
         if value and len(value) > max_len:
@@ -473,19 +560,32 @@ class UsersEvents(Base):
         return value
 
     def __repr__(self):
-        return ("<UsersEvents("
-                + "id=" + str(self.id)
-                + ", meeting_event_id=" + str(self.meeting_event_id)
-                + ", created_at=" + str(self.created_at)
-                + ", updated_at=" + str(self.updated_at)
-                + ", name=" + str(self.name)
-                + ", role=" + str(self.role)
-                + ", join_time=" + str(self.join_time)
-                + ", leave_time=" + str(self.leave_time)
-                + ", internal_user_id=" + str(self.internal_user_id)
-                + ", external_user_id=" + str(self.external_user_id)
-                + ", userdata=" + str(self.userdata)
-                + ")>")
+        return (
+            "<UsersEvents("
+            + "id="
+            + str(self.id)
+            + ", meeting_event_id="
+            + str(self.meeting_event_id)
+            + ", created_at="
+            + str(self.created_at)
+            + ", updated_at="
+            + str(self.updated_at)
+            + ", name="
+            + str(self.name)
+            + ", role="
+            + str(self.role)
+            + ", join_time="
+            + str(self.join_time)
+            + ", leave_time="
+            + str(self.leave_time)
+            + ", internal_user_id="
+            + str(self.internal_user_id)
+            + ", external_user_id="
+            + str(self.external_user_id)
+            + ", userdata="
+            + str(self.userdata)
+            + ")>"
+        )
 
 
 class Servers(Base):
@@ -507,6 +607,7 @@ class Servers(Base):
     ip : Column of type String
         Server IP.
     """
+
     __tablename__ = "servers"
 
     id = Column(Integer, primary_key=True)
@@ -517,7 +618,7 @@ class Servers(Base):
     ip = Column(String(15))
     enabled = Column(Boolean)
 
-    @validates('name')
+    @validates("name")
     def validate_code(self, key, value):
         max_len = getattr(self.__class__, key).prop.columns[0].type.length
         if value and len(value) > max_len:
@@ -525,14 +626,22 @@ class Servers(Base):
         return value
 
     def __repr__(self):
-        return ("<Servers("
-                + "id=" + str(self.id)
-                + ", guid=" + str(self.guid)
-                + ", institution_guid=" + str(self.institution_guid)
-                + ", name=" + str(self.name)
-                + ", secret=" + str(self.secret)
-                + ", ip=" + str(self.ip)
-                + ")>")
+        return (
+            "<Servers("
+            + "id="
+            + str(self.id)
+            + ", guid="
+            + str(self.guid)
+            + ", institution_guid="
+            + str(self.institution_guid)
+            + ", name="
+            + str(self.name)
+            + ", secret="
+            + str(self.secret)
+            + ", ip="
+            + str(self.ip)
+            + ")>"
+        )
 
 
 class SharedSecrets(Base):
@@ -560,6 +669,7 @@ class SharedSecrets(Base):
     updated_at : Column of type DateTime
         Last datetime the meeting was updated.
     """
+
     __tablename__ = "shared_secrets"
 
     id = Column(Integer, primary_key=True)
@@ -569,19 +679,32 @@ class SharedSecrets(Base):
     secret = Column(String)
     scope = Column(String)
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+    updated_at = Column(
+        DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
+    )
 
     def __repr__(self):
-        return ("<SharedSecrets("
-                + "id=" + str(self.id)
-                + ", guid=" + str(self.guid)
-                + ", institution_guid=" + str(self.institution_guid)
-                + ", name=" + str(self.name)
-                + ", secret=" + str(self.secret)
-                + ", scope=" + str(self.scope)
-                + ", created_at=" + str(self.created_at)
-                + ", updated_at=" + str(self.updated_at)
-                + ")>")
+        return (
+            "<SharedSecrets("
+            + "id="
+            + str(self.id)
+            + ", guid="
+            + str(self.guid)
+            + ", institution_guid="
+            + str(self.institution_guid)
+            + ", name="
+            + str(self.name)
+            + ", secret="
+            + str(self.secret)
+            + ", scope="
+            + str(self.scope)
+            + ", created_at="
+            + str(self.created_at)
+            + ", updated_at="
+            + str(self.updated_at)
+            + ")>"
+        )
+
 
 class Institutions(Base):
     """Table institutions in the database.
@@ -609,13 +732,22 @@ class Institutions(Base):
     guid = Column(String, unique=True)
     name = Column(String)
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
+    updated_at = Column(
+        DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
+    )
 
     def __repr__(self):
-        return ("<Institutions("
-                + "id=" + str(self.id)
-                + ", guid=" + str(self.guid)
-                + ", name=" + str(self.name)
-                + ", created_at=" + str(self.created_at)
-                + ", updated_at=" + str(self.updated_at)
-                + ")>")
+        return (
+            "<Institutions("
+            + "id="
+            + str(self.id)
+            + ", guid="
+            + str(self.guid)
+            + ", name="
+            + str(self.name)
+            + ", created_at="
+            + str(self.created_at)
+            + ", updated_at="
+            + str(self.updated_at)
+            + ")>"
+        )
