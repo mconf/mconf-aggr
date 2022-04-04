@@ -27,21 +27,35 @@ RUN poetry install --no-root
 COPY ./$APP_NAME ./$APP_NAME
 
 #
-# Stage: debug
+# Stage: build
 #
-FROM staging as debug
+FROM staging as build
 ARG APP_PATH
 
 WORKDIR $APP_PATH
+RUN poetry build -f wheel
+RUN poetry export -o constraints.txt --without-hashes
 
-ENV PORT=8000 \
-    DEBUG_PORT=5678
-EXPOSE $PORT $DEBUG_PORT
 
-ENV GEVENT_SUPPORT=True \
+#
+# Stage: production
+#
+FROM python:${PYTHON_VERSION}-slim-bullseye as production
+ARG APP_NAME
+ARG APP_PATH
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=false
 
-ENTRYPOINT ["poetry", "run"]
-CMD python -m debugpy --listen 0.0.0.0:${DEBUG_PORT} --wait-for-client \
-    -m gunicorn.app.wsgiapp mconf_aggr.main:app --bind=0.0.0.0:${PORT} \
-    --worker-class gevent --timeout 0
+WORKDIR $APP_PATH
+
+COPY --from=build $APP_PATH/dist/*.whl ./
+COPY --from=build $APP_PATH/constraints.txt ./
+
+RUN pip install ./$APP_NAME*.whl --constraint constraints.txt \
+    && rm *.whl constraints.txt
+
+ENV PORT=8000
+EXPOSE $PORT
+
+CMD gunicorn mconf_aggr.main:app --bind=0.0.0.0:${PORT} --worker-class gevent

@@ -37,38 +37,43 @@ restart:
 stop:
 	docker-compose -f production.yml stop ${SERVICE}
 
-docker-build:
-	docker build -f Dockerfile -t $(IMAGE_NAME):webhook-$(IMAGE_VERSION) .
-	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-latest
-
 docker-build-dev:
-	docker build -f Dockerfile.dev -t $(IMAGE_NAME):dev .
-	docker tag $(IMAGE_NAME):dev $(IMAGE_NAME):dev-latest
-	docker image rm `docker images -f dangling=true -a -q`
+	$(MAKE) .docker-build PROJECT_ENV=development TAG_NAME=dev IMAGE_VERSION=""
 
 docker-build-debug:
-	docker build -f Dockerfile.debug -t $(IMAGE_NAME):debug .
-	docker tag $(IMAGE_NAME):debug $(IMAGE_NAME):debug-latest
-	docker image rm `docker images -f dangling=true -a -q`
+	$(MAKE) .docker-build PROJECT_ENV=debug TAG_NAME=debug IMAGE_VERSION=""
 
-docker-run:
+docker-build-prod:
+	$(MAKE) .docker-build PROJECT_ENV=production TAG_NAME=webhook \
+		IMAGE_VERSION="-$(IMAGE_VERSION)"
+
+.docker-build:
+	docker build -f Dockerfile.${PROJECT_ENV} \
+		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
+		--build-arg POETRY_VERSION=$(POETRY_VERSION) \
+		--build-arg POETRY_HOME=${POETRY_HOME} \
+		-t $(IMAGE_NAME):$(TAG_NAME)$(IMAGE_VERSION) .
+	docker tag $(IMAGE_NAME):$(TAG_NAME)$(IMAGE_VERSION) \
+		$(IMAGE_NAME):$(TAG_NAME)-latest
+
+docker-run-dev:
+	$(MAKE) .docker-run PROJECT_ENV=development TAG_NAME=dev
+
+docker-run-debug:
+	$(MAKE) .docker-run PROJECT_ENV=debug TAG_NAME=debug
+
+docker-run-prod:
 	docker run --rm \
 	-v $(AGGR_PATH)/$(LOGGING_PATH):$(IMAGE_WORKDIR)/$(LOGGING_PATH) \
 	-p 8000:8000 \
 	--env-file=envs/webhook-env-file.env \
 	-ti $(IMAGE_NAME):webhook-$(IMAGE_VERSION)
 
-docker-run-dev:
+.docker-run:
 	AGGR_PATH=$(AGGR_PATH) \
-	IMAGE_NAME=$(IMAGE_NAME):dev \
-	MCONF_AGGR_WEBHOOK_IMAGE_VERSION=dev \
-	docker-compose -f development.yml up
-
-docker-run-debug:
-	AGGR_PATH=$(AGGR_PATH) \
-	IMAGE_NAME=$(IMAGE_NAME):debug \
-	MCONF_AGGR_WEBHOOK_IMAGE_VERSION=debug \
-	docker-compose -f debugging.yml up
+	IMAGE_NAME=$(IMAGE_NAME):$(TAG_NAME) \
+	MCONF_AGGR_WEBHOOK_IMAGE_VERSION=$(TAG_NAME) \
+	docker-compose -f $(PROJECT_ENV).yml up
 
 docker-tag:
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-$(NUMBER_VERSION)

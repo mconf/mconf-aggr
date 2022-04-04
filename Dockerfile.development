@@ -27,21 +27,17 @@ RUN poetry install --no-root
 COPY ./$APP_NAME ./$APP_NAME
 
 #
-# Stage: debug
+# Stage: development
 #
-FROM staging as debug
+FROM staging as development
 ARG APP_PATH
 
 WORKDIR $APP_PATH
 
-ENV PORT=8000 \
-    DEBUG_PORT=5678
-EXPOSE $PORT $DEBUG_PORT
+ENV PORT=8000
+EXPOSE $PORT
 
-ENV GEVENT_SUPPORT=True \
-    POETRY_VIRTUALENVS_IN_PROJECT=false
+ENV POETRY_VIRTUALENVS_IN_PROJECT=false
 
 ENTRYPOINT ["poetry", "run"]
-CMD python -m debugpy --listen 0.0.0.0:${DEBUG_PORT} --wait-for-client \
-    -m gunicorn.app.wsgiapp mconf_aggr.main:app --bind=0.0.0.0:${PORT} \
-    --worker-class gevent --timeout 0
+CMD gunicorn mconf_aggr.main:app --bind=0.0.0.0:${PORT} --worker-class gevent
