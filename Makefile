@@ -129,11 +129,15 @@ test:
 	poetry run python tests.py
 
 install_requisites_locally:
-	curl -sSL https://install.python-poetry.org | POETRY_HOME="" python3 -
+	curl -sSL https://install.python-poetry.org | POETRY_HOME="" POETRY_VIRTUALENVS_CREATE=true python3 -
 
-install_requisites_container:
+install_requisites:
 	curl -sSL https://install.python-poetry.org | python3 -
 	export PATH="${POETRY_HOME}/bin:${PATH}"
+
+install_deps_locally:
+	POETRY_VIRTUALENVS_CREATE=true \
+	poetry install --no-root ${INSTALL_DEPS_ARGS}
 
 install_deps:
 	poetry install --no-root ${INSTALL_DEPS_ARGS}

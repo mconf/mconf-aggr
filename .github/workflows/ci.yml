@@ -1,0 +1,50 @@
+name: Continuous Integration
+
+env:
+  PYTHON_VERSION: 3.9.10
+  POETRY_VIRTUALENVS_CREATE: false
+
+on:
+  push:
+    paths:
+      - '**.py'
+    branches: [ master, develop ]
+  pull_request:
+    paths:
+      - '**.py'
+    branches: [ master, develop ]
+
+jobs:
+  CI:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        rule: ["lint", "test"]
+
+    steps:
+      #
+      # Preparation
+      #
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install Requisites
+        run: |
+          make install_requisites
+          echo "$POETRY_HOME/bin" >> $GITHUB_PATH
+
+      - name: Install Dependencies
+        run: |
+          make install_deps
+
+      #
+      # Actual jobs
+      #
+      - name: Run job
+        run: |
+          make ${{ matrix.rule}}
