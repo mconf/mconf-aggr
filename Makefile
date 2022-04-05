@@ -1,5 +1,4 @@
 include .env
-export
 
 AGGR_PATH=$(shell pwd)
 IMAGE_WORKDIR=/usr/src/mconf-aggr
