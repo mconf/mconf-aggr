@@ -46,11 +46,20 @@ docker-build-prod:
 	$(MAKE) .docker-build PROJECT_ENV=production TAG_NAME=webhook \
 		IMAGE_VERSION="-$(IMAGE_VERSION)"
 
-.docker-build:
-	docker build -f Dockerfile.${PROJECT_ENV} \
+.docker-build-base:
+	docker build -f Dockerfile.base \
 		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
 		--build-arg POETRY_VERSION=$(POETRY_VERSION) \
 		--build-arg POETRY_HOME=${POETRY_HOME} \
+		--build-arg BASE_PATH=${BASE_PATH} \
+		--build-arg APP_NAME=${APP_NAME} \
+		-t mconf-aggr-base .
+
+.docker-build: .docker-build-base
+	docker build -f Dockerfile.${PROJECT_ENV} \
+		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
+		--build-arg BASE_PATH=${BASE_PATH} \
+		--build-arg APP_NAME=${APP_NAME} \
 		-t $(IMAGE_NAME):$(TAG_NAME)$(IMAGE_VERSION) .
 	docker tag $(IMAGE_NAME):$(TAG_NAME)$(IMAGE_VERSION) \
 		$(IMAGE_NAME):$(TAG_NAME)-latest

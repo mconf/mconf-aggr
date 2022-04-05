@@ -1,38 +1,18 @@
-ARG APP_NAME=mconf_aggr
-ARG APP_PATH=/usr/src/$APP_NAME
 ARG PYTHON_VERSION
 ARG POETRY_VERSION
 ARG MCONF_AGGR_ENV
+ARG BASE_PATH
+ARG APP_NAME
 
-#
-# Stage: staging
-#
-FROM python:${PYTHON_VERSION} as staging
-ARG APP_PATH
-ARG POETRY_VERSION
-ARG POETRY_HOME
-
-ENV POETRY_VERSION=$POETRY_VERSION \
-    POETRY_HOME=$POETRY_HOME \
-    POETRY_VIRTUALENVS_CREATE=false
-
-# Install Poetry using POETRY_VERSION and POETRY_HOME
-RUN curl -sSL https://install.python-poetry.org | python3 -
-ENV PATH="$POETRY_HOME/bin:$PATH"
-
-WORKDIR $APP_PATH
-COPY ./poetry.lock ./pyproject.toml ./
-RUN poetry install --no-root
-
-COPY ./$APP_NAME ./$APP_NAME
 
 #
 # Stage: build
 #
-FROM staging as build
-ARG APP_PATH
+FROM mconf-aggr-base as build
+ARG BASE_PATH
+ARG APP_NAME
 
-WORKDIR $APP_PATH
+WORKDIR $BASE_PATH/$APP_NAME
 RUN poetry build -f wheel
 RUN poetry export -o constraints.txt --without-hashes
 
@@ -41,13 +21,16 @@ RUN poetry export -o constraints.txt --without-hashes
 # Stage: production
 #
 FROM python:${PYTHON_VERSION}-slim-bullseye as production
+ARG BASE_PATH
 ARG APP_NAME
-ARG APP_PATH
+ARG APP_PATH=$BASE_PATH/$APP_NAME
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     POETRY_VIRTUALENVS_IN_PROJECT=false
 
 WORKDIR $APP_PATH
+
+RUN echo $APP_PATH
 
 COPY --from=build $APP_PATH/dist/*.whl ./
 COPY --from=build $APP_PATH/constraints.txt ./
