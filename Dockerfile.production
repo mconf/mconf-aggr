@@ -38,7 +38,7 @@ COPY --from=build $APP_PATH/constraints.txt ./
 RUN pip install ./$APP_NAME*.whl --constraint constraints.txt \
     && rm *.whl constraints.txt
 
-ENV PORT=8000
-EXPOSE $PORT
+EXPOSE 8000
 
-CMD gunicorn mconf_aggr.main:app --bind=0.0.0.0:${PORT} --worker-class gevent
+CMD ["gunicorn", "mconf_aggr.main:app", "--bind=0.0.0.0:8000", \
+     "--worker-class", "gevent"]

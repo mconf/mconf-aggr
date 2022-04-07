@@ -11,10 +11,10 @@ ARG APP_NAME
 
 WORKDIR $BASE_PATH/$APP_NAME
 
-ENV PORT=8000
-EXPOSE $PORT
+EXPOSE 8000
 
 ENV POETRY_VIRTUALENVS_IN_PROJECT=false
 
 ENTRYPOINT ["poetry", "run"]
-CMD gunicorn mconf_aggr.main:app --bind=0.0.0.0:${PORT} --worker-class gevent
+CMD ["gunicorn", "mconf_aggr.main:app", "--bind=0.0.0.0:8000", \
+     "--worker-class", "gevent"]

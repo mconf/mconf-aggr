@@ -11,14 +11,12 @@ ARG APP_NAME
 
 WORKDIR $BASE_PATH/$APP_NAME
 
-ENV PORT=8000 \
-    DEBUG_PORT=5678
-EXPOSE $PORT $DEBUG_PORT
+EXPOSE 8000 5678
 
 ENV GEVENT_SUPPORT=True \
     POETRY_VIRTUALENVS_IN_PROJECT=false
 
 ENTRYPOINT ["poetry", "run"]
-CMD python -m debugpy --listen 0.0.0.0:${DEBUG_PORT} --wait-for-client \
-    -m gunicorn.app.wsgiapp mconf_aggr.main:app --bind=0.0.0.0:${PORT} \
-    --worker-class gevent --timeout 0
+CMD ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", \
+     "--wait-for-client", "-m", "gunicorn.app.wsgiapp", "mconf_aggr.main:app", \
+     "--bind=0.0.0.0:8000", "--worker-class", "gevent", "--timeout", "0"]
