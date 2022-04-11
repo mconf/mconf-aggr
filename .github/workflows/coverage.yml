@@ -1,21 +1,17 @@
-name: Continuous Integration
+name: Tests and Coverage
 
 env:
   PYTHON_VERSION: 3.9.10
   POETRY_VIRTUALENVS_CREATE: false
 
 on:
-  push:
-    paths:
-      - '**.py'
-    branches: [ master, develop ]
   pull_request:
     paths:
       - '**.py'
     branches: [ master, develop ]
 
 jobs:
-  lint:
+  test_and_coverage:
     runs-on: ubuntu-latest
 
     steps:
@@ -43,4 +39,18 @@ jobs:
       #
       - name: Run job
         run: |
-          make lint
+          make ARGS="--coverage" test
+
+      - name: Python Cov
+        uses: orgoro/coverage@v2.1
+        with:
+          coverageFile: tests/report.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+
+
+
+
+
+
+
