@@ -1,3 +1,4 @@
+import argparse
 import importlib
 import json
 import logging
@@ -6,13 +7,15 @@ import re
 import sys
 import unittest
 
+import coverage
 
-def print_help():
-    print(
-        """usage: python test_suites.py [suite]\n
-suite\tA suite in 'test_suites' of config_tests.json.
-If no suite is supplied, all is implied."""
-    )
+
+class CustomArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        """Print help when error occurs and exit"""
+        self.print_help()
+        sys.stderr.write("\nError: %s\n" % message)
+        sys.exit(1)
 
 
 CONFIG_DIR = "tests"
@@ -33,6 +36,28 @@ def remove_ext(file):
     return os.path.splitext(file)[0]
 
 
+def get_cmd_args_parser():
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument(
+        "suite",
+        type=str,
+        help="A suite in 'test_suites' of config_tests.json. If no suite is supplied, "
+        "all is implied.",
+        nargs="?",
+    )
+    parser.add_argument(
+        "--coverage",
+        dest="enable_coverage",
+        action="store_true",
+        default=False,
+        help="Enable test coverage",
+    )
+
+    return parser
+
+
 if __name__ == "__main__":
     config_file = os.path.join(CONFIG_DIR, "tests.json")
     with open(config_file, "r") as f:
@@ -45,30 +70,29 @@ if __name__ == "__main__":
     if not should_log:
         logging.disable(logging.CRITICAL)
 
-    loader = unittest.TestLoader()
     suite = unittest.TestSuite()
 
     os.chdir(TESTS_DIR)
 
-    if len(sys.argv) == 1:
+    parser = get_cmd_args_parser()
+    args = parser.parse_args()
+
+    if args.suite is None:
         modules = [
             remove_ext(name)
             for name in os.listdir(os.getcwd())
             if is_test_file(name) and not is_integration_test_file(name)
         ]
-    elif len(sys.argv) == 2:
-        if is_test_file(sys.argv[1]):
-            modules = [remove_ext(sys.argv[1])]
+    else:
+        if is_test_file(args.suite):
+            modules = [remove_ext(args.suite)]
         else:
-            test_suite = str(sys.argv[1])
+            test_suite = str(args.suite)
             try:
                 modules = test_suites[test_suite]
             except KeyError:
                 print("Invalid suite '{}'.".format(test_suite))
                 sys.exit(1)
-    else:
-        print_help()
-        sys.exit(1)
 
     for module in modules:
         module = TESTS_DIR + "." + module
@@ -83,4 +107,13 @@ if __name__ == "__main__":
 
     runner = unittest.TextTestRunner(verbosity=verbosity)
 
+    if args.enable_coverage:
+        cov = coverage.Coverage(branch=True)
+        cov.start()
+
     runner.run(suite)
+
+    if args.enable_coverage:
+        cov.stop()
+        cov.save()
+        cov.xml_report()

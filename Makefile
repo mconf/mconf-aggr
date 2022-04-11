@@ -139,7 +139,7 @@ docker-prune:
 docker-clean: docker-rm-dangling docker-rm docker-prune
 
 test:
-	poetry run python tests.py
+	poetry run python tests.py ${ARGS}
 
 install_requisites_locally:
 	curl -sSL https://install.python-poetry.org | POETRY_HOME="" POETRY_VIRTUALENVS_CREATE=true python3 -
