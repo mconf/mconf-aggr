@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.9.3
+* Fix remaining Falcon warnings about deprecated methods;
+* Fix error on graceful shutdown with `gevent` monkey patch before all other imports.
+
 ## 1.9.2
 * Fix Falcon warnings about usage of deprecated methods:
     - `falcon.HTTPUnauthorized` method updated to use keyword arguments instead of positional ones;
