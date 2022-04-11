@@ -2,6 +2,7 @@ name: Continuous Integration
 
 env:
   PYTHON_VERSION: 3.9.10
+  POETRY_VERSION: 1.1.13
   POETRY_VIRTUALENVS_CREATE: false
 
 on:
@@ -29,10 +30,10 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install Requisites
-        run: |
-          make install_requisites
-          echo "$POETRY_HOME/bin" >> $GITHUB_PATH
+      - name: Run image
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
 
       - name: Install Dependencies
         run: |
