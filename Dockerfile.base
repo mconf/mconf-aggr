@@ -2,6 +2,7 @@ ARG PYTHON_VERSION
 ARG POETRY_VERSION
 ARG BASE_PATH
 ARG APP_NAME
+ARG DISABLE_DEV
 
 #
 # Stage: staging
@@ -11,6 +12,7 @@ ARG BASE_PATH
 ARG APP_NAME
 ARG POETRY_VERSION
 ARG POETRY_HOME
+ARG DISABLE_DEV
 
 ENV POETRY_VERSION=$POETRY_VERSION \
     POETRY_HOME=$POETRY_HOME \
@@ -22,6 +24,6 @@ ENV PATH="$POETRY_HOME/bin:$PATH"
 
 WORKDIR ${BASE_PATH}/${APP_NAME}
 COPY ./poetry.lock ./pyproject.toml ./
-RUN poetry install --no-root
+RUN poetry install --no-root $([ ${DISABLE_DEV:-0} = 1 ] && echo "--no-dev" )
 
 COPY ./$APP_NAME ./$APP_NAME

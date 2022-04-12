@@ -43,8 +43,18 @@ docker-build-debug:
 	$(MAKE) .docker-build PROJECT_ENV=debug TAG_NAME=debug IMAGE_VERSION=""
 
 docker-build-prod:
-	$(MAKE) .docker-build PROJECT_ENV=production TAG_NAME=webhook \
+	$(MAKE) DISABLE_DEV=1 .docker-build PROJECT_ENV=production TAG_NAME=webhook \
 		IMAGE_VERSION="-$(IMAGE_VERSION)"
+
+.docker-build:
+	$(MAKE) DISABLE_DEV=${DISABLE_DEV} .docker-build-base
+	docker build -f Dockerfile.${PROJECT_ENV} \
+		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
+		--build-arg BASE_PATH=${BASE_PATH} \
+		--build-arg APP_NAME=${APP_NAME} \
+		-t $(IMAGE_NAME):$(TAG_NAME)$(IMAGE_VERSION) .
+	docker tag $(IMAGE_NAME):$(TAG_NAME)$(IMAGE_VERSION) \
+		$(IMAGE_NAME):$(TAG_NAME)-latest
 
 .docker-build-base:
 	docker build -f Dockerfile.base \
@@ -53,16 +63,9 @@ docker-build-prod:
 		--build-arg POETRY_HOME=${POETRY_HOME} \
 		--build-arg BASE_PATH=${BASE_PATH} \
 		--build-arg APP_NAME=${APP_NAME} \
+		--build-arg DISABLE_DEV=${DISABLE_DEV} \
+		--no-cache \
 		-t mconf-aggr-base .
-
-.docker-build: .docker-build-base
-	docker build -f Dockerfile.${PROJECT_ENV} \
-		--build-arg PYTHON_VERSION=$(PYTHON_VERSION) \
-		--build-arg BASE_PATH=${BASE_PATH} \
-		--build-arg APP_NAME=${APP_NAME} \
-		-t $(IMAGE_NAME):$(TAG_NAME)$(IMAGE_VERSION) .
-	docker tag $(IMAGE_NAME):$(TAG_NAME)$(IMAGE_VERSION) \
-		$(IMAGE_NAME):$(TAG_NAME)-latest
 
 docker-run-dev:
 	$(MAKE) .docker-run PROJECT_ENV=development TAG_NAME=dev
