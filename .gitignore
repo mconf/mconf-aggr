@@ -107,5 +107,3 @@ tmp/
 
 # ngrok
 scripts/utils/ngrok
-
-constraints.txt
