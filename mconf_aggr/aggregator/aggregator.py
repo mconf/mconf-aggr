@@ -193,7 +193,6 @@ class SubscriberThread(threading.Thread):
                         logging_extra, keywords=json.dumps(logging_extra["keywords"])
                     ),
                 )
-                # self._errorevent.set()
 
         return
 
