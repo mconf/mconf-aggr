@@ -37,7 +37,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          make install_deps
+          make install-deps
 
       #
       # Actual jobs

@@ -141,18 +141,18 @@ docker-clean: docker-rm-dangling docker-rm docker-prune
 test:
 	poetry run python tests.py ${ARGS}
 
-install_requisites_locally:
+install-requisites-locally:
 	curl -sSL https://install.python-poetry.org | POETRY_HOME="" POETRY_VIRTUALENVS_CREATE=true python3 -
 
-install_requisites:
+install-requisites:
 	curl -sSL https://install.python-poetry.org | python3 -
 	export PATH="${POETRY_HOME}/bin:${PATH}"
 
-install_deps_locally:
+install-deps-locally:
 	POETRY_VIRTUALENVS_CREATE=true \
 	poetry install --no-root ${INSTALL_DEPS_ARGS}
 
-install_deps:
+install-deps:
 	poetry install --no-root ${INSTALL_DEPS_ARGS}
 
 html:
