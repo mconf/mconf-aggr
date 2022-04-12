@@ -36,7 +36,7 @@ COPY --from=build $APP_PATH/dist/*.whl ./
 COPY --from=build $APP_PATH/constraints.txt ./
 
 RUN pip install ./$APP_NAME*.whl --constraint constraints.txt \
-    && rm *.whl constraints.txt
+    && rm $(ls | grep -i '.whl$') constraints.txt
 
 EXPOSE 8000
 
