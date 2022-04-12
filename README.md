@@ -56,34 +56,30 @@ following line towards the end of your `.bashrc` or `bash_profile` file: `eval "
 ## Virtual environment
 
 In order to keep Python's version and related libraries under control, we use
-virtual environments as provided by `venv` (builtin module in Python since 3.4).
+virtual environments as provided by `poetry`.
 It is a pretty common pattern in development with Python.
 
-If you don't have a virtual envoriment directory set yet, create one and
-set `venv` to use it:
+Poetry will automatically create a virtual environment in the `.venv` folder,
+if it doesn't already exist, when running commands such as `poetry install` or
+`poetry shell`.
 
-```
-$ mkdir venv
-$ python -m venv ./venv
-```
-
-> Note: Remember to add this new directory to `.gitignore`.
+To install poetry, run `make install-requisites-locally`.
 
 To activate the virtual environment, run:
 
 ```
-$ source ./venv/bin/activate
+$ poetry shell
 ```
 
-It should now include a `(venv)` string at the beginning of your prompt. It
+It should now include a `(.venv)` string at the beginning of your prompt. It
 makes clear that you are running a virtual environment and so all your Python
-commands will be provided by `venv`.
+commands will be provided by `.venv`.
 
 From now on, every Python-related command you use in this project should be
-provided by `venv`. For instance, the output for the `which pip3` command should be similar to this:
+provided by `.venv`. For instance, the output for the `which pip3` command should be similar to this:
 
 ```
-/home/john_doe/myproject/venv/bin/pip3
+/home/john_doe/myproject/.venv/bin/pip3
 ```
 
 When running a script in the project, call Python explicitly as in `python main.py`.
@@ -95,19 +91,15 @@ If you run the script as an executable, it will check for system's Python
 To deactivate the session, simply run:
 
 ```
-$ deactivate
+$ exit
 ```
-
-To save the current dependencies, run:
-
-```
-$ pip freeze > requirements.txt
-```
+Note: DO NOT run `deactivate` (as you would with venv), otherwise you will have
+to kill poetry shell.
 
 To install the packages needed for development, run:
 
 ```
-$ pip install -r requirements.txt
+$ make install-deps-locally
 ```
 
 ## Dependencies
@@ -118,58 +110,18 @@ We are currently using the following third-party packages:
 * `sphinx` version 1.6.3 or later ([official site](http://www.sphinx-doc.org/en/stable/))
 * `sqlalchemy` version 1.2.0b2 or later ([official site](https://www.sqlalchemy.org/))
 
-They can be easily installed with:
-
-```
-$ pip3 install psycopg2
-$ pip3 install sphinx
-$ pip3 install sqlalchemy
-```
-
 To check if the installation ran successfuly, try to import them
 (in the project's root directoy):
 
 ```
 $ python -c "import psycopg2"
-$ python -c "import sphinx"
 $ python -c "import sqlalchemy"
 ```
 
-It should run successfuly.
+It should run successfuly (showing no output).
 
 > Note: _Sphinx_ is actually used to generate documentation. It makes little
 sense to import it.
-
-## Setup.py
-
-Although this package is not distributed by _Distutils_ (or available on _PyPI_),
-it does come with a `setup.py` script. It makes developing, testing, and
-(maybe in future) distributing easier.
-
-To install the package for development:
-
-```
-$ python setup.py develop
-```
-
-To really install the package:
-
-```
-$ python setup.py install
-```
-
-To run all tests in the `tests/` directory:
-
-```
-$ python setup.py test
-```
-
-Other commands are also available. Check this
-[Getting Started With setuptools and setup.py](https://pythonhosted.org/an_example_pypi_project/setuptools.html).
-
-> Note: Before proceeding, you may need to install it in develop mode with
-the command shown above. Some commands below may not work correctly as they fail
-to find the `mconf_aggr` package.
 
 ## Testing
 
@@ -235,13 +187,6 @@ To run all tests, you also have two approaches:
 $ python tests.py
 ```
 
-* Alternatively, as said in [Setup.py](#setup.py), you can also run all tests in
-the `tests/` directory by running:
-
-```
-$ python setup.py test
-```
-
 Note that this does not run the integration tests. To run them, you have to run
 the `integration` suite specifically.
 
@@ -276,7 +221,7 @@ your browser.
 ## Docker
 
 We also provide a bunch of Dockerfiles to build images of the applications. They are built
-upon the [python:3.6-alpine](https://hub.docker.com/_/python/) image.
+upon the [python](https://hub.docker.com/_/python/) image.
 
 Refer to the Makefile section below to further details on the recommended way to run Docker.
 
@@ -332,7 +277,7 @@ of the project.
 To build the development image manually, run:
 
 ```
-$ docker build -f Dockerfile.dev -t mconf/mconf-aggr:dev .
+$ docker build -f Dockerfile.development -t mconf/mconf-aggr:dev .
 ```
 
 It is also nice to tag it as _latest_:
@@ -417,6 +362,31 @@ To debug aggregator, for example:
 
 When it's done, make sure the image is built and run the container with makefile. After the container is up, the debugger will wait the attach to start running the service. Just click on "Start debugging" and a debug console should appears on your panel.
 
+## Linting and automatic formatation
+
+We use `flake8` for linting, and `black` and `isort` for formatation.
+To lint and format you can run `make lint` and `make format`.
+
+### Configuring linter and formatter with Visual Studio
+
+Here is an example of `.vscode/settings.json` to use with Visual Studio.
+```
+{
+  "python.formatting.provider": "black",
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.sortImports.args": ["--profile=black",],
+  "python.sortImports.path": "${workspaceFolder}/.venv/bin/isort",
+
+  "[python]": {
+    "editor.codeActionsOnSave": { "source.organizeImports": true },
+    "editor.formatOnSave": true,
+    "editor.formatOnSaveMode": "file",
+    "editor.rulers": [ 88 ],
+  },
+}
+```
+
 ## Makefile
 
 Some tasks can be done using the `make` utility. The most important ones are
@@ -448,9 +418,11 @@ shown below:
 * To prune Docker system: `$ make docker-prune`
 * To remove all dangling project-related Docker images and prune Docker syste: `$ make docker-clean`
 * To run the tests: `$ make test`
-* To install dependecies: `$ make dep`
+* To install project requisites: `$ make install-requisites-locally`
+* To install dependecies: `$ make install-deps-locally`
 * To build the HTML documentation: `$ make html`
 * To run the linter: `$ make lint`
+* To run the formatters: `$ make format`
 * To clean the project: `$ make clean`
 
 You can also overwrite some parameters used in Makefile. For instance, if you
