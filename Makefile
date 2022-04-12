@@ -162,6 +162,10 @@ lint:
 	poetry run isort . --check-only
 	poetry run flake8
 
+format:
+	poetry run black .
+	poetry run isort .
+
 .PHONY: clean
 clean: clean-pyc clean-build
 
