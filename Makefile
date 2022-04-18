@@ -64,7 +64,6 @@ docker-build-prod:
 		--build-arg BASE_PATH=${BASE_PATH} \
 		--build-arg APP_NAME=${APP_NAME} \
 		--build-arg DISABLE_DEV=${DISABLE_DEV} \
-		--no-cache \
 		-t mconf-aggr-base .
 
 docker-run-dev:
