@@ -634,8 +634,8 @@ class Aggregator:
                 self.remove_callback(subscriber.callback)
                 continue
 
-        errorevent = threading.Event()  # Shared Event between subscriber
-        # threads and error-waiting thread.
+        # Shared Event between subscriber threads and error-waiting thread.
+        errorevent = threading.Event()
         self.threads = []
 
         for subscriber in self.subscribers:
