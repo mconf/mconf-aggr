@@ -26,4 +26,4 @@ WORKDIR ${BASE_PATH}/${APP_NAME}
 COPY ./poetry.lock ./pyproject.toml ./
 RUN poetry install --no-root $([ ${DISABLE_DEV:-0} = 1 ] && echo "--no-dev" )
 
-COPY ./$APP_NAME ./$APP_NAME
+COPY ./mconf_aggr ./mconf_aggr
