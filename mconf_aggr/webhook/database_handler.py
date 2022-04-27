@@ -379,7 +379,7 @@ class MeetingEndedHandler(DatabaseEventHandler):
                     UsersEvents.meeting_event_id == meetings_events_table.id,
                     UsersEvents.leave_time is None,
                 )
-                .update({"leave_time": event.end_time})
+                .update({"leave_time": event.end_time}, synchronize_session="fetch")
             )
             # make sure the users events are updated before deleting the meeting
             self.session.commit()
