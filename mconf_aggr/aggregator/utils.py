@@ -1,8 +1,6 @@
 import time
 from contextlib import contextmanager
 
-import sqlalchemy
-
 
 @contextmanager
 def time_logger(logger_func, msg, extra=dict(), **kw_format):
@@ -29,7 +27,7 @@ def create_session_scope(Session):
         try:
             yield session
             session.commit()
-        except sqlalchemy.exc.SQLAlchemyError:
+        except Exception:
             session.rollback()
             if raise_exception:
                 raise

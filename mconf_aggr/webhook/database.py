@@ -1,6 +1,5 @@
 from contextlib import contextmanager
 
-import sqlalchemy
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -49,7 +48,7 @@ class DatabaseConnector:
             try:
                 yield session
                 session.commit()
-            except sqlalchemy.exc.SQLAlchemyError:
+            except Exception:
                 session.rollback()
                 if raise_exception:
                     raise
