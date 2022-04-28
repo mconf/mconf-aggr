@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.10.0
+* Add continuous integration:
+    - Add `poetry` for dependency management;
+    - Add `flake8` for linting and `black` for formatting:
+        - Refactor for fixing errors and warnings identified by linter or formatter.
+    - Add GitHub Actions workflows:
+        - `lint` applies the `flake8` with the `isort` on the code;
+        - `test` run all the unit tests and publish the test coverage in the GitHub PR (if the commit is in a PR).
+
 ## 1.9.3
 * Fix remaining Falcon warnings about deprecated methods;
 * Fix error on graceful shutdown with `gevent` monkey patch before all other imports.
