@@ -1,0 +1,29 @@
+ARG PYTHON_VERSION
+ARG POETRY_VERSION
+ARG BASE_PATH
+ARG APP_NAME
+ARG DISABLE_DEV
+
+#
+# Stage: staging
+#
+FROM python:${PYTHON_VERSION} as staging
+ARG BASE_PATH
+ARG APP_NAME
+ARG POETRY_VERSION
+ARG POETRY_HOME
+ARG DISABLE_DEV
+
+ENV POETRY_VERSION=$POETRY_VERSION \
+    POETRY_HOME=$POETRY_HOME \
+    POETRY_VIRTUALENVS_CREATE=false
+
+# Install Poetry using POETRY_VERSION and POETRY_HOME
+RUN curl -sSL https://install.python-poetry.org | python3 -
+ENV PATH="$POETRY_HOME/bin:$PATH"
+
+WORKDIR ${BASE_PATH}/${APP_NAME}
+COPY ./poetry.lock ./pyproject.toml ./
+RUN poetry install --no-root $([ ${DISABLE_DEV:-0} = 1 ] && echo "--no-dev" )
+
+COPY ./mconf_aggr ./mconf_aggr

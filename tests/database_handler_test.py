@@ -1,14 +1,40 @@
 import unittest
 import unittest.mock as mock
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock
 
 import sqlalchemy
 
+from mconf_aggr.aggregator import cfg
 from mconf_aggr.aggregator.aggregator import CallbackError
-from mconf_aggr.webhook.database_handler import *
-from mconf_aggr.webhook.event_mapper import *
-from mconf_aggr.webhook.exceptions import WebhookDatabaseError, InvalidWebhookEventError
+from mconf_aggr.webhook.database_handler import (
+    DatabaseConnector,
+    DataProcessor,
+    MeetingCreatedHandler,
+    MeetingEndedHandler,
+    MeetingTransferHandler,
+    RapHandler,
+    UserCamBroadcastEndHandler,
+    UserCamBroadcastStartHandler,
+    UserJoinedHandler,
+    UserLeftHandler,
+    UserListenOnlyDisabledHandler,
+    UserListenOnlyEnabledHandler,
+    UserPresenterAssignedHandler,
+    UserPresenterUnassignedHandler,
+    UsersEvents,
+    UserVoiceDisabledHandler,
+    UserVoiceEnabledHandler,
+    WebhookDataWriter,
+)
 from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents
+from mconf_aggr.webhook.event_mapper import (
+    MeetingCreatedEvent,
+    MeetingEndedEvent,
+    MeetingTransferEvent,
+    UserJoinedEvent,
+    WebhookEvent,
+)
+from mconf_aggr.webhook.exceptions import InvalidWebhookEventError, WebhookDatabaseError
 
 
 class SessionMock(mock.Mock):
@@ -49,19 +75,20 @@ class TestMeetingCreatedHandler(unittest.TestCase):
                 recording=False,
                 max_users=0,
                 is_breakout=False,
-                meta_data={
-                    "mock_data": "mock",
-                    "another_mock": "mocked"
-                }
-            )
+                meta_data={"mock_data": "mock", "another_mock": "mocked"},
+            ),
         )
 
     def test_meeting_created_handle(self):
         server = MagicMock()
         server.name = "mocked-server"
         server.guid = "mocked-guid"
-        self.handler.session.query().filter().first.side_effect = [False, 'mocked-secret', server, False]
-        
+        self.handler.session.query().filter().first.side_effect = [
+            False,
+            "mocked-secret",
+            server,
+            False,
+        ]
 
         self.handler.handle(self.event)
 
@@ -96,7 +123,9 @@ class TestMeetingCreatedHandler(unittest.TestCase):
         self.assertEqual(meetings_events.recording, False)
         self.assertEqual(meetings_events.max_users, 0)
         self.assertEqual(meetings_events.is_breakout, False)
-        self.assertEqual(meetings_events.meta_data, {"mock_data": "mock", "another_mock": "mocked"})
+        self.assertEqual(
+            meetings_events.meta_data, {"mock_data": "mock", "another_mock": "mocked"}
+        )
 
 
 class TestMeetingEndedHandler(unittest.TestCase):
@@ -111,8 +140,8 @@ class TestMeetingEndedHandler(unittest.TestCase):
             event=MeetingEndedEvent(
                 external_meeting_id="mock_e",
                 internal_meeting_id="mock_i",
-                end_time=1502810164922
-            )
+                end_time=1502810164922,
+            ),
         )
 
     def test_meeting_ended_no_meeting_event(self):
@@ -138,10 +167,13 @@ class TestMeetingEndedHandler(unittest.TestCase):
             recording=False,
             max_users=0,
             is_breakout=False,
-            meta_data={"mock_data": "mock", "another_mock": "mocked"}
+            meta_data={"mock_data": "mock", "another_mock": "mocked"},
         )
 
-        self.handler.session.query().filter().first.side_effect = [meetings_events, None]
+        self.handler.session.query().filter().first.side_effect = [
+            meetings_events,
+            None,
+        ]
 
         self.handler.handle(self.event)
 
@@ -163,7 +195,7 @@ class TestMeetingEndedHandler(unittest.TestCase):
             recording=False,
             max_users=0,
             is_breakout=False,
-            meta_data={"mock_data": "mock", "another_mock": "mocked"}
+            meta_data={"mock_data": "mock", "another_mock": "mocked"},
         )
 
         meetings = Meetings(
@@ -174,11 +206,13 @@ class TestMeetingEndedHandler(unittest.TestCase):
             voice_participant_count=0,
             video_count=0,
             moderator_count=0,
-            attendees=[]
+            attendees=[],
         )
 
         self.handler.session.query().filter().first.return_value = meetings_events
-        self.handler.session.query().get = mock.Mock(side_effect=[meetings_events, meetings])
+        self.handler.session.query().get = mock.Mock(
+            side_effect=[meetings_events, meetings]
+        )
 
         self.handler.handle(self.event)
 
@@ -196,16 +230,15 @@ class TestMeetingTransferHandler(unittest.TestCase):
         session_mock = SessionMock()
 
         self.handler = MeetingTransferHandler(session_mock)
-        
+
         self.enableEvent = WebhookEvent(
             event_type="meeting-transfer-enabled",
             server_url="localhost",
             event=MeetingTransferEvent(
                 external_meeting_id="mock_e",
                 internal_meeting_id="mock_i",
-                event_name="meeting_transfer_enabled"
-                
-            )
+                event_name="meeting_transfer_enabled",
+            ),
         )
 
         self.disableEvent = WebhookEvent(
@@ -214,11 +247,9 @@ class TestMeetingTransferHandler(unittest.TestCase):
             event=MeetingTransferEvent(
                 external_meeting_id="mock_e",
                 internal_meeting_id="mock_i",
-                event_name="meeting_transfer_disabled"
-                
-            )
+                event_name="meeting_transfer_disabled",
+            ),
         )
-
 
     def test_meeting_transfer_enable(self):
         meetings_events = MeetingsEvents(
@@ -236,7 +267,7 @@ class TestMeetingTransferHandler(unittest.TestCase):
             recording=False,
             max_users=0,
             is_breakout=False,
-            meta_data={"mock_data": "mock", "another_mock": "mocked"}
+            meta_data={"mock_data": "mock", "another_mock": "mocked"},
         )
 
         meetings = Meetings(
@@ -248,22 +279,23 @@ class TestMeetingTransferHandler(unittest.TestCase):
             voice_participant_count=0,
             video_count=0,
             moderator_count=0,
-            attendees=[]
+            attendees=[],
         )
 
         self.handler.session.query().filter().first.return_value = meetings_events
-        self.handler.session.query().get = mock.Mock(side_effect=[meetings_events, meetings])
+        self.handler.session.query().get = mock.Mock(
+            side_effect=[meetings_events, meetings]
+        )
 
         self.handler.handle(self.enableEvent)
 
         meetings = self.handler.session.get_first_add_arg
         self.handler.session.add.assert_called_once()
 
-
         self.assertEqual(meetings.transfer, True)
 
         self.handler.session.add.assert_called_once_with(meetings)
-    
+
     def test_meeting_transfer_disable(self):
         meetings_events = MeetingsEvents(
             server_url="localhost",
@@ -280,7 +312,7 @@ class TestMeetingTransferHandler(unittest.TestCase):
             recording=False,
             max_users=0,
             is_breakout=False,
-            meta_data={"mock_data": "mock", "another_mock": "mocked"}
+            meta_data={"mock_data": "mock", "another_mock": "mocked"},
         )
 
         meetings = Meetings(
@@ -292,23 +324,22 @@ class TestMeetingTransferHandler(unittest.TestCase):
             voice_participant_count=0,
             video_count=0,
             moderator_count=0,
-            attendees=[]
+            attendees=[],
         )
 
         self.handler.session.query().filter().first.return_value = meetings_events
-        self.handler.session.query().get = mock.Mock(side_effect=[meetings_events, meetings])
+        self.handler.session.query().get = mock.Mock(
+            side_effect=[meetings_events, meetings]
+        )
 
         self.handler.handle(self.disableEvent)
 
         meetings = self.handler.session.get_first_add_arg
         self.handler.session.add.assert_called_once()
 
-
         self.assertEqual(meetings.transfer, False)
 
         self.handler.session.add.assert_called_once_with(meetings)
-    
-
 
 
 class TestUserJoinedHandler(unittest.TestCase):
@@ -329,8 +360,8 @@ class TestUserJoinedHandler(unittest.TestCase):
                 external_meeting_id="madeup-external-meeting-id",
                 join_time=1502810164922,
                 is_presenter=True,
-                userdata={}
-            )
+                userdata={},
+            ),
         )
 
         self.transferEvent = WebhookEvent(
@@ -345,8 +376,8 @@ class TestUserJoinedHandler(unittest.TestCase):
                 external_meeting_id="madeup-external-meeting-id",
                 join_time=1502810164922,
                 is_presenter=True,
-                userdata={}
-            )
+                userdata={},
+            ),
         )
 
     def test_get_users_events(self):
@@ -357,8 +388,12 @@ class TestUserJoinedHandler(unittest.TestCase):
         self.assertEqual(users_events.name, self.event.event.name)
         self.assertEqual(users_events.role, self.event.event.role)
         self.assertEqual(users_events.join_time, self.event.event.join_time)
-        self.assertEqual(users_events.internal_user_id, self.event.event.internal_user_id)
-        self.assertEqual(users_events.external_user_id, self.event.event.external_user_id)
+        self.assertEqual(
+            users_events.internal_user_id, self.event.event.internal_user_id
+        )
+        self.assertEqual(
+            users_events.external_user_id, self.event.event.external_user_id
+        )
 
     def test_user_joined_no_meeting_event(self):
         self.handler.session.query().filter().first.return_value = None
@@ -384,10 +419,13 @@ class TestUserJoinedHandler(unittest.TestCase):
             recording=False,
             max_users=0,
             is_breakout=False,
-            meta_data={"mock_data": "mock", "another_mock": "mocked"}
+            meta_data={"mock_data": "mock", "another_mock": "mocked"},
         )
 
-        self.handler.session.query().filter().first.side_effect = [meetings_events, None]
+        self.handler.session.query().filter().first.side_effect = [
+            meetings_events,
+            None,
+        ]
 
         with self.assertRaises(WebhookDatabaseError):
             self.handler.handle(self.event)
@@ -408,7 +446,7 @@ class TestUserJoinedHandler(unittest.TestCase):
             recording=False,
             max_users=0,
             is_breakout=False,
-            meta_data={"mock_data": "mock", "another_mock": "mocked"}
+            meta_data={"mock_data": "mock", "another_mock": "mocked"},
         )
 
         meetings = Meetings(
@@ -419,10 +457,13 @@ class TestUserJoinedHandler(unittest.TestCase):
             voice_participant_count=0,
             video_count=0,
             moderator_count=0,
-            attendees=[]
+            attendees=[],
         )
 
-        self.handler.session.query().filter().first.side_effect = [meetings_events, meetings]
+        self.handler.session.query().filter().first.side_effect = [
+            meetings_events,
+            meetings,
+        ]
         self.handler.session.query().get.return_value = meetings
 
         self.handler.handle(self.event)
@@ -446,7 +487,7 @@ class TestUserJoinedHandler(unittest.TestCase):
             recording=False,
             max_users=0,
             is_breakout=False,
-            meta_data={"mock_data": "mock", "another_mock": "mocked"}
+            meta_data={"mock_data": "mock", "another_mock": "mocked"},
         )
 
         meetings = Meetings(
@@ -459,10 +500,13 @@ class TestUserJoinedHandler(unittest.TestCase):
             voice_participant_count=0,
             video_count=0,
             moderator_count=0,
-            attendees=[]
+            attendees=[],
         )
 
-        self.handler.session.query().filter().first.side_effect = [meetings_events, meetings]
+        self.handler.session.query().filter().first.side_effect = [
+            meetings_events,
+            meetings,
+        ]
         self.handler.session.query().get.return_value = meetings
 
         self.handler.handle(self.transferEvent)
@@ -505,12 +549,16 @@ class TestDataProcessor(unittest.TestCase):
         self.assertIsInstance(event_handler, UserVoiceEnabledHandler)
 
     def test_select_user_audio_listen_only_enabled(self):
-        event_handler = self.data_processor._select_handler("user-audio-listen-only-enabled")
+        event_handler = self.data_processor._select_handler(
+            "user-audio-listen-only-enabled"
+        )
 
         self.assertIsInstance(event_handler, UserListenOnlyEnabledHandler)
 
     def test_select_user_audio_listen_only_disabled(self):
-        event_handler = self.data_processor._select_handler("user-audio-listen-only-disabled")
+        event_handler = self.data_processor._select_handler(
+            "user-audio-listen-only-disabled"
+        )
 
         self.assertIsInstance(event_handler, UserListenOnlyDisabledHandler)
 
@@ -540,28 +588,38 @@ class TestDataProcessor(unittest.TestCase):
         self.assertIsInstance(event_handler, UserPresenterUnassignedHandler)
 
     def test_select_user_presenter_(self):
-        for event_type in ["rap-archive-started",
-                           "rap-sanity-started", "rap-sanity-ended",
-                           "rap-post-archive-started", "rap-post-archive-ended",
-                           "rap-post-process-started", "rap-post-process-ended",
-                           "rap-post-publish-started", "rap-post-publish-ended"]:
+        for event_type in [
+            "rap-archive-started",
+            "rap-sanity-started",
+            "rap-sanity-ended",
+            "rap-post-archive-started",
+            "rap-post-archive-ended",
+            "rap-post-process-started",
+            "rap-post-process-ended",
+            "rap-post-publish-started",
+            "rap-post-publish-ended",
+        ]:
             event_handler = self.data_processor._select_handler(event_type)
 
             self.assertIsInstance(event_handler, RapHandler)
 
     def test_select_invalid_event_type(self):
         with self.assertRaises(InvalidWebhookEventError):
-            event_handler = self.data_processor._select_handler("invalid-event-type")
+            self.data_processor._select_handler("invalid-event-type")
 
     def test_select_handler_called(self):
-        event = WebhookEvent(event_type="valid-event-type", event=None, server_url="localhost")
+        event = WebhookEvent(
+            event_type="valid-event-type", event=None, server_url="localhost"
+        )
         self.data_processor._select_handler = mock.MagicMock()
         self.data_processor.update(event)
 
         self.data_processor._select_handler.assert_called_once_with(event.event_type)
 
     def test_handle_called(self):
-        event = WebhookEvent(event_type="valid-event-type", event=None, server_url="localhost")
+        event = WebhookEvent(
+            event_type="valid-event-type", event=None, server_url="localhost"
+        )
         handler_mock = mock.Mock()
         handler_mock.handle = mock.MagicMock()
         self.data_processor._select_handler = mock.MagicMock(return_value=handler_mock)
@@ -580,14 +638,18 @@ class TestWebhookDataWriter(unittest.TestCase):
         self.webhook_data_writer = WebhookDataWriter(connector=self.connector_mock)
 
     def test_run_called_with_data(self):
-        with mock.patch('mconf_aggr.webhook.database_handler.DataProcessor') as data_processor_mock:
+        with mock.patch(
+            "mconf_aggr.webhook.database_handler.DataProcessor"
+        ) as data_processor_mock:
             data_processor_mock.update = mock.MagicMock()
             with self.assertRaises(CallbackError):
                 self.webhook_data_writer.run({})
                 data_processor_mock.update.assert_called_with({})
 
     def test_run_operational_error(self):
-        self.connector_mock.update = mock.MagicMock(side_effect=sqlalchemy.exc.OperationalError(None, None, None))
+        self.connector_mock.update = mock.MagicMock(
+            side_effect=sqlalchemy.exc.OperationalError(None, None, None)
+        )
 
         with self.assertRaises(CallbackError):
             self.webhook_data_writer.run(None)
@@ -613,8 +675,7 @@ class TestPostgresConnector(unittest.TestCase):
             "MCONF_WEBHOOK_DATABASE_PASSWORD": "madeup-password",
             "MCONF_WEBHOOK_DATABASE_HOST": "madeup-host",
             "MCONF_WEBHOOK_DATABASE_DATABASE": "madeup-database",
-            "MCONF_WEBHOOK_DATABASE_PORT": "madeup-port"
-
+            "MCONF_WEBHOOK_DATABASE_PORT": "madeup-port",
         }
 
     def setUp(self):
@@ -623,5 +684,5 @@ class TestPostgresConnector(unittest.TestCase):
     def test_build_uri(self):
         self.assertEqual(
             "postgresql://madeup-user:madeup-password@madeup-host:madeup-port/madeup-database",
-            self.postgres_connector._build_uri()
+            self.postgres_connector._build_uri(),
         )

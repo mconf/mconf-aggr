@@ -1,35 +1,40 @@
 import hashlib
-import logging
-import logaugment
 import json
-import requests
+import logging
 import urllib.parse
 from urllib.parse import urljoin
 from xml.etree import ElementTree
+
+import logaugment
+import requests
 
 from mconf_aggr.webhook.database_handler import WebhookServerHandler
 from mconf_aggr.webhook.exceptions import DatabaseNotReadyError
 
 
 class WebhookCreateError(Exception):
-    """Raised if any error occur during webhook callback registration.
-    """
+    """Raised if any error occur during webhook callback registration."""
+
     def __init__(self, reason="unexpected reason"):
         self.reason = reason
 
 
 class WebhookAlreadyExistsError(Exception):
-    """Raised if webhook callback registration generated a duplicate.
-    """
+    """Raised if webhook callback registration generated a duplicate."""
+
     def __init__(self):
         self.reason = "webhook already exists"
+
 
 class WebhookRegister:
     """Webhook callback register.
 
     This is class is responsible for registering webhook callbacks.
     """
-    def __init__(self, callback_url, servers=None, get_raw=False, hook_id=None, logger=None):
+
+    def __init__(
+        self, callback_url, servers=None, get_raw=False, hook_id=None, logger=None
+    ):
         """Constructor of the WebhookRegister.
 
         Parameters
@@ -48,11 +53,18 @@ class WebhookRegister:
         self._callback_url = callback_url
         self._get_raw = get_raw
         self._hook_id = hook_id
-        self._success_servers = [] # List of servers registered successfully.
-        self._failed_servers = [] # List of servers that failed to register.
+        self._success_servers = []  # List of servers registered successfully.
+        self._failed_servers = []  # List of servers that failed to register.
 
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.set(self.logger, code="", site="WebhookRegister", server="", event="", keywords="null")
+        logaugment.set(
+            self.logger,
+            code="",
+            site="WebhookRegister",
+            server="",
+            event="",
+            keywords="null",
+        )
 
         if servers:
             # Use the servers passed as argument.
@@ -77,52 +89,108 @@ class WebhookRegister:
         logging_extra = {
             "code": "Create webhooks",
             "site": "WebhookRegister.create_hooks",
-            "keywords": ["hook", "register", "create", "callback", 'server=""']
+            "keywords": ["hook", "register", "create", "callback", 'server=""'],
         }
-        self.logger.info(f"Creating hooks.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+        self.logger.info(
+            "Creating hooks.",
+            extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])),
+        )
         # Iterate over its dictionary of server_name-server_secret key-values.
         # We still use token and secret interchangeably.
         for server, token in self._servers.items():
             inner_server = WebhookServer(server, token)
 
-            logging_extra["keywords"] = ["hook", "register", "create", "callback", f"server={server}"]
+            logging_extra["keywords"] = [
+                "hook",
+                "register",
+                "create",
+                "callback",
+                f"server={server}",
+            ]
             # When creating a hook, i.e., registerting a webhook callback,
             # it may fail due to many different reasons.
             # If it fails, appends the failed server to the failed_servers list.
             # Otherwise, the server is good to go on the success_servers list.
             try:
-                _ = inner_server.create_hook(self._callback_url, self._get_raw, self._hook_id)
+                _ = inner_server.create_hook(
+                    self._callback_url, self._get_raw, self._hook_id
+                )
             except WebhookCreateError as err:
                 logging_extra["code"] = "Registration failed"
-                logging_extra["keywords"] = ["create error", "warning", "hook", "register", "create", "callback", f"server={server}"]
-                self.logger.warn(f"Webhook registration for server '{server}' failed ({err.reason}).", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+                logging_extra["keywords"] = [
+                    "create error",
+                    "warning",
+                    "hook",
+                    "register",
+                    "create",
+                    "callback",
+                    f"server={server}",
+                ]
+                self.logger.warn(
+                    f"Webhook registration for server '{server}' failed "
+                    f"({err.reason}).",
+                    extra=dict(
+                        logging_extra, keywords=json.dumps(logging_extra["keywords"])
+                    ),
+                )
                 self.failed_servers.append(server)
-            except WebhookAlreadyExistsError as err:
+            except WebhookAlreadyExistsError:
                 logging_extra["code"] = "Registration ok"
-                self.logger.info(f"Webhook registration for server '{server}' ok (webhook already exists).", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
-            except Exception as err:
+                self.logger.info(
+                    f"Webhook registration for server '{server}' ok "
+                    "(webhook already exists).",
+                    extra=dict(
+                        logging_extra, keywords=json.dumps(logging_extra["keywords"])
+                    ),
+                )
+            except RuntimeError:
                 logging_extra["code"] = "Registration failed for an unexpected reason"
-                logging_extra["keywords"] = ["unexpected", "exception", "warning", "hook", "register", "create", "callback", f"server={server}"]
-                self.logger.warn(f"Webhook registration for server '{server}' failed (unexpected reason).", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+                logging_extra["keywords"] = [
+                    "unexpected",
+                    "exception",
+                    "warning",
+                    "hook",
+                    "register",
+                    "create",
+                    "callback",
+                    f"server={server}",
+                ]
+                self.logger.warn(
+                    f"Webhook registration for server '{server}' failed "
+                    "(unexpected reason).",
+                    extra=dict(
+                        logging_extra, keywords=json.dumps(logging_extra["keywords"])
+                    ),
+                )
 
                 self.failed_servers.append(server)
             else:
                 logging_extra["code"] = "Registration ok"
-                self.logger.info(f"Webhook registration for server '{server}' ok.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+                self.logger.info(
+                    f"Webhook registration for server '{server}' ok.",
+                    extra=dict(
+                        logging_extra, keywords=json.dumps(logging_extra["keywords"])
+                    ),
+                )
 
                 self.success_servers.append(server)
-            logging_extra["keywords"] = [x for x in logging_extra["keywords"] if x not in ["warning"]]
+            logging_extra["keywords"] = [
+                x for x in logging_extra["keywords"] if x not in ["warning"]
+            ]
 
         logging_extra["code"] = "Registration ok"
         logging_extra["keywords"][-1] = 'server=""'
-        self.logger.info(f"Hooks registration done.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+        self.logger.info(
+            "Hooks registration done.",
+            extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])),
+        )
 
     def _fetch_servers_from_database(self):
         handler = WebhookServerHandler()
 
         try:
             servers = handler.servers()
-        except DatabaseNotReadyError as err:
+        except DatabaseNotReadyError:
             # If any known or unknown error occurred in the database,
             # create an empty dict.
             self._servers = dict()
@@ -134,8 +202,8 @@ class WebhookRegister:
 
 
 class WebhookServer:
-    """A single server to register webhook callback.
-    """
+    """A single server to register webhook callback."""
+
     def __init__(self, server, secret, logger=None):
         """Constructor of `WebhookServer`.
 
@@ -152,7 +220,14 @@ class WebhookServer:
         self._secret = secret
 
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.set(self.logger, code="", site="WebhookServer", server="", event="", keywords="null")
+        logaugment.set(
+            self.logger,
+            code="",
+            site="WebhookServer",
+            server="",
+            event="",
+            keywords="null",
+        )
 
     def create_hook(self, callback_url, get_raw=False, hook_id=None):
         """Register a webhook callback.
@@ -176,7 +251,15 @@ class WebhookServer:
         logging_extra = {
             "code": "Create webhooks",
             "site": "WebhookServer.create_hook",
-            "keywords": ["webhook", "hook", "register", "create", "callback", "single server", f"url={callback_url}"]
+            "keywords": [
+                "webhook",
+                "hook",
+                "register",
+                "create",
+                "callback",
+                "single server",
+                f"url={callback_url}",
+            ],
         }
 
         hook_url = self._build_create_hook_url()
@@ -184,12 +267,19 @@ class WebhookServer:
         if hook_id:
             params["hookID"] = hook_id
 
-        params["checksum"] = checksum("hooks/create", urllib.parse.urlencode(params), self._secret)
+        params["checksum"] = checksum(
+            "hooks/create", urllib.parse.urlencode(params), self._secret
+        )
 
         r = None
         try:
             r = requests.get(hook_url, params=params)
-            self.logger.debug(f"response from '{hook_url}': '{r.text}'.", extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+            self.logger.debug(
+                f"response from '{hook_url}': '{r.text}'.",
+                extra=dict(
+                    logging_extra, keywords=json.dumps(logging_extra["keywords"])
+                ),
+            )
         except requests.exceptions.ConnectionError as err:
             raise WebhookCreateError("connection error") from err
         except Exception as err:
@@ -204,7 +294,7 @@ class WebhookServer:
             except (WebhookCreateError, WebhookAlreadyExistsError) as err:
                 # Pass-through the known errors.
                 raise err
-            except Exception as err:
+            except RuntimeError:
                 # If it is an unexpected error, raises a generic webhook creation error.
                 raise WebhookCreateError()
 
@@ -237,8 +327,11 @@ def checksum(method, params, secret):
         SHA-1 of the string resulting of the concatenation of method, params and
         shared secret provided.
     """
-    # We need to make sure the strings are encoded as UTF-8 before calculating the SHA-1.
-    encoded_payload = method.encode("utf-8") + params.encode("utf-8") + secret.encode("utf-8")
+    # We need to make sure the strings are encoded as UTF-8 before calculating the
+    # SHA-1.
+    encoded_payload = (
+        method.encode("utf-8") + params.encode("utf-8") + secret.encode("utf-8")
+    )
     sha1_payload = hashlib.sha1(encoded_payload)
 
     # Converts and returns SHA-1 as str.
@@ -276,8 +369,12 @@ def parse_response(response):
             # If it can not find it, assign None to these variables.
             return_code_node = response_xml.find("returncode")
             message_key_node = response_xml.find("messageKey")
-            return_code = return_code_node.text if return_code_node is not None else None
-            message_key = message_key_node.text if message_key_node is not None else None
+            return_code = (
+                return_code_node.text if return_code_node is not None else None
+            )
+            message_key = (
+                message_key_node.text if message_key_node is not None else None
+            )
 
             # Below is a list of the possible errors that can occur when registering
             # a webhook callback.

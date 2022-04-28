@@ -1,30 +1,22 @@
-FROM python:3.9.10-alpine
+ARG PYTHON_VERSION
+ARG BASE_PATH
+ARG APP_NAME
 
-WORKDIR /usr/local
+#
+# Stage: debug
+#
+FROM mconf-aggr-base as  debug
+ARG BASE_PATH
+ARG APP_NAME
 
-COPY ./requirements_dev.txt /requirements_dev.txt
-
-RUN apk update && \
-    apk add postgresql-libs && \
-	apk add libpq && \
-    apk add --no-cache openssl && \
-    apk add --virtual .build-deps gcc musl-dev postgresql-dev 
-
-RUN pip install --prefix=/usr/local -r /requirements_dev.txt
-
-RUN apk --purge del .build-deps
-
-COPY ./mconf_aggr/__init__.py /usr/src/mconf-aggr/mconf_aggr/__init__.py
-COPY ./mconf_aggr/aggregator/ /usr/src/mconf-aggr/mconf_aggr/aggregator/
-COPY ./mconf_aggr/webhook/ /usr/src/mconf-aggr/mconf_aggr/webhook/
-COPY ./main.py /usr/src/mconf-aggr/main.py
-
-WORKDIR /usr/src/mconf-aggr/
+WORKDIR $BASE_PATH/$APP_NAME
 
 EXPOSE 8000 5678
 
-RUN pip install --prefix=/usr/local debugpy
+ENV GEVENT_SUPPORT=True \
+    POETRY_VIRTUALENVS_IN_PROJECT=false
 
-ENV GEVENT_SUPPORT=True
-
-CMD python -m debugpy --listen 0.0.0.0:5678 --wait-for-client -m gunicorn.app.wsgiapp main:app --bind=0.0.0.0:8000 --worker-class gevent --timeout 0
+ENTRYPOINT ["poetry", "run"]
+CMD ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678", \
+     "--wait-for-client", "-m", "gunicorn.app.wsgiapp", "mconf_aggr.main:app", \
+     "--bind=0.0.0.0:8000", "--worker-class", "gevent", "--timeout", "0"]

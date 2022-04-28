@@ -2,18 +2,15 @@
 
 It will receive, validate, parse and send the parsed data to be processed.
 """
-import logging
-import logaugment
 import json
+import logging
 
 import falcon
+import logaugment
 import sqlalchemy
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 
 from mconf_aggr.webhook.database import DatabaseConnector
 from mconf_aggr.webhook.exceptions import DatabaseNotReadyError
-
 
 """Falcon follows the REST architectural style, meaning (among
 other things) that you think in terms of resources and state
@@ -29,6 +26,7 @@ class ProbeListener:
     This class might have more methods if needed, on the format on_*.
     It could handle POST, GET, PUT and DELETE requests as well.
     """
+
     def __init__(self, logger=None):
         """Constructor of the ProbeListener.
 
@@ -38,7 +36,14 @@ class ProbeListener:
             If not supplied, it will instantiate a new logger from __name__.
         """
         self.logger = logger or logging.getLogger(__name__)
-        logaugment.set(self.logger, code="", site="ProbeListener", server="", event="", keywords="null")
+        logaugment.set(
+            self.logger,
+            code="",
+            site="ProbeListener",
+            server="",
+            event="",
+            keywords="null",
+        )
 
     def on_get(self, req, resp):
         """Handle GET requests.
@@ -51,31 +56,28 @@ class ProbeListener:
         req : falcon.Request
         resp : falcon.Response
         """
-        if (self._ok()):
+        if self._ok():
             resp.text = "OK"
-            resp.status = falcon.HTTP_200 # OK.
+            resp.status = falcon.HTTP_200  # OK.
         else:
             resp.text = "NOT OK"
-            resp.status = falcon.HTTP_503 # Service unavailable.
+            resp.status = falcon.HTTP_503  # Service unavailable.
 
     def _ok(self):
-        """This method must be implemented by derived classes.
-        """
+        """This method must be implemented by derived classes."""
         raise NotImplementedError()
 
 
 class LivenessProbeListener(ProbeListener):
-    """Listener for the endpoint /health.
-    """
+    """Listener for the endpoint /health."""
 
     def __init__(self):
-        """Constructor of LivenessProbeListener
-        """
+        """Constructor of LivenessProbeListener"""
         self._is_running = True
 
     def close(self):
         """Close the ProbeListener.
-        
+
         Set a flag to notify kubernetes that the service is no longer available.
         """
         self._is_running = False
@@ -92,8 +94,7 @@ class LivenessProbeListener(ProbeListener):
 
 
 class ReadinessProbeListener(ProbeListener):
-    """Listener for the endpoint /ready.
-    """
+    """Listener for the endpoint /ready."""
 
     def _ok(self):
         """Implements endpoint-specific logic of /ready.
@@ -106,13 +107,18 @@ class ReadinessProbeListener(ProbeListener):
         logging_extra = {
             "code": "Endpoint listener",
             "site": "ReadinessProbeListener._ok",
-            "keywords": ["listener", "endpoint", "ready"]
+            "keywords": ["listener", "endpoint", "ready"],
         }
 
         try:
             _ping_database()
         except DatabaseNotReadyError as err:
-            self.logger.warn(str(err), extra=dict(logging_extra, keywords=json.dumps(logging_extra["keywords"])))
+            self.logger.warn(
+                str(err),
+                extra=dict(
+                    logging_extra, keywords=json.dumps(logging_extra["keywords"])
+                ),
+            )
 
             return False
 
@@ -123,7 +129,7 @@ def _ping_database():
     with session_scope() as session:
         try:
             session.execute("SELECT 1")
-        except sqlalchemy.exc.OperationalError as err:
-            raise DatabaseNotReadyError(f"Operational error on database during ping.")
+        except sqlalchemy.exc.OperationalError:
+            raise DatabaseNotReadyError("Operational error on database during ping.")
         except Exception as err:
             raise DatabaseNotReadyError(f"Unknown error during ping: {err}")

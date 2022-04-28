@@ -176,7 +176,7 @@ Consider the following file `data_input.txt`::
 
 It all can be put together in the working example below::
 
-    #!/usr/bin/env python3.6
+    #!/usr/bin/env python3.9
 
 
     import sys

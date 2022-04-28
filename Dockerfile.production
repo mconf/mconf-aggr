@@ -1,0 +1,43 @@
+ARG PYTHON_VERSION
+ARG MCONF_AGGR_ENV
+ARG BASE_PATH
+ARG APP_NAME
+
+
+#
+# Stage: build
+#
+FROM mconf-aggr-base as build
+ARG BASE_PATH
+ARG APP_NAME
+
+WORKDIR $BASE_PATH/$APP_NAME
+RUN poetry build -f wheel
+RUN poetry export -o constraints.txt --without-hashes
+
+
+#
+# Stage: production
+#
+FROM python:${PYTHON_VERSION}-slim-bullseye as production
+ARG BASE_PATH
+ARG APP_NAME
+ARG APP_PATH=$BASE_PATH/$APP_NAME
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    POETRY_VIRTUALENVS_IN_PROJECT=false
+
+WORKDIR $APP_PATH
+
+RUN echo $APP_PATH
+
+COPY --from=build $APP_PATH/dist/*.whl ./
+COPY --from=build $APP_PATH/constraints.txt ./
+
+RUN pip install ./mconf_aggr*.whl --constraint constraints.txt \
+    && rm $(ls | grep -i '.whl$') constraints.txt
+
+EXPOSE 8000
+
+CMD ["gunicorn", "mconf_aggr.main:app", "--bind=0.0.0.0:8000", \
+     "--worker-class", "gevent"]

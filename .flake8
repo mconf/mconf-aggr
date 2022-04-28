@@ -1,0 +1,16 @@
+[flake8]
+max-line-length = 88
+
+exclude =
+  __pycache__
+  .git
+  .venv
+  envs
+  log
+  scripts
+
+per-file-ignores =
+  # Ignore E501 (line too long) on tests
+  tests/*: E501
+  # Ignore E402 (import not at top of file) on main because we want to monkey patch before all the other imports
+  mconf_aggr/main.py: E402

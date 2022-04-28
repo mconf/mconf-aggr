@@ -1,23 +1,22 @@
-import sys
 import getopt
 import json
+import sys
 
 from Utility.utils import post_event
 
 
 def main(argv):
-    inputfile = ''
-    url = ''
+    inputfile = ""
+    url = ""
     try:
-        opts, args = getopt.getopt(
-            argv, "hf:u:", ["file=", "url="])
+        opts, args = getopt.getopt(argv, "hf:u:", ["file=", "url="])
     except getopt.GetoptError:
-        print('post_event.py -f <jsonfile>')
+        print("post_event.py -f <jsonfile>")
         sys.exit(2)
 
     for opt, arg in opts:
-        if opt == '-h':
-            print('post_event.py -f <jsonfile> ')
+        if opt == "-h":
+            print("post_event.py -f <jsonfile> ")
             sys.exit()
         elif opt in ("-f", "--file"):
             inputfile = arg
@@ -26,14 +25,14 @@ def main(argv):
             if not url.startswith("http://"):
                 url = f"http://{url}"
 
-    if inputfile == '':
-        print('post_event.py -f <jsonfile>')
+    if inputfile == "":
+        print("post_event.py -f <jsonfile>")
         sys.exit(3)
     else:
         with open(inputfile) as f:
             data = json.load(f)
 
-        if url != '':
+        if url != "":
             post_event(data, url)
         else:
             post_event(data)

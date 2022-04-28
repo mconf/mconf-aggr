@@ -4,32 +4,30 @@ from contextlib import contextmanager
 
 @contextmanager
 def time_logger(logger_func, msg, extra=dict(), **kw_format):
-    """Provide a log for the elapsed time in the context block.
-    """
+    """Provide a log for the elapsed time in the context block."""
     start_time = time.time()
     yield None
     end_time = time.time()
 
     elapsed_time = round(end_time - start_time, 4)
-    kw_format.update({'elapsed': elapsed_time})
+    kw_format.update({"elapsed": elapsed_time})
 
     try:
         logger_func(msg.format(**kw_format), extra=extra)
     except Exception as err:
         kw = ", ".join(["{}: {}".format(k, v) for k, v in kw_format.items()])
-        print("Error while logging elapsed time: {} ({})."
-              .format(err, kw))
+        print("Error while logging elapsed time: {} ({}).".format(err, kw))
+
 
 def create_session_scope(Session):
     @contextmanager
     def session_scope(raise_exception=True):
-        """Provide a transactional scope around a series of operations.
-        """
+        """Provide a transactional scope around a series of operations."""
         session = Session()
         try:
             yield session
             session.commit()
-        except:
+        except Exception:
             session.rollback()
             if raise_exception:
                 raise
@@ -38,9 +36,9 @@ def create_session_scope(Session):
 
     return session_scope
 
+
 class RequestTimeLogger:
-    """Logger the request and also update management variables.
-    """
+    """Logger the request and also update management variables."""
 
     """ How many requests are being handled
     """
@@ -49,8 +47,8 @@ class RequestTimeLogger:
     @staticmethod
     @contextmanager
     def time_logger_requests(logger_func, msg, extra=dict(), **kw_format):
-        """Provide a log for the elapsed time in the context block and handle statistics of requests.
-        """
+        """Provide a log for the elapsed time in the context block and handle
+        statistics of requests."""
         RequestTimeLogger.current_requests_count += 1
 
         start_time = time.time()
@@ -58,16 +56,16 @@ class RequestTimeLogger:
         end_time = time.time()
 
         elapsed_time = round(end_time - start_time, 4)
-        kw_format.update({'elapsed': elapsed_time})
+        kw_format.update({"elapsed": elapsed_time})
 
         try:
             logger_func(msg.format(**kw_format), extra=extra)
         except Exception as err:
             kw = ", ".join(["{}: {}".format(k, v) for k, v in kw_format.items()])
-            print("Error while logging elapsed time: {} ({})."
-                .format(err, kw))
+            print("Error while logging elapsed time: {} ({}).".format(err, kw))
 
         RequestTimeLogger.current_requests_count -= 1
+
 
 def signal_handler(aggregator, liveness_probe, signal):
     """Unix signals handler.
@@ -88,7 +86,10 @@ def signal_handler(aggregator, liveness_probe, signal):
         liveness_probe.close()
 
         # Wait aggregator handle with all the received events before close it
-        while any([not x.channel.empty() for x in aggregator.subscribers]) or RequestTimeLogger.current_requests_count > 0:
+        while (
+            any([not x.channel.empty() for x in aggregator.subscribers])
+            or RequestTimeLogger.current_requests_count > 0
+        ):
             print("There are events to handle yet.")
 
         aggregator.stop()

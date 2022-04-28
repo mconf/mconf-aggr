@@ -1,0 +1,57 @@
+name: Tests and Coverage
+
+env:
+  PYTHON_VERSION: 3.9.10
+  POETRY_VERSION: 1.1.13
+  POETRY_VIRTUALENVS_CREATE: false
+
+on:
+  pull_request:
+    paths:
+      - '**.py'
+    branches: [ master, develop ]
+
+jobs:
+  test_and_coverage:
+    runs-on: ubuntu-latest
+
+    steps:
+      #
+      # Preparation
+      #
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v3
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Run image
+        uses: abatilo/actions-poetry@v2.0.0
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
+
+      - name: Install Dependencies
+        run: |
+          make install-deps
+
+      #
+      # Actual jobs
+      #
+      - name: Run job
+        run: |
+          make ARGS="--coverage" test
+
+      - name: Python Cov
+        uses: orgoro/coverage@v2.1
+        with:
+          coverageFile: tests/coverage.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+
+
+
+
+
+
+
