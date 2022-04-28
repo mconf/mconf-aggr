@@ -55,7 +55,7 @@ class TestListener(unittest.TestCase):
 
         self.event_listener.on_post(req_mock, resp_mock)
 
-        resp_body = json.loads(resp_mock.body)
+        resp_body = json.loads(resp_mock.text)
 
         self.assertEqual(resp_body["status"], "Error")
 
@@ -66,7 +66,7 @@ class TestListener(unittest.TestCase):
 
         self.event_listener.on_post(req_mock, resp_mock)
 
-        resp_body = json.loads(resp_mock.body)
+        resp_body = json.loads(resp_mock.text)
 
         self.assertEqual(resp_body["status"], "Error")
 
@@ -82,7 +82,7 @@ class TestListener(unittest.TestCase):
 
         self.event_listener.on_post(req_mock, resp_mock)
 
-        resp_body = json.loads(resp_mock.body)
+        resp_body = json.loads(resp_mock.text)
 
         self.assertEqual(resp_body["status"], "Success")
 

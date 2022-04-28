@@ -1,9 +1,12 @@
+import gevent
+
+gevent.monkey.patch_all()
+
 import logging
 import signal
 import sys
 
 import falcon
-import gevent
 
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError
