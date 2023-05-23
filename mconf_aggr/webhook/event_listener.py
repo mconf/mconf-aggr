@@ -136,8 +136,8 @@ class WebhookEventListener:
         Parameters
         ----------
         event_handler : WebhookEventHandler.
-        logger : logging.Logger
-            If not supplied, it will instantiate a new logger from __name__.
+        logger : loguru.Logger
+            If not supplied, it will instantiate a new logger.
         """
         self.event_handler = event_handler
         self.logger = logger or get_logger()
@@ -235,8 +235,8 @@ class WebhookEventHandler:
         publisher : aggregator.Publisher
         channel : str
             Channel where event will be published.
-        logger : logging.Logger
-            If not supplied, it will instantiate a new logger from __name__.
+        logger : loguru.Logger
+            If not supplied, it will instantiate a new logger.
         """
         self.publisher = publisher
         self.channel = channel

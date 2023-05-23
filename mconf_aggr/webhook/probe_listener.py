@@ -32,8 +32,8 @@ class ProbeListener:
 
         Parameters
         ----------
-        logger : logging.Logger
-            If not supplied, it will instantiate a new logger from __name__.
+        logger : loguru.Logger
+            If not supplied, it will instantiate a new logger.
         """
         self.logger = logger or get_logger()
 

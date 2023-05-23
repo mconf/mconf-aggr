@@ -47,8 +47,8 @@ class WebhookRegister:
             True if it requests raw webhooks to be received. False otherwise.
         hook_id : int
             Specify a hook ID.
-        logger : logging.Logger
-            If not supplied, it will instantiate a new logger from __name__.
+        logger : loguru.Logger
+            If not supplied, it will instantiate a new logger.
         """
         self._callback_url = callback_url
         self._get_raw = get_raw
@@ -145,8 +145,8 @@ class WebhookServer:
             Hostname of the server.
         secret : str
             Shared secret (token) of the server.
-        logger : logging.Logger
-            If not supplied, it will instantiate a new logger from __name__.
+        logger : loguru.Logger
+            If not supplied, it will instantiate a new logger.
         """
         self._server = server
         self._secret = secret
