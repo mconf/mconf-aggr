@@ -246,8 +246,7 @@ class Channel:
         data = self.queue.get()
 
         if data is None:
-            self.logger.debug(f"Signaling closing channel {self.name} for clients")
-            self.logger.debug("waiting for data.")
+            self.logger.debug(f"Signaling closing channel {self.name} for clients. Waiting for data.")
             raise ChannelClosed()
 
         self.queue.task_done()
