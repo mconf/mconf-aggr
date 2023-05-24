@@ -7,7 +7,7 @@ import sys
 
 import falcon
 
-from logger import get_logger
+from mconf_aggr.logger import get_logger
 
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError

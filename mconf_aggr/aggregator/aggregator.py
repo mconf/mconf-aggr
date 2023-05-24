@@ -11,7 +11,7 @@ import queue
 import reprlib
 import threading
 from collections import namedtuple
-from logger import get_logger
+from mconf_aggr.logger import get_logger
 
 
 class AggregatorNotRunning(Exception):

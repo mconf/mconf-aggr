@@ -8,7 +8,7 @@ which event was received by the `update` method on `WebhookDataWriter` and passe
 import sqlalchemy
 from sqlalchemy.orm.attributes import flag_modified
 
-from logger import get_logger
+from mconf_aggr.logger import get_logger
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger
 from mconf_aggr.webhook.database import DatabaseConnector
