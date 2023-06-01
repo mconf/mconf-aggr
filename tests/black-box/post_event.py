@@ -2,7 +2,7 @@ import getopt
 import json
 import sys
 
-from Utility.utils import post_event
+from utility.utils import post_event
 
 
 def main(argv):
