@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.11.0
+* Set the metadata `mconf-decrypter-pending` to false when the workflow field `presentation` is updated to `published`.
+
 ## 1.10.0
 * Add continuous integration:
     - Add `poetry` for dependency management;
