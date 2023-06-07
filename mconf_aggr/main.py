@@ -2,11 +2,12 @@ import gevent
 
 gevent.monkey.patch_all()
 
-import logging
 import signal
 import sys
 
 import falcon
+
+from mconf_aggr.logger import get_logger
 
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError
@@ -20,7 +21,7 @@ from mconf_aggr.webhook.probe_listener import (
     ReadinessProbeListener,
 )
 
-logger = logging.getLogger(__name__)
+logger = get_logger()
 
 # falcon.API instances are callable WSGI apps.
 app = falcon.App()

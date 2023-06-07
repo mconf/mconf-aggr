@@ -6,9 +6,9 @@ import json
 import logging
 
 import falcon
-import logaugment
 import sqlalchemy
 
+from mconf_aggr.logger import get_logger
 from mconf_aggr.webhook.database import DatabaseConnector
 from mconf_aggr.webhook.exceptions import DatabaseNotReadyError
 
@@ -32,18 +32,10 @@ class ProbeListener:
 
         Parameters
         ----------
-        logger : logging.Logger
-            If not supplied, it will instantiate a new logger from __name__.
+        logger : loguru.Logger
+            If not supplied, it will instantiate a new logger.
         """
-        self.logger = logger or logging.getLogger(__name__)
-        logaugment.set(
-            self.logger,
-            code="",
-            site="ProbeListener",
-            server="",
-            event="",
-            keywords="null",
-        )
+        self.logger = logger or get_logger()
 
     def on_get(self, req, resp):
         """Handle GET requests.
@@ -104,21 +96,11 @@ class ReadinessProbeListener(ProbeListener):
         bool : True if the service is ready to handle requests adequately.
         False otherwise.
         """
-        logging_extra = {
-            "code": "Endpoint listener",
-            "site": "ReadinessProbeListener._ok",
-            "keywords": ["listener", "endpoint", "ready"],
-        }
 
         try:
             _ping_database()
         except DatabaseNotReadyError as err:
-            self.logger.warn(
-                str(err),
-                extra=dict(
-                    logging_extra, keywords=json.dumps(logging_extra["keywords"])
-                ),
-            )
+            self.logger.warn(str(err))
 
             return False
 
