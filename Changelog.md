@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.12.0
+* Refactor logs using the loguru package.
+
 ## 1.11.0
 * Set the metadata `mconf-decrypter-pending` to false when the workflow field `presentation` is updated to `published`.
 
