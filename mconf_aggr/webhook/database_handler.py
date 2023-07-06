@@ -232,7 +232,7 @@ class MeetingEndedHandler(DatabaseEventHandler):
                 self.session.query(UsersEvents)
                 .filter(
                     UsersEvents.meeting_event_id == meetings_events_table.id,
-                    UsersEvents.leave_time is None,
+                    UsersEvents.leave_time == None,
                 )
                 .update({"leave_time": event.end_time}, synchronize_session="fetch")
             )
