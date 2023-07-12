@@ -1,44 +1,51 @@
-[build-system]
-requires = ["poetry-core~=1.1.13"]
-build-backend = "poetry.core.masonry.api"
-
-#
-# Poetry
-#
-
-[tool.poetry]
+[project]
 name = "mconf-aggr"
 version = "1.9.2"
 description = "Mconf Aggregator"
-authors = ["Kazuki Yokoyama <kmyokoyama@inf.ufrgs.br>"]
+dependencies = [
+    "falcon<4.0.0,>=3.0.1",
+    "gevent<22.0.0,>=21.12.0",
+    "gunicorn<21.0.0,>=20.1.0",
+    "logaugment<1.0.0,>=0.1.3",
+    "psycopg2-binary<3.0.0,>=2.9.3",
+    "requests<3.0.0,>=2.27.1",
+    "SQLAlchemy<2.0.0,>=1.4.31",
+    "urllib3<2.0.0,>=1.26.5",
+    "loguru<1.0.0,>=0.7.0",
+]
+requires-python = ">=3.9"
 
-[tool.poetry.dependencies]
-python = "3.9.10"
-falcon = "^3.0.1"
-gevent = "^21.12.0"
-gunicorn = "^20.1.0"
-logaugment = "^0.1.3"
-psycopg2-binary = "^2.9.3"
-requests = "^2.27.1"
-SQLAlchemy = "^1.4.31"
-urllib3 = "^1.26.5"
-loguru = "^0.7.0"
+[build-system]
+requires = ["pdm-pep517>=1.0.0"]
+build-backend = "pdm.pep517.api"
 
-[tool.poetry.dev-dependencies]
-black = "^22.3.0"
-debugpy = "^1.6.0"
-flake8 = "^4.0.1"
-isort = "^5.10.0"
-coverage = "^6.3.2"
+[tool.pdm]
+[[tool.pdm.source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
 
-#
-# Tools
-#
+[tool.pdm.dev-dependencies]
+dev = [
+    "coverage~=6.5",
+    "black~=22.12",
+    "flake8~=6.0",
+    "isort~=5.10",
+]
+test = [
+    "pytest>=7.4.0",
+]
+debug = [
+    "debugpy>=1.6.7",
+]
 
+[tool]
+[tool.pytest.ini_options]
+addopts = "-ra -v -x -s --import-mode=importlib"
+testpaths = ["tests"]
 [tool.black]
 line-length = 88
-target-version = ['py39']
+target-version = ['py310']
 include = '\.pyi?$'
-
 [tool.isort]
 profile = "black"
