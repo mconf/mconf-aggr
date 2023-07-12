@@ -33,12 +33,12 @@ jobs:
         uses: py-actions/flake8@v2
         with:
           max-line-length: "100"
-          path: "./src"
+          path: "./mconf_aggr"
       - name: Check with Black
         uses: psf/black@stable
         with:
           options: "--check --verbose"
-          src: "./src"
+          src: "./mconf_aggr"
           version: "~= 22.0"
       - name: Run Isort
         uses: isort/isort-action@v1.0.0
