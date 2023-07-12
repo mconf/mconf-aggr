@@ -392,50 +392,27 @@ Here is an example of `.vscode/settings.json` to use with Visual Studio.
 Some tasks can be done using the `make` utility. The most important ones are
 shown below:
 
-* To run mconf-aggr (without Docker): `$ make run CONFIG_PATH=path/to/app-config.json`
-* To run mconf-aggr with Docker Compose: `$ make up [IMAGE_VERSION=latest]`
-* To start, restart or stop a single service: `$ make [start|restart|stop] SERVICE=[mconf-aggr-webhook]`
+* To run mconf-aggr (without Docker): `$ make run`
 * To build the Docker image: `$ make docker-build`
 * To build the development Docker image: `$ make docker-build-dev`
-* To run the Docker image: `$ make docker-run  [CONFIG_PATH=path/to/app-config.json] [LOGGING_PATH=path/to/logging.json] [IMAGE_VERSION=latest]`
-* To run the Docker image of development: `$ make docker-run-dev [CONFIG_PATH=path/to/webhook-config.json] [LOGGING_PATH=path/to/logging.json] [EXTRA_OPTS=""]`
+* To run the Docker image: `$ make up`
+* To run the Docker image of development: `$ make up-dev`
 * To tag stable Docker images: `$ make docker-tag`
 * To tag unstable Docker images: `$ make docker-tag-unstable`
 * To tag latest Docker images: `$ make docker-tag-latest`
-* To tag staging Docker images: `$ make docker-tag-staging`
 * To push stable Docker images to registry: `$ make docker-push`
 * To push unstable Docker images to registry: `$ make docker-push-unstable`
 * To push latest Docker images to registry: `$ make docker-push-latest`
-* To push staging Docker images to registry: `$ make docker-push-staging`
-* To show the stable tags that will be generated: `$ make tags`
-* To show the unstable tags that will be generated: `$ make tags-unstable`
-* To show the latest tags that will be generated: `$ make tags-latest`
-* To show the staging tags that will be generated: `$ make tags-staging`
-* To show all project-related Docker images: `$ make docker-image`
-* To remove all containers (related to the project or not): `$ make docker-container-rm`
-* To remove all project-related Docker images: `$ make docker-rm`
-* To remove all dangling project-related Docker images: `$ make docker-rm-dangling`
-* To prune Docker system: `$ make docker-prune`
-* To remove all dangling project-related Docker images and prune Docker syste: `$ make docker-clean`
 * To run the tests: `$ make test`
-* To install project requisites: `$ make install-requisites-locally`
-* To install dependecies: `$ make install-deps-locally`
 * To build the HTML documentation: `$ make html`
 * To run the linter: `$ make lint`
 * To run the formatters: `$ make format`
 * To clean the project: `$ make clean`
 
-You can also overwrite some parameters used in Makefile. For instance, if you
-want to run a different revision, you can run:
-
-`$ make docker-run REVISION=<revision>`
-
 The `Makefile` also provides sensitive defaults:
 
 ```
 AGGR_PATH=<current_directory>
-CONFIG_PATH=<current_directory>/config/config.json
-LOGGING_PATH=<current_directory/config/logging.json
 DOCKER_USERNAME=mconf
 REPOSITORY=mconf-aggr
 ```
