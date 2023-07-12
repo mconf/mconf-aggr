@@ -1,42 +1,77 @@
 name: Continuous Integration
 
+env:
+  SRC_PATH: mconf_aggr
+  TESTS_PATH: tests
+
 on:
   push:
-    paths:
-      - '**.py'
-    branches: [ master, develop ]
+    branches: [master]
   pull_request:
-    paths:
-      - '**.py'
-    branches: [ master, develop ]
+    branches: [master]
 
 jobs:
-  lint:
-    runs-on: ubuntu-20.04
-
+  format-and-lint:
+    runs-on: ubuntu-latest
+    name: Lint and Check Formatting
     steps:
-      #
-      # Preparation
-      #
-      - uses: actions/checkout@v3
-
-      - name: Set up Python
-        uses: actions/setup-python@v3
+      - name: Check out Source Repository
+        uses: actions/checkout@v3
+      - name: Set up Python Environment
+        uses: actions/setup-python@v4
         with:
-          python-version: "3.9.10"
-
-      - name: Run image
-        uses: abatilo/actions-poetry@v2.0.0
+          python-version: '3.10'
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v3
         with:
-          poetry-version: "1.1.13"
-
+          python-version: '3.10'
+          cache: true
+          cache-dependency-path: ./pdm.lock
       - name: Install Dependencies
-        run: |
-          make install-deps
+        run: pdm install
+      - name: Lint with Flake
+        uses: py-actions/flake8@v2
+        with:
+          max-line-length: "100"
+          path: "./src"
+      - name: Check with Black
+        uses: psf/black@stable
+        with:
+          options: "--check --verbose"
+          src: "./src"
+          version: "~= 22.0"
+      - name: Run Isort
+        uses: isort/isort-action@v1.0.0
 
-      #
-      # Actual jobs
-      #
-      - name: Run job
-        run: |
-          make lint
+  test-and-check-coverage:
+    runs-on: ubuntu-latest
+    name: Test and Check Coverage
+    steps:
+      - name: Check out Source Repository
+        uses: actions/checkout@v3
+      - name: Set up Python Environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      - name: Setup PDM
+        uses: pdm-project/setup-pdm@v3
+        with:
+          python-version: '3.10'
+          cache: true
+          cache-dependency-path: ./pdm.lock
+      - name: Install Dependencies
+        run: pdm install 
+      - name: Load .env File
+        uses: c-py/action-dotenv-to-setenv@v2
+        with:
+          env-file: .env
+      - name: Run Tests
+        run: pdm run coverage run --source=$SRC_PATH -m unittest discover -s $TESTS_PATH
+      - name: Generate XML from Coverage
+        run: pdm run coverage xml
+      - name: Run Python Cov
+        uses: orgoro/coverage@v2.1
+        if: github.event_name == 'pull_request'
+        with:
+          coverageFile: coverage.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
