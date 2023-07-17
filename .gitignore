@@ -106,4 +106,8 @@ tmp/
 *.org
 
 # ngrok
-scripts/utils/ngrok
+scripts/utils/ngrok.pdm-python
+
+__pypackages__
+
+.pdm-python

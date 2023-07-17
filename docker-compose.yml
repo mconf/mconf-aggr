@@ -1,0 +1,51 @@
+version: "3"
+services:
+  prod:
+    image: mconf/mconf-aggr:latest
+    build:
+      context: .
+      target: production
+      args:
+        - DISABLE_DEV=1
+    ports:
+      - "8000:8000"
+    networks:
+      - mconf-net-dev
+    env_file:
+      - ${MCONF_AGGR_WEBHOOK_ENV_FILE}
+
+  dev:
+    image: mconf/mconf-aggr:dev-latest
+    build:
+      context: .
+      target: development
+      args:
+        - DISABLE_DEV=0
+    ports:
+      - "8000:8000"
+    networks:
+      - mconf-net-dev
+    env_file:
+      - ${MCONF_AGGR_WEBHOOK_ENV_FILE}
+    volumes:
+      - ./:/usr/src/mconf-aggr
+
+  debug:
+    image: mconf/mconf-aggr:debug-latest
+    build:
+      context: .
+      target: debug
+      args:
+        - DISABLE_DEV=0
+    ports:
+      - "8000:8000"
+      - "5678:5678"
+    networks:
+      - mconf-net-dev
+    env_file:
+      - ${MCONF_AGGR_WEBHOOK_ENV_FILE}
+    volumes:
+      - ./:/usr/src/mconf-aggr
+
+networks:
+  mconf-net-dev:
