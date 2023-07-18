@@ -221,6 +221,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "pytest-loguru"
+version = "0.2.0"
+requires_python = ">=3.6"
+summary = "Pytest Loguru"
+dependencies = [
+    "loguru",
+    "pytest",
+]
+
+[[package]]
 name = "requests"
 version = "2.31.0"
 requires_python = ">=3.7"
@@ -293,7 +303,7 @@ dependencies = [
 lock_version = "4.2"
 cross_platform = true
 groups = ["default", "debug", "dev", "test"]
-content_hash = "sha256:0abc33349d81d87068948df26e55351a70f9e19cac9f4303a53889a19131c919"
+content_hash = "sha256:bca191d7ec0e09b8ec10b9e7a85d2ca0ebf97590679a5c7516d5694d5f67789e"
 
 [metadata.files]
 "black 22.12.0" = [
@@ -808,6 +818,9 @@ content_hash = "sha256:0abc33349d81d87068948df26e55351a70f9e19cac9f4303a53889a19
 "pytest 7.4.0" = [
     {url = "https://files.pythonhosted.org/packages/33/b2/741130cbcf2bbfa852ed95a60dc311c9e232c7ed25bac3d9b8880a8df4ae/pytest-7.4.0-py3-none-any.whl", hash = "sha256:78bf16451a2eb8c7a2ea98e32dc119fd2aa758f1d5d66dbf0a59d69a3969df32"},
     {url = "https://files.pythonhosted.org/packages/a7/f3/dadfbdbf6b6c8b5bd02adb1e08bc9fbb45ba51c68b0893fa536378cdf485/pytest-7.4.0.tar.gz", hash = "sha256:b4bf8c45bd59934ed84001ad51e11b4ee40d40a1229d2c79f9c592b0a3f6bd8a"},
+]
+"pytest-loguru 0.2.0" = [
+    {url = "https://files.pythonhosted.org/packages/0c/92/e951874a6b51190ee993f7cfbad7bee9b1c020f1a2c7e1156d487a05a469/pytest-loguru-0.2.0.tar.gz", hash = "sha256:6588efbc5d4ab87b05a9a37fdd0be6464d290dc985bc2fb0e5b8425fca7fb93a"},
 ]
 "requests 2.31.0" = [
     {url = "https://files.pythonhosted.org/packages/70/8e/0e2d847013cb52cd35b38c009bb167a1a26b2ce6cd6965bf26b47bc0bf44/requests-2.31.0-py3-none-any.whl", hash = "sha256:58cd2187c01e70e6e26505bca751777aa9f2ee0b7f4300988b709f44e013003f"},
