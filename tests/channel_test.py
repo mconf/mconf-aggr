@@ -6,8 +6,7 @@ from mconf_aggr.aggregator.aggregator import Channel
 
 class TestChannel(unittest.TestCase):
     def setUp(self):
-        logger = logging.getLogger("test_channel")
-        self.channel = Channel("test_channel", maxsize=5, logger=logger)
+        self.channel = Channel("test_channel", maxsize=5)
 
     def test_publish(self):
         self.channel.publish(1)
