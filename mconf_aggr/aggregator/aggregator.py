@@ -211,7 +211,7 @@ class Channel:
         """
         self.logger.debug(f"Closing channel {self.name}.")
         if not self.empty():
-            self.logger.warning(f"There are data not consumed in channel {self.name}.")
+            self.logger.warning(f"There is data not consumed in channel {self.name}.")
         self.queue.put(None)
 
     def publish(self, data):
