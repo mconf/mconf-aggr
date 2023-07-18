@@ -76,7 +76,7 @@ jobs:
           env-file: envs/webhook-env-file.env
       - name: Run Tests
         if: ${{ steps.changed-python-files.outputs.any_changed == 'true' && github.event_name == 'pull_request'}}
-        run: pdm run coverage run --source=${SRC_PATH} -m pytest-loguru -s ${TESTS_PATH} --ignore ${TESTS_PATH}/black-box --ignore-glob=${TESTS_PATH}/integration*
+        run: pdm run coverage run --source=${SRC_PATH} -m pytest -s ${TESTS_PATH} --ignore ${TESTS_PATH}/black-box --ignore-glob=${TESTS_PATH}/integration*
       - name: Generate XML from Coverage
         if: ${{ steps.changed-python-files.outputs.any_changed == 'true' && github.event_name == 'pull_request'}}
         run: pdm run coverage xml
