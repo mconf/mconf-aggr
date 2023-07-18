@@ -7,11 +7,10 @@ import sys
 
 import falcon
 
-from mconf_aggr.logger import get_logger
-
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError
 from mconf_aggr.aggregator.utils import signal_handler
+from mconf_aggr.logger import get_logger
 from mconf_aggr.webhook.database import DatabaseConnector
 from mconf_aggr.webhook.database_handler import WebhookDataWriter
 from mconf_aggr.webhook.event_listener import WebhookEventHandler, WebhookEventListener

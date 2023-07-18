@@ -8,9 +8,9 @@ which event was received by the `update` method on `WebhookDataWriter` and passe
 import sqlalchemy
 from sqlalchemy.orm.attributes import flag_modified
 
-from mconf_aggr.logger import get_logger
 from mconf_aggr.aggregator.aggregator import AggregatorCallback, CallbackError
 from mconf_aggr.aggregator.utils import time_logger
+from mconf_aggr.logger import get_logger
 from mconf_aggr.webhook.database import DatabaseConnector
 from mconf_aggr.webhook.database_model import (
     Institutions,
@@ -90,10 +90,13 @@ class MeetingCreatedHandler(DatabaseEventHandler):
         event : event_mapper.WebhookEvent
             Event to be handled and written to database.
         """
-        event_type = event.event_type
+
         event = event.event
 
-        self.logger.info(f"Processing meeting-created event for internal-meeting-id: '{event.internal_meeting_id}'.")
+        self.logger.info(
+            f"Processing meeting-created event for internal-meeting-id: \
+                         '{event.internal_meeting_id}'."
+        )
 
         # Create tables meetings_events and meetings.
         if (
@@ -101,7 +104,10 @@ class MeetingCreatedHandler(DatabaseEventHandler):
             .filter(MeetingsEvents.internal_meeting_id == event.internal_meeting_id)
             .first()
         ):
-            self.logger.warning(f"Meeting with internal-meeting-id '{event.internal_meeting_id}' already exists.")
+            self.logger.warning(
+                f"Meeting with internal-meeting-id '{event.internal_meeting_id}' \
+                                already exists."
+            )
             return
 
         new_meetings_events = MeetingsEvents(**event._asdict())
@@ -128,7 +134,10 @@ class MeetingCreatedHandler(DatabaseEventHandler):
             )
 
         if not metadata.mconf_shared_secret_guid:
-            self.logger.info(f"Empty shared secret guid, meeting '{event.internal_meeting_id}' insertion falling back to institution name: '{metadata.mconflb_institution_name}'")
+            self.logger.info(
+                f"Empty shared secret guid, meeting '{event.internal_meeting_id}' \
+                             insertion falling back to institution name: '{metadata.mconflb_institution_name}'"
+            )
             # fallback to name of institution
             try:
                 # Find the secret using mconflb-institution-name which corresponds
@@ -140,7 +149,10 @@ class MeetingCreatedHandler(DatabaseEventHandler):
                     .first()
                 )
                 new_meetings_events.shared_secret_guid = found_secret.guid
-                self.logger.info(f"Found secret: '{found_secret.name}' for meeting '{event.internal_meeting_id}'")
+                self.logger.info(
+                    f"Found secret: '{found_secret.name}' for meeting \
+                                 '{event.internal_meeting_id}'"
+                )
 
                 # We found the secret, try to find its institution to complete
                 # the table with information
@@ -153,11 +165,20 @@ class MeetingCreatedHandler(DatabaseEventHandler):
                     new_meetings_events.institution_guid = found_institution.guid
                     new_meetings_events.shared_secret_name = found_secret.name
                 except RuntimeError:
-                    self.logger.warning(f"Could not find institution for secret '{found_secret.name}'")
+                    self.logger.warning(
+                        f"Could not find institution for secret \
+                                        '{found_secret.name}'"
+                    )
 
-                self.logger.info(f"Found institution: '{found_institution.name}' for meeting '{event.internal_meeting_id}'")
+                self.logger.info(
+                    f"Found institution: '{found_institution.name}' \
+                                 for meeting '{event.internal_meeting_id}'"
+                )
             except AttributeError:
-                self.logger.warning(f"Could not match institution name '{metadata.mconflb_institution_name}' to an institution")
+                self.logger.warning(
+                    f"Could not match institution name \
+                                    '{metadata.mconflb_institution_name}' to an institution"
+                )
 
         if not metadata.mconf_server_guid and not metadata.mconf_server_url:
             servers_table = (
@@ -177,7 +198,9 @@ class MeetingCreatedHandler(DatabaseEventHandler):
             .filter(Meetings.ext_meeting_id == event.external_meeting_id)
             .first()
         ):
-            self.logger.warning(f"Meeting with external-meeting-id '{event.external_meeting_id}'")
+            self.logger.warning(
+                f"Meeting with external-meeting-id '{event.external_meeting_id}'"
+            )
             return
 
         new_meeting = Meetings(
@@ -213,11 +236,12 @@ class MeetingEndedHandler(DatabaseEventHandler):
             Event to be handled and written to database.
         """
 
-        event_type = event.event_type
         event = event.event
 
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing meeting-ended event for internal-meeting-id: '{int_id}'.")
+        self.logger.info(
+            f"Processing meeting-ended event for internal-meeting-id: '{int_id}'."
+        )
 
         # Table meetings_events to be updated.
         meetings_events_table = (
@@ -232,7 +256,7 @@ class MeetingEndedHandler(DatabaseEventHandler):
                 self.session.query(UsersEvents)
                 .filter(
                     UsersEvents.meeting_event_id == meetings_events_table.id,
-                    UsersEvents.leave_time == None,
+                    UsersEvents.leave_time.is_(None),
                 )
                 .update({"leave_time": event.end_time}, synchronize_session="fetch")
             )
@@ -265,12 +289,15 @@ class UserJoinedHandler(DatabaseEventHandler):
         event : event_mapper.WebhookEvent
             Event to be handled and written to database.
         """
-        event_type = event.event_type
+
         event = event.event
 
         int_id = event.internal_meeting_id
 
-        self.logger.info(f"Processing user-joined event for internal-user-id '{event.internal_user_id}'.'")
+        self.logger.info(
+            f"Processing user-joined event for internal-user-id \
+                         '{event.internal_user_id}'.'"
+        )
 
         users_events_table = self._get_users_events(event)
 
@@ -318,7 +345,9 @@ class UserJoinedHandler(DatabaseEventHandler):
                 self.session.add(meetings_table)
                 self.session.flush()
             else:
-                self.logger.warning(f"No meeting found for user '{event.internal_user_id}'.")
+                self.logger.warning(
+                    f"No meeting found for user '{event.internal_user_id}'."
+                )
                 raise WebhookDatabaseError(
                     f"no meeting found for user '{event.internal_user_id}'"
                 )
@@ -385,12 +414,15 @@ class UserLeftHandler(DatabaseEventHandler):
         event : event_mapper.WebhookEvent
             Event to be handled and written to database.
         """
-        event_type = event.event_type
+
         event = event.event
 
         user_id = event.internal_user_id
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing user-left message for internal-user-id '{user_id}' in meeting '{int_id}'.")
+        self.logger.info(
+            f"Processing user-left message for internal-user-id \
+                         '{user_id}' in meeting '{int_id}'."
+        )
 
         # Table meetings to be updated.
         meetings_table = (
@@ -409,7 +441,9 @@ class UserLeftHandler(DatabaseEventHandler):
 
             self.session.add(meetings_table)
         else:
-            self.logger.warning(f"No meeting found with internal-meeting-id '{int_id}'.")
+            self.logger.warning(
+                f"No meeting found with internal-meeting-id '{int_id}'."
+            )
 
         # Table users_events to be updated.
         users_table = (
@@ -422,7 +456,7 @@ class UserLeftHandler(DatabaseEventHandler):
             # Update table users_events.
             users_table.leave_time = event.leave_time
         else:
-            self.logger.warning(f"No user found with internal-user-id '{user_id}'." )
+            self.logger.warning(f"No user found with internal-user-id '{user_id}'.")
 
     def _remove_attendee(self, meetings_table, user_id):
         for idx, attendee in enumerate(meetings_table.attendees):
@@ -451,7 +485,10 @@ class UserEventHandler(DatabaseEventHandler):
 
         user_id = event.internal_user_id
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing {event.event_name} event for internal-user-id '{user_id}' on meeting '{int_id}'.")
+        self.logger.info(
+            f"Processing {event.event_name} event for internal-user-id \
+                         '{user_id}' on meeting '{int_id}'."
+        )
 
         # Table meetings to be updated.
         meetings_table = (
@@ -469,7 +506,9 @@ class UserEventHandler(DatabaseEventHandler):
 
             self.session.add(meetings_table)
         else:
-            self.logger.warning(f"No meeting found with internal-meeting-id '{int_id}'.")
+            self.logger.warning(
+                f"No meeting found with internal-meeting-id '{int_id}'."
+            )
 
     def _update_meeting(self, meetings_table):
         _update_meeting(meetings_table)
@@ -554,11 +593,12 @@ class RapArchiveHandler(DatabaseEventHandler):
             Event to be handled and written to database.
         """
         event_type = event.event_type
-        server_url = event.server_url
         event = event.event
 
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+        self.logger.info(
+            f"Processing {event_type} event for internal-meeting-id '{int_id}'."
+        )
 
         recorded = event.recorded
 
@@ -614,7 +654,9 @@ class RapArchiveHandler(DatabaseEventHandler):
                     meetings_events_table.internal_meeting_id
                 )
             else:
-                self.logger.warning(f"No meeting found for recording '{event.record_id}'.")
+                self.logger.warning(
+                    f"No meeting found for recording '{event.record_id}'."
+                )
 
             records_table.current_step = event.current_step
 
@@ -637,7 +679,9 @@ class RapHandler(DatabaseEventHandler):
         event = event.event
 
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+        self.logger.info(
+            f"Processing {event_type} event for internal-meeting-id '{int_id}'."
+        )
 
         records_table = (
             self.session.query(Recordings)
@@ -675,7 +719,9 @@ class RapHandler(DatabaseEventHandler):
                     self.logger.info(f"Recording host was updated to '{server_url}'.")
                 records_table.server_id = server_id_result.id
             else:
-                self.logger.warning(f"No server found for recording '{event.record_id}'.")
+                self.logger.warning(
+                    f"No server found for recording '{event.record_id}'."
+                )
 
         meetings_events_table = (
             self.session.query(MeetingsEvents)
@@ -722,7 +768,9 @@ class RapProcessHandler(DatabaseEventHandler):
         event = event.event
 
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+        self.logger.info(
+            f"Processing {event_type} event for internal-meeting-id '{int_id}'."
+        )
 
         records_table = (
             self.session.query(Recordings)
@@ -755,7 +803,9 @@ class RapProcessHandler(DatabaseEventHandler):
 
                 self.session.add(records_table)
             else:
-                self.logger.warning(f"Invalid event '{event.current_step}' from current status '{current_status}' for recording '{event.record_id}'.")
+                self.logger.warning(
+                    f"Invalid event '{event.current_step}' from current status '{current_status}' for recording '{event.record_id}'."
+                )
         else:
             self.logger.warning(f"No recording found with id '{event.record_id}'.")
 
@@ -775,7 +825,9 @@ class RapPublishUnpublishHandler(DatabaseEventHandler):
         event = event.event
 
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+        self.logger.info(
+            f"Processing {event_type} event for internal-meeting-id '{int_id}'."
+        )
 
         records_table = (
             self.session.query(Recordings)
@@ -790,14 +842,18 @@ class RapPublishUnpublishHandler(DatabaseEventHandler):
                     records_table.published = False
                     self.session.add(records_table)
                 else:
-                    self.logger.warning(f"Tried to unpublish a recording with meeting id '{int_id}' that is not yet published.")
+                    self.logger.warning(
+                        f"Tried to unpublish a recording with meeting id '{int_id}' that is not yet published."
+                    )
             elif event_type == "rap-published":
                 if records_table.status == Status.UNPUBLISHED:
                     records_table.status = Status.PUBLISHED
                     records_table.published = True
                     self.session.add(records_table)
                 else:
-                    self.logger.warning(f"Tried to publish a recording with meeting id '{int_id}' that is already published.",)
+                    self.logger.warning(
+                        f"Tried to publish a recording with meeting id '{int_id}' that is already published.",
+                    )
         else:
             self.logger.warning(f"No recording found with meeting id '{int_id}'.")
 
@@ -818,7 +874,9 @@ class RapDeleteHandler(DatabaseEventHandler):
         event = event.event
 
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+        self.logger.info(
+            f"Processing {event_type} event for internal-meeting-id '{int_id}'."
+        )
 
         records_table = (
             self.session.query(Recordings)
@@ -850,7 +908,9 @@ class RapPublishHandler(DatabaseEventHandler):
         event = event.event
 
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+        self.logger.info(
+            f"Processing {event_type} event for internal-meeting-id '{int_id}'."
+        )
 
         records_table = (
             self.session.query(Recordings)
@@ -908,7 +968,10 @@ class RapPublishHandler(DatabaseEventHandler):
 
                 self.session.add(records_table)
             else:
-                self.logger.warning(f"Invalid event '{event.current_step}' from current status '{current_status}' for meeting '{int_id}'.")
+                self.logger.warning(
+                    f"Invalid event '{event.current_step}' from current status \
+                                    '{current_status}' for meeting '{int_id}'."
+                )
         else:
             self.logger.warning(f"No recording found with meeting id '{int_id}'.")
 
@@ -932,7 +995,9 @@ class MeetingTransferHandler(DatabaseEventHandler):
             transfer_status = True
 
         int_id = event.internal_meeting_id
-        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
+        self.logger.info(
+            f"Processing {event_type} event for internal-meeting-id '{int_id}'."
+        )
 
         transfer_table = (
             self.session.query(Meetings)
@@ -1161,19 +1226,28 @@ class WebhookDataWriter(AggregatorCallback):
             If any error occur while persisting event into database.
         """
         try:
-            with time_logger(self.logger.info, "Processing information to database took {elapsed}s."):
+            with time_logger(
+                self.logger.info, "Processing information to database \took {elapsed}s."
+            ):
                 with session_scope() as session:
                     DataProcessor(session).update(data)
         except sqlalchemy.exc.OperationalError as err:
-            self.logger.error(f"Operational error on database. Not persisting data: {err}")
+            self.logger.error(
+                f"Operational error on database. Not persisting data: {err}"
+            )
 
             raise CallbackError() from err
         except WebhookDatabaseError as err:
-            self.logger.error(f"An error occurred while persisting data. Not persisting data: {err}")
+            self.logger.error(
+                f"An error occurred while persisting data. \
+                              Not persisting data: {err}"
+            )
 
             raise CallbackError() from err
         except Exception as err:
-            self.logger.error(f"Unknown error on database handler. Not persisting data: {err}")
+            self.logger.error(
+                f"Unknown error on database handler. Not persisting data: {err}"
+            )
 
             raise CallbackError() from err
 
@@ -1211,7 +1285,9 @@ class AuthenticationHandler:
                     session.query(Servers.secret).filter(Servers.name == server).first()
                 )
             except sqlalchemy.exc.OperationalError as err:
-                self.logger.error(f"Operational error on database while validating token: {err}")
+                self.logger.error(
+                    f"Operational error on database while validating token: {err}"
+                )
                 server = None
             except Exception as err:
                 self.logger.warning(f"Unknown error while validating token: {err}")
@@ -1250,7 +1326,9 @@ class WebhookServerHandler:
             try:
                 servers = session.query(Servers).all()
             except sqlalchemy.exc.OperationalError as err:
-                self.logger.error(f"Operational error on database while gathering servers: {err}")
+                self.logger.error(
+                    f"Operational error on database while gathering servers: {err}"
+                )
 
                 raise DatabaseNotReadyError()
             except Exception as err:
