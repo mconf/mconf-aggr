@@ -54,27 +54,28 @@ jobs:
         uses: tj-actions/changed-files@v37
         with:
           files: mconf_aggr/*.py
-      - name: Run step if any file(s) change
-        if: ${{ steps.changed-python-files.outputs.any_changed == 'false' }}
-        run: |
-          echo "Conditional evaluated to True"
       - name: Set up Python Environment
+        if: ${{ steps.changed-python-files.outputs.any_changed == 'true' }} && ${{ github.event_name == 'pull_request' }}
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - name: Setup PDM
+        if: ${{ steps.changed-python-files.outputs.any_changed == 'true' }} && ${{ github.event_name == 'pull_request' }}
         uses: pdm-project/setup-pdm@v3
         with:
           python-version: '3.10'
           cache: true
           cache-dependency-path: ./pdm.lock
       - name: Install Dependencies
+        if: ${{ steps.changed-python-files.outputs.any_changed == 'true' }} && ${{ github.event_name == 'pull_request' }}
         run: pdm install 
       - name: Load .env File
+        if: ${{ steps.changed-python-files.outputs.any_changed == 'true' }} && ${{ github.event_name == 'pull_request' }}
         uses: c-py/action-dotenv-to-setenv@v2
         with:
           env-file: .env
       - name: Run Tests
+        if: ${{ steps.changed-python-files.outputs.any_changed == 'true' }} && ${{ github.event_name == 'pull_request' }}
         run: pdm run coverage run --source=$SRC_PATH -m unittest discover -s $TESTS_PATH
       - name: Generate XML from Coverage
         run: pdm run coverage xml
