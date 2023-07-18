@@ -97,7 +97,7 @@ class ReadinessProbeListener(ProbeListener):
         try:
             _ping_database()
         except DatabaseNotReadyError as err:
-            self.logger.warn(str(err))
+            self.logger.warning(str(err))
 
             return False
 

@@ -303,7 +303,7 @@ class WebhookEventHandler:
                             continue
 
                 else:
-                    self.logger.warn("Not publishing event from '{}'".format(server_url))
+                    self.logger.warning("Not publishing event from '{}'".format(server_url))
 
     def _decode(self, event):
         return json.loads(event)

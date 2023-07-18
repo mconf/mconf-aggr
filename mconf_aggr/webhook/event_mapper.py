@@ -201,7 +201,7 @@ def map_webhook_event(event):
         event_type = event["data"]["id"]
         server_url = event["server_url"]
     except (KeyError, TypeError) as err:
-        logger.warn("Webhook message dos not contain a valid id: {}".format(err))
+        logger.warning("Webhook message dos not contain a valid id: {}".format(err))
         raise InvalidWebhookMessageError("Webhook message dos not contain a valid id")
 
     logger.debug("Mapping event")
@@ -273,7 +273,7 @@ def map_webhook_event(event):
         mapped_event = _map_transfer_event(event, event_type, server_url)
 
     else:
-        logger.warn("Webhook event id is not valid: '{}'".format(event_type))
+        logger.warning("Webhook event id is not valid: '{}'".format(event_type))
         raise InvalidWebhookEventError("Webhook event '{}' is not valid".format(event_type))
 
     return mapped_event
