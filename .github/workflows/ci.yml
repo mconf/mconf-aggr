@@ -55,9 +55,6 @@ jobs:
         with:
           files: |
             *.py
-      - name: End Job If None
-        if: steps.changed-python-files.outputs.any_changed == 'false'
-        run: exit 0
       - name: Set up Python Environment
         uses: actions/setup-python@v4
         with:
@@ -79,8 +76,8 @@ jobs:
       - name: Generate XML from Coverage
         run: pdm run coverage xml
       - name: Run Python Cov
+        if: steps.changed-python-files.outputs.any_changed == 'false' && github.event_name == 'pull_request'
         uses: orgoro/coverage@v2.1
-        if: github.event_name == 'pull_request'
         with:
           coverageFile: coverage.xml
           token: ${{ secrets.GITHUB_TOKEN }}
