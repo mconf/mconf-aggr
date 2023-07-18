@@ -21,8 +21,8 @@ jobs:
         id: changed-python-files
         uses: tj-actions/changed-files@v37
         with:
-          files: *.py
-  
+          files: |
+            *.py
   format-and-lint:
     runs-on: ubuntu-20.04
     name: Lint and Check Formatting
