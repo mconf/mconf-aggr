@@ -75,12 +75,12 @@ jobs:
         with:
           env-file: .env
       - name: Run Tests
-        if: ${{ steps.changed-python-files.outputs.any_changed == 'true' }} && ${{ github.event_name == 'pull_request' }}
+        if: ${{ steps.changed-python-files.outputs.any_changed == 'true' }}
         run: pdm run coverage run --source=$SRC_PATH -m unittest discover -s $TESTS_PATH
       - name: Generate XML from Coverage
         run: pdm run coverage xml
       - name: Run Python Cov
-        if: ${{ steps.changed-python-files.outputs.any_changed == 'true' }} && ${{ github.event_name == 'pull_request' }}
+        if: ${{ steps.changed-python-files.outputs.any_changed == 'true' }}
         uses: orgoro/coverage@v2.1
         with:
           coverageFile: coverage.xml
