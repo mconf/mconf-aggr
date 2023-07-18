@@ -98,9 +98,7 @@ class Meetings(Base):
     meeting_event = relationship("MeetingsEvents")
 
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(
-        DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
-    )
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     running = Column(Boolean)
     has_user_joined = Column(Boolean)
@@ -251,9 +249,7 @@ class MeetingsEvents(Base):
     institution_guid = Column(String)
 
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(
-        DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
-    )
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     external_meeting_id = Column(String(255))  # Index?
     internal_meeting_id = Column(String(255), unique=True)  # Index?
@@ -405,9 +401,7 @@ class Recordings(Base):
     id = Column(Integer, primary_key=True)
 
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(
-        DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
-    )
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     record_id = Column(String(255), unique=True)
     meeting_event_id = Column(Integer, ForeignKey("meetings_events.id"))
@@ -539,9 +533,7 @@ class UsersEvents(Base):
     meeting_event = relationship("MeetingsEvents")
 
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(
-        DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
-    )
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     name = Column(String(255))
     role = Column(String(50))
@@ -679,9 +671,7 @@ class SharedSecrets(Base):
     secret = Column(String)
     scope = Column(String)
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(
-        DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
-    )
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     def __repr__(self):
         return (
@@ -732,9 +722,7 @@ class Institutions(Base):
     guid = Column(String, unique=True)
     name = Column(String)
     created_at = Column(DateTime, default=datetime.datetime.now)
-    updated_at = Column(
-        DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now
-    )
+    updated_at = Column(DateTime, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     def __repr__(self):
         return (

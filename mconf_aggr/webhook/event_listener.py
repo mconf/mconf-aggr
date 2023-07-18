@@ -69,9 +69,7 @@ class AuthMiddleware:
             server_url = req.get_param("domain")
 
             if not server_url:
-                self.logger.warning(
-                    "Domain missing from (last hop) '{}'.".format(req.host)
-                )
+                self.logger.warning("Domain missing from (last hop) '{}'.".format(req.host))
                 raise falcon.HTTPUnauthorized(
                     title="Domain required for authentication",
                     description="Provide a valid domain as part of the request",
@@ -82,13 +80,10 @@ class AuthMiddleware:
             www_authentication = {"Bearer realm": '"mconf-aggregator"'}
 
             if token is None:
-                self.logger.warning(
-                    "Authentication token missing from '{}'.".format(server_url)
-                )
+                self.logger.warning("Authentication token missing from '{}'.".format(server_url))
                 raise falcon.HTTPUnauthorized(
                     title="Authentication required",
-                    description="Provide an authentication token as part of the "
-                    "request",
+                    description="Provide an authentication token as part of the " "request",
                     headers=www_authentication,
                 )
 
@@ -101,8 +96,7 @@ class AuthMiddleware:
                 )
                 raise falcon.HTTPUnauthorized(
                     title="Unable to validate authentication token",
-                    description="The provided authentication token could not be "
-                    "validate",
+                    description="The provided authentication token could not be " "validate",
                     headers=www_authentication,
                 )
 
@@ -164,9 +158,7 @@ class WebhookEventListener:
             event = req.get_param("event")
 
             self.logger.info(
-                "Webhook event received from '{}' (last hop: '{}').".format(
-                    server_url, req.host
-                )
+                "Webhook event received from '{}' (last hop: '{}').".format(server_url, req.host)
             )
 
             # Always responds with HTTP status code 200 in order to prevent
@@ -180,9 +172,7 @@ class WebhookEventListener:
                 resp.text = json.dumps(response.error)
                 resp.status = falcon.HTTP_200
             except Exception as err:
-                self.logger.error(
-                    f"An unexpected error occurred while processing event: {err}"
-                )
+                self.logger.error(f"An unexpected error occurred while processing event: {err}")
                 response = WebhookResponse(str(err))
                 resp.text = json.dumps(response.error)
                 resp.status = falcon.HTTP_200
@@ -313,9 +303,7 @@ class WebhookEventHandler:
                             continue
 
                 else:
-                    self.logger.warn(
-                        "Not publishing event from '{}'".format(server_url)
-                    )
+                    self.logger.warn("Not publishing event from '{}'".format(server_url))
 
     def _decode(self, event):
         return json.loads(event)

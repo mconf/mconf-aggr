@@ -48,9 +48,7 @@ def main(argv):
             )
             print("     Accepts only integers.")
             print("     Default is '1'.")
-            print(
-                " -t|--times=<integer>: how many meetings will be sent to aggregator."
-            )
+            print(" -t|--times=<integer>: how many meetings will be sent to aggregator.")
             print("     Accepts only integers.")
             print("     Default is '1'.")
             sys.exit()
@@ -148,45 +146,27 @@ def run_meeting(cfg, interval):
             cfg.internal_meeting_id, cfg.external_meeting_id, cfg.internal_user_id
         )
         time.sleep(interval)
-    events.post_meeting_recording_changed(
-        cfg.internal_meeting_id, cfg.external_meeting_id
-    )
+    events.post_meeting_recording_changed(cfg.internal_meeting_id, cfg.external_meeting_id)
     time.sleep(interval)
-    events.post_meeting_transfer_enabled(
-        cfg.internal_meeting_id, cfg.external_meeting_id
-    )
+    events.post_meeting_transfer_enabled(cfg.internal_meeting_id, cfg.external_meeting_id)
     time.sleep(interval)
-    events.post_meeting_transfer_disabled(
-        cfg.internal_meeting_id, cfg.external_meeting_id
-    )
+    events.post_meeting_transfer_disabled(cfg.internal_meeting_id, cfg.external_meeting_id)
     time.sleep(interval)
     events.post_meeting_ended(cfg.internal_meeting_id, cfg.external_meeting_id)
 
 
 def run_recording(cfg, interval):
-    events.post_rap_archive_started(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
+    events.post_rap_archive_started(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
     time.sleep(interval)
-    events.post_rap_archive_ended(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
+    events.post_rap_archive_ended(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
     time.sleep(interval)
-    events.post_rap_sanity_started(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
+    events.post_rap_sanity_started(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
     time.sleep(interval)
-    events.post_rap_sanity_ended(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
+    events.post_rap_sanity_ended(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
     time.sleep(interval)
-    events.post_rap_process_started(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
+    events.post_rap_process_started(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
     time.sleep(interval)
-    events.post_rap_process_ended(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
+    events.post_rap_process_ended(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
     time.sleep(interval)
     events.post_rap_process_started_pv(
         cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
@@ -196,9 +176,7 @@ def run_recording(cfg, interval):
         cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
     )
     time.sleep(interval)
-    events.post_rap_publish_started(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
+    events.post_rap_publish_started(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
     time.sleep(interval)
     events.post_rap_publish_ended(
         cfg.internal_meeting_id,

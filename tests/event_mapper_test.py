@@ -101,9 +101,7 @@ class TestMapping(unittest.TestCase):
             "mconf_aggr.webhook.event_mapper._map_create_event"
         ) as _map_create_event_mock:
             map_webhook_event(event)
-            _map_create_event_mock.assert_called_with(
-                event, "meeting-created", "localhost"
-            )
+            _map_create_event_mock.assert_called_with(event, "meeting-created", "localhost")
 
         got = map_webhook_event(event)
 
@@ -135,13 +133,9 @@ class TestMapping(unittest.TestCase):
             ),
         )
 
-        with mock.patch(
-            "mconf_aggr.webhook.event_mapper._map_end_event"
-        ) as _map_end_event_mock:
+        with mock.patch("mconf_aggr.webhook.event_mapper._map_end_event") as _map_end_event_mock:
             map_webhook_event(event)
-            _map_end_event_mock.assert_called_with(
-                event, "meeting-ended", "mocked-server"
-            )
+            _map_end_event_mock.assert_called_with(event, "meeting-ended", "mocked-server")
 
         got = map_webhook_event(event)
 
@@ -190,9 +184,7 @@ class TestMapping(unittest.TestCase):
             "mconf_aggr.webhook.event_mapper._map_user_joined_event"
         ) as _map_user_joined_event_mock:
             map_webhook_event(event)
-            _map_user_joined_event_mock.assert_called_with(
-                event, "user-joined", "mocked-server"
-            )
+            _map_user_joined_event_mock.assert_called_with(event, "user-joined", "mocked-server")
 
         got = map_webhook_event(event)
 
@@ -235,9 +227,7 @@ class TestMapping(unittest.TestCase):
             "mconf_aggr.webhook.event_mapper._map_user_left_event"
         ) as _map_user_left_event_mock:
             map_webhook_event(event)
-            _map_user_left_event_mock.assert_called_with(
-                event, "user-left", "mocked-server"
-            )
+            _map_user_left_event_mock.assert_called_with(event, "user-left", "mocked-server")
 
         got = map_webhook_event(event)
 
@@ -323,9 +313,7 @@ class TestMapping(unittest.TestCase):
             ),
         )
 
-        with mock.patch(
-            "mconf_aggr.webhook.event_mapper._map_user_event"
-        ) as _map_user_event_mock:
+        with mock.patch("mconf_aggr.webhook.event_mapper._map_user_event") as _map_user_event_mock:
             map_webhook_event(event)
             _map_user_event_mock.assert_called_with(
                 event, "user-audio-voice-disabled", "mocked-server"
@@ -365,9 +353,7 @@ class TestMapping(unittest.TestCase):
                             "link": "madeup-link",
                             "processing_time": 2060,
                             "duration": 5663,
-                            "extensions": {
-                                "preview": {"images": {"image": "madeup-image-link"}}
-                            },
+                            "extensions": {"preview": {"images": {"image": "madeup-image-link"}}},
                             "size": 213541,
                         },
                         "download": {},
@@ -397,9 +383,7 @@ class TestMapping(unittest.TestCase):
                     "link": "madeup-link",
                     "processing_time": 2060,
                     "duration": 5663,
-                    "extensions": {
-                        "preview": {"images": {"image": "madeup-image-link"}}
-                    },
+                    "extensions": {"preview": {"images": {"image": "madeup-image-link"}}},
                     "size": 213541,
                 },
                 download={},
@@ -454,9 +438,7 @@ class TestMapping(unittest.TestCase):
             "mconf_aggr.webhook.event_mapper._map_rap_publish_event"
         ) as _map_rap_event_mock:
             map_webhook_event(event)
-            _map_rap_event_mock.assert_called_with(
-                event, "rap-publish-started", "mocked-server"
-            )
+            _map_rap_event_mock.assert_called_with(event, "rap-publish-started", "mocked-server")
 
         got = map_webhook_event(event)
 

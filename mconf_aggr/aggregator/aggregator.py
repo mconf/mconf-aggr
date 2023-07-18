@@ -152,9 +152,7 @@ class SubscriberThread(threading.Thread):
         sent to the `subscriber`'s callback `run` method. When signaled to
         exit, it simply returns and the thread is done.
         """
-        self.logger.debug(
-            f"Running thread with callback {format(self.subscriber.callback)}"
-        )
+        self.logger.debug(f"Running thread with callback {format(self.subscriber.callback)}")
 
         while not self._stopevent.is_set():
             try:
@@ -178,9 +176,7 @@ class SubscriberThread(threading.Thread):
         self.subscriber.channel.close()
 
         threading.Thread.join(self)
-        self.logger.debug(
-            f"Thread with callback {self.subscriber.callback} exited with success."
-        )
+        self.logger.debug(f"Thread with callback {self.subscriber.callback} exited with success.")
 
 
 class Channel:
@@ -365,9 +361,7 @@ class Publisher:
     def __repr__(self):
         channels = list(self.channels.keys())
 
-        return "{!s}(channels={!r})".format(
-            self.__class__.__name__, reprlib.repr(channels)
-        )
+        return "{!s}(channels={!r})".format(self.__class__.__name__, reprlib.repr(channels))
 
 
 def error_handler(aggregator, errorevent):
@@ -432,9 +426,7 @@ class Aggregator:
                 self.logger.debug(f"Setting up callback {subscriber.callback}.")
                 subscriber.callback.setup()
             except NotImplementedError:
-                self.logger.warning(
-                    f"setup() not implemented for callback {subscriber.callback}."
-                )
+                self.logger.warning(f"setup() not implemented for callback {subscriber.callback}.")
                 continue
             except Exception:
                 self.logger.exception(
@@ -449,9 +441,7 @@ class Aggregator:
         self.threads = []
 
         for subscriber in self.subscribers:
-            self.threads.append(
-                SubscriberThread(subscriber=subscriber, errorevent=errorevent)
-            )
+            self.threads.append(SubscriberThread(subscriber=subscriber, errorevent=errorevent))
 
         # Create error-waiting thread.
         self._error_thread = threading.Thread(
@@ -564,9 +554,7 @@ class Aggregator:
         try:
             subscribers = self.channels[channel]
         except KeyError:
-            self.logger.debug(
-                f"Creating new list of subscribers for channel {channel}."
-            )
+            self.logger.debug(f"Creating new list of subscribers for channel {channel}.")
             subscribers = []
 
         channel_obj = Channel(channel)
@@ -590,9 +578,7 @@ class Aggregator:
             self.channels[channel] = filtered_subscribers
 
         self.channels = {
-            channel: subscribers
-            for channel, subscribers in self.channels.items()
-            if subscribers
+            channel: subscribers for channel, subscribers in self.channels.items() if subscribers
         }
 
     @property
