@@ -11,6 +11,18 @@ on:
     branches: [master]
 
 jobs:
+  changed_files:
+    runs-on: ubuntu-20.04
+    name: Get Changed Files
+    steps:
+      - name: Check out Source Repository
+        uses: actions/checkout@v3
+      - name: Get changed Python files
+        id: changed-python-files
+        uses: tj-actions/changed-files@v37
+        with:
+          files: *.py
+  
   format-and-lint:
     runs-on: ubuntu-20.04
     name: Lint and Check Formatting
@@ -44,7 +56,7 @@ jobs:
         uses: isort/isort-action@v1.0.0
 
   test-and-check-coverage:
-    if: github.event.pull_request.changed_files contains '*.py'
+    if: steps.changed-python-files.outputs.any_changed == 'true'
     runs-on: ubuntu-20.04
     name: Test and Check Coverage
     steps:
