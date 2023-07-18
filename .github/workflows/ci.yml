@@ -55,6 +55,11 @@ jobs:
         with:
           files: |
             *.py
+      - name: Run step if any file(s) change
+        if: ${{ steps.changed-python-files.outputs.any_changed == 'true' }}
+        run: |
+          echo "One or more files in the docs folder has changed."
+          echo "List all the files that have changed: ${{ steps.changed-files-specific.outputs.all_changed_files }}"
       - name: Set up Python Environment
         uses: actions/setup-python@v4
         with:
