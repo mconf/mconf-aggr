@@ -33,7 +33,7 @@ jobs:
         uses: py-actions/flake8@v2
         with:
           path: "./mconf_aggr"
-          ignore: E501
+          ignore: E501, W503
       - name: Check with Black
         uses: psf/black@stable
         with:
