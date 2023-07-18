@@ -32,8 +32,8 @@ jobs:
       - name: Lint with Flake
         uses: py-actions/flake8@v2
         with:
-          max-line-length: "100"
           path: "./mconf_aggr"
+          ignore: E501
       - name: Check with Black
         uses: psf/black@stable
         with:
