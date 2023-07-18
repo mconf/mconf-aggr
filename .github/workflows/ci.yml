@@ -76,7 +76,7 @@ jobs:
       - name: Generate XML from Coverage
         run: pdm run coverage xml
       - name: Run Python Cov
-        if: ${{ steps.changed-python-files.outputs.any_changed == 'false' }} && ${{ github.event_name == 'pull_request' }}
+        if: ${{ steps.changed-python-files.outputs.any_changed == 'true' }} && ${{ github.event_name == 'pull_request' }}
         uses: orgoro/coverage@v2.1
         with:
           coverageFile: coverage.xml
