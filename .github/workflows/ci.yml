@@ -12,7 +12,7 @@ on:
 
 jobs:
   format-and-lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: Lint and Check Formatting
     steps:
       - name: Check out Source Repository
@@ -39,11 +39,12 @@ jobs:
         with:
           options: "--check --verbose"
           src: "./mconf_aggr"
-          version: "~= 22.0"
+          version: "22.0"
       - name: Run Isort
         uses: isort/isort-action@v1.0.0
 
   test-and-check-coverage:
+    if: ${{ github.event.pull_request.changed_files contains '*.py' }}
     runs-on: ubuntu-latest
     name: Test and Check Coverage
     steps:
