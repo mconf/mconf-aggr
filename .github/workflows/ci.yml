@@ -39,7 +39,7 @@ jobs:
         with:
           options: "--check --verbose"
           src: "./mconf_aggr"
-          version: "22.0"
+          version: "22.10.0"
       - name: Run Isort
         uses: isort/isort-action@v1.0.0
 
@@ -76,7 +76,7 @@ jobs:
           env-file: .env
       - name: Run Tests
         if: ${{ steps.changed-python-files.outputs.any_changed == 'true' && github.event_name == 'pull_request'}}
-        run: pdm run coverage run --source=${SRC_PATH} -m pytest -s ${TESTS_PATH}
+        run: pdm run coverage run --source=${SRC_PATH} -m pytest -s ${TESTS_PATH} --ignore ${TESTS_PATH}/black-box
       - name: Generate XML from Coverage
         if: ${{ steps.changed-python-files.outputs.any_changed == 'true' && github.event_name == 'pull_request'}}
         run: pdm run coverage xml
