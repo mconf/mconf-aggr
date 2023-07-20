@@ -1,11 +1,12 @@
 import unittest
 
 from mconf_aggr.aggregator.aggregator import Channel
+from mconf_aggr.logger import get_logger
 
 
 class TestChannel(unittest.TestCase):
     def setUp(self):
-        self.channel = Channel("test_channel", maxsize=5)
+        self.channel = Channel(name="test_channel", maxsize=5, logger=get_logger())
 
     def test_publish(self):
         self.channel.publish(1)
@@ -62,5 +63,5 @@ class TestChannel(unittest.TestCase):
         self.channel.publish(1)
         self.channel.close()
 
-        with self.assertLogs(self.channel.logger, level="DEBUG") as cm:
+        with self.assertLogs(self.channel.logger, level="WARNING") as cm:
             self.assertIn("There is data not consumed in channel {self.channel.name}.", cm.output)
