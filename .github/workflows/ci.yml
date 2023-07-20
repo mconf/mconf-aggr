@@ -32,13 +32,13 @@ jobs:
       - name: Lint with Flake
         uses: py-actions/flake8@v2
         with:
-          path: ${SRC_PATH}
+          path: "./mconf_aggr"
           ignore: "E501,W503"
       - name: Check with Black
         uses: psf/black@stable
         with:
           options: "--check --verbose"
-          src: ${SRC_PATH}
+          src: "./mconf_aggr"
           version: "22.10.0"
       - name: Run Isort
         uses: isort/isort-action@v1.0.0
@@ -49,11 +49,13 @@ jobs:
     steps:
       - name: Check out Source Repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
       - name: Get Modified Python Files
         id: changed-python-files
         uses: tj-actions/changed-files@v37
         with:
-          files: ${SRC_PATH}/*.py
+          files: mconf_aggr/*.py
       - name: Set up Python Environment
         if: ${{ steps.changed-python-files.outputs.any_changed == 'true' }}
         uses: actions/setup-python@v4
