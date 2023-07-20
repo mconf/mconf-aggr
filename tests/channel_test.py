@@ -1,7 +1,5 @@
 import unittest
 
-from loguru_caplog import loguru_caplog as caplog
-
 from mconf_aggr.aggregator.aggregator import Channel
 
 
@@ -63,4 +61,6 @@ class TestChannel(unittest.TestCase):
     def test_log_unwritten(self, caplog):
         self.channel.publish(1)
         self.channel.close()
-        assert "There is data not consumed in channel {self.channel.name}." in caplog.text
+
+        with self.assertLogs(self.channel.logger, level="DEBUG") as cm:
+            self.assertIn("There is data not consumed in channel {self.channel.name}.", cm.output)
