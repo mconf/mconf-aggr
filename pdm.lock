@@ -147,6 +147,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "loguru-caplog"
+version = "0.2.0"
+requires_python = ">=3.6"
+summary = "Сaptures loguru logging output"
+dependencies = [
+    "loguru",
+    "pytest",
+]
+
+[[package]]
 name = "mccabe"
 version = "0.7.0"
 requires_python = ">=3.6"
@@ -303,7 +313,7 @@ dependencies = [
 lock_version = "4.2"
 cross_platform = true
 groups = ["default", "debug", "dev", "test"]
-content_hash = "sha256:bca191d7ec0e09b8ec10b9e7a85d2ca0ebf97590679a5c7516d5694d5f67789e"
+content_hash = "sha256:2a40d244459f63826ca17ede684d04f74764acb304a90264c5c5b45f9e1fcc85"
 
 [metadata.files]
 "black 22.12.0" = [
@@ -714,6 +724,10 @@ content_hash = "sha256:bca191d7ec0e09b8ec10b9e7a85d2ca0ebf97590679a5c7516d5694d5
 "loguru 0.7.0" = [
     {url = "https://files.pythonhosted.org/packages/0c/1d/697cbb4ae54217784c1c4805696efb2fd7a1cbbe4827264a80a49e52b828/loguru-0.7.0.tar.gz", hash = "sha256:1612053ced6ae84d7959dd7d5e431a0532642237ec21f7fd83ac73fe539e03e1"},
     {url = "https://files.pythonhosted.org/packages/71/bd/337f7a0cd2628c4c77512d78e26f93b13c327a2ddf2132001dd78c000bf4/loguru-0.7.0-py3-none-any.whl", hash = "sha256:b93aa30099fa6860d4727f1b81f8718e965bb96253fa190fab2077aaad6d15d3"},
+]
+"loguru-caplog 0.2.0" = [
+    {url = "https://files.pythonhosted.org/packages/6e/2a/3fe40a9d04601f05988fd43c26a9b98e17448664bcd7a5dcf547372e3311/loguru-caplog-0.2.0.tar.gz", hash = "sha256:2ebc354a3e45b41498539bc71311b670668a81d3412de6f60ee74c9407a472ed"},
+    {url = "https://files.pythonhosted.org/packages/ca/f8/68a8c0234e5a12cff96f12da4eb5e36c50b55964bd500719eca31cb44a16/loguru_caplog-0.2.0-py3-none-any.whl", hash = "sha256:1fb1e7afabf866de7b68bd728837e3bd0b03b69b915e9c3606fbd083fd4baaf8"},
 ]
 "mccabe 0.7.0" = [
     {url = "https://files.pythonhosted.org/packages/27/1a/1f68f9ba0c207934b35b86a8ca3aad8395a3d6dd7921c0686e23853ff5a9/mccabe-0.7.0-py2.py3-none-any.whl", hash = "sha256:6c2d30ab6be0e4a46919781807b4f0d834ebdd6c6e3dca0bda5a15f863427b6e"},

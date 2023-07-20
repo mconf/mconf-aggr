@@ -1,5 +1,7 @@
 import unittest
 
+from loguru_caplog import loguru_caplog as caplog
+
 from mconf_aggr.aggregator.aggregator import Channel
 
 
