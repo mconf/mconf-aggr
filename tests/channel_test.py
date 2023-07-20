@@ -58,7 +58,7 @@ class TestChannel(unittest.TestCase):
 
         self.assertTrue(self.channel.empty())
 
-    def test_log_unwritten(self, caplog):
+    def test_log_unwritten(self):
         self.channel.publish(1)
         self.channel.close()
 
