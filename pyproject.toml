@@ -34,8 +34,6 @@ dev = [
 ]
 test = [
     "pytest>=7.4.0",
-    "pytest-loguru>=0.2.0",
-    "loguru-caplog>=0.2.0",
 ]
 debug = [
     "debugpy>=1.6.7",
