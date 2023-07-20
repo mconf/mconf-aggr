@@ -1,12 +1,23 @@
 import unittest
+from contextlib import contextmanager
+
+from loguru import logger
 
 from mconf_aggr.aggregator.aggregator import Channel
-from mconf_aggr.logger import get_logger
+
+
+@contextmanager
+def capture_logs(level="INFO", format="{level}:{name}:{message}"):
+    """Capture loguru-based logs."""
+    output = []
+    handler_id = logger.add(output.append, level=level, format=format)
+    yield output
+    logger.remove(handler_id)
 
 
 class TestChannel(unittest.TestCase):
     def setUp(self):
-        self.channel = Channel(name="test_channel", maxsize=5, logger=get_logger())
+        self.channel = Channel(name="test_channel", maxsize=5)
 
     def test_publish(self):
         self.channel.publish(1)
@@ -61,7 +72,8 @@ class TestChannel(unittest.TestCase):
 
     def test_log_unwritten(self):
         self.channel.publish(1)
-        self.channel.close()
 
-        with self.assertLogs(self.channel.logger, level="WARNING") as cm:
-            self.assertIn("There is data not consumed in channel {self.channel.name}.", cm.output)
+        with capture_logs(level="WARNING") as cm:
+            self.channel.close()
+            print(cm)
+            self.assertIn("WARNING:mconf_aggr.aggregator.aggregator:There is data not consumed in channel test_channel.\n", cm)
