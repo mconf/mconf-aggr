@@ -49,8 +49,6 @@ jobs:
     steps:
       - name: Check out Source Repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
       - name: Get Modified Python Files
         id: changed-python-files
         uses: tj-actions/changed-files@v37
