@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.13.1
+* Fix error on hooks/build.
+
 ## 1.13.0
 * Change project manager to PDM.
 * Set user's leave_time when the meeting ends.
