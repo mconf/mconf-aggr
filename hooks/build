@@ -1,20 +1,8 @@
 #!/bin/bash
 
-source .env
+docker build \
+-t $IMAGE_NAME \
+-f $DOCKERFILE_PATH \
+--target production \
+--build-arg DISABLE_DEV=1 .
 
-DISABLE_DEV=1
-
-docker build -f Dockerfile.base \
-  --build-arg PYTHON_IMAGE_TAG=$PYTHON_IMAGE_TAG \
-	--build-arg POETRY_VERSION=$POETRY_VERSION \
-	--build-arg POETRY_HOME=$POETRY_HOME \
-	--build-arg BASE_PATH=$BASE_PATH \
-	--build-arg APP_NAME=$APP_NAME \
-	--build-arg DISABLE_DEV=$DISABLE_DEV \
-	-t mconf-aggr-base .
-
-docker build -f $DOCKERFILE_PATH \
-  --build-arg PYTHON_IMAGE_TAG=$PYTHON_IMAGE_TAG \
-  --build-arg BASE_PATH=$BASE_PATH \
-  --build-arg APP_NAME=$APP_NAME \
-  -t $IMAGE_NAME .
