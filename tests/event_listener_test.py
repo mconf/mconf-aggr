@@ -94,14 +94,10 @@ class TestResponse(unittest.TestCase):
         self.response = WebhookResponse("test message")
 
     def test_response_success(self):
-        self.assertEqual(
-            self.response.success, {"status": "Success", "message": "test message"}
-        )
+        self.assertEqual(self.response.success, {"status": "Success", "message": "test message"})
 
     def test_response_error(self):
-        self.assertEqual(
-            self.response.error, {"status": "Error", "message": "test message"}
-        )
+        self.assertEqual(self.response.error, {"status": "Error", "message": "test message"})
 
 
 class TestAuthMiddleware(unittest.TestCase):
@@ -160,15 +156,11 @@ class TestAuthMiddleware(unittest.TestCase):
 
         host = "host1"
         token = "Bearer 123456"
-        self.assertFalse(
-            self.auth_middleware._token_is_valid(host, token, handler_mock)
-        )
+        self.assertFalse(self.auth_middleware._token_is_valid(host, token, handler_mock))
 
         host = "host2"
         token = "Bearer 123456"
-        self.assertFalse(
-            self.auth_middleware._token_is_valid(host, token, handler_mock)
-        )
+        self.assertFalse(self.auth_middleware._token_is_valid(host, token, handler_mock))
 
 
 class TestWebhookEventHandler(unittest.TestCase):
@@ -181,9 +173,7 @@ class TestWebhookEventHandler(unittest.TestCase):
         self.event = '[{"event": 1}, {"event": 2}, {"event": 3}]'
 
     def test_json_decode_error(self):
-        self.event_handler._decode = MagicMock(
-            side_effect=json.JSONDecodeError("", "", 0)
-        )
+        self.event_handler._decode = MagicMock(side_effect=json.JSONDecodeError("", "", 0))
 
         with self.assertRaises(RequestProcessingError):
             self.event_handler.process_event("localhost", "")
@@ -198,9 +188,7 @@ class TestWebhookEventHandler(unittest.TestCase):
 
     def test_map_fails_publish_not_called(self):
         mapper_mock = mock.MagicMock(side_effect=Exception)
-        with mock.patch(
-            "mconf_aggr.webhook.event_listener.map_webhook_event", mapper_mock
-        ):
+        with mock.patch("mconf_aggr.webhook.event_listener.map_webhook_event", mapper_mock):
             self.event_handler.process_event("localhost", self.event)
 
         self.event_handler.publisher.publish.assert_not_called()
@@ -212,9 +200,7 @@ class TestWebhookEventHandler(unittest.TestCase):
             mock.Mock(),
         ]
         mapper_mock = mock.MagicMock(side_effect=mapped_events)
-        with mock.patch(
-            "mconf_aggr.webhook.event_listener.map_webhook_event", mapper_mock
-        ):
+        with mock.patch("mconf_aggr.webhook.event_listener.map_webhook_event", mapper_mock):
             self.event_handler.process_event("localhost", self.event)
 
             calls = [
@@ -222,9 +208,7 @@ class TestWebhookEventHandler(unittest.TestCase):
                 call(mapped_3, channel=self.channel_mock),
             ]
 
-            self.event_handler.publisher.publish.assert_has_calls(
-                calls, any_order=False
-            )
+            self.event_handler.publisher.publish.assert_has_calls(calls, any_order=False)
 
     def test_normalize_server_url(self):
         server_url = "my-server.com"

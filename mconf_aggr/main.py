@@ -7,11 +7,10 @@ import sys
 
 import falcon
 
-from mconf_aggr.logger import get_logger
-
 import mconf_aggr.aggregator.cfg as cfg
 from mconf_aggr.aggregator.aggregator import Aggregator, SetupError
 from mconf_aggr.aggregator.utils import signal_handler
+from mconf_aggr.logger import get_logger
 from mconf_aggr.webhook.database import DatabaseConnector
 from mconf_aggr.webhook.database_handler import WebhookDataWriter
 from mconf_aggr.webhook.event_listener import WebhookEventHandler, WebhookEventListener
@@ -50,9 +49,7 @@ try:
     aggregator.setup()
 
     # Create the signal handling for graceful shutdown
-    gevent.signal_handler(
-        signal.SIGTERM, signal_handler, aggregator, livenessProbe, signal.SIGTERM
-    )
+    gevent.signal_handler(signal.SIGTERM, signal_handler, aggregator, livenessProbe, signal.SIGTERM)
 except SetupError:
     sys.exit(1)
 
@@ -68,9 +65,7 @@ app.add_route("/ready", readinessProbe)
 should_register = cfg.config["MCONF_WEBHOOK_SHOULD_REGISTER"]
 if should_register:
     # Auto-register webhook callback to servers.
-    webhook_register = WebhookRegister(
-        callback_url=cfg.config["MCONF_WEBHOOK_CALLBACK_URL"]
-    )
+    webhook_register = WebhookRegister(callback_url=cfg.config["MCONF_WEBHOOK_CALLBACK_URL"])
     webhook_register.create_hooks()
 
 aggregator.start()

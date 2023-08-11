@@ -11,6 +11,7 @@ import queue
 import reprlib
 import threading
 from collections import namedtuple
+
 from mconf_aggr.logger import get_logger
 
 
@@ -210,7 +211,7 @@ class Channel:
         """
         self.logger.debug(f"Closing channel {self.name}.")
         if not self.empty():
-            self.logger.warning(f"There are data not consumed in channel {self.name}.")
+            self.logger.warning(f"There is data not consumed in channel {self.name}.")
         self.queue.put(None)
 
     def publish(self, data):
@@ -246,7 +247,10 @@ class Channel:
         data = self.queue.get()
 
         if data is None:
-            self.logger.debug(f"Signaling closing channel {self.name} for clients. Waiting for data.")
+            self.logger.debug(
+                f"Signaling closing channel {self.name} for clients. \
+                              Waiting for data."
+            )
             raise ChannelClosed()
 
         self.queue.task_done()
@@ -357,9 +361,7 @@ class Publisher:
     def __repr__(self):
         channels = list(self.channels.keys())
 
-        return "{!s}(channels={!r})".format(
-            self.__class__.__name__, reprlib.repr(channels)
-        )
+        return "{!s}(channels={!r})".format(self.__class__.__name__, reprlib.repr(channels))
 
 
 def error_handler(aggregator, errorevent):
@@ -427,7 +429,10 @@ class Aggregator:
                 self.logger.warning(f"setup() not implemented for callback {subscriber.callback}.")
                 continue
             except Exception:
-                self.logger.exception(f"Something went wrong while setting up callback {subscriber.callback}.")
+                self.logger.exception(
+                    f"Something went wrong while setting up callback \
+                                      {subscriber.callback}."
+                )
                 self.remove_callback(subscriber.callback)
                 continue
 
@@ -436,9 +441,7 @@ class Aggregator:
         self.threads = []
 
         for subscriber in self.subscribers:
-            self.threads.append(
-                SubscriberThread(subscriber=subscriber, errorevent=errorevent)
-            )
+            self.threads.append(SubscriberThread(subscriber=subscriber, errorevent=errorevent))
 
         # Create error-waiting thread.
         self._error_thread = threading.Thread(
@@ -471,7 +474,9 @@ class Aggregator:
             for thread in self.threads:
                 thread.start()
         except RuntimeError:
-            self.logger.exception("Error while starting thread. Cleaning up.",)
+            self.logger.exception(
+                "Error while starting thread. Cleaning up.",
+            )
             for thread in self.threads:
                 if thread.is_alive():
                     thread.exit()
@@ -497,7 +502,7 @@ class Aggregator:
 
             return
 
-        self.logger.info( "Stopping aggregator.")
+        self.logger.info("Stopping aggregator.")
 
         self.logger.info("Tearing down callbacks.")
         for subscriber in self.subscribers:
@@ -505,10 +510,16 @@ class Aggregator:
                 self.logger.debug(f"Tearing down callback {subscriber.callback}.")
                 subscriber.callback.teardown()
             except NotImplementedError:
-                self.logger.warning(f"teardown() not implemented for callback {subscriber.callback}.")
+                self.logger.warning(
+                    f"teardown() not implemented for callback \
+                                    {subscriber.callback}."
+                )
                 continue
             except Exception:
-                self.logger.exception(f"Something went wrong while tearing down callback {subscriber.callback}.")
+                self.logger.exception(
+                    f"Something went wrong while tearing down callback \
+                                      {subscriber.callback}."
+                )
                 continue
 
         self.logger.info("Exiting threads.")
@@ -567,9 +578,7 @@ class Aggregator:
             self.channels[channel] = filtered_subscribers
 
         self.channels = {
-            channel: subscribers
-            for channel, subscribers in self.channels.items()
-            if subscribers
+            channel: subscribers for channel, subscribers in self.channels.items() if subscribers
         }
 
     @property

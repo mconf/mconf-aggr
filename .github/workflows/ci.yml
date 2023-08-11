@@ -12,7 +12,7 @@ on:
 
 jobs:
   format-and-lint:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: Lint and Check Formatting
     steps:
       - name: Check out Source Repository
@@ -32,46 +32,55 @@ jobs:
       - name: Lint with Flake
         uses: py-actions/flake8@v2
         with:
-          max-line-length: "100"
           path: "./mconf_aggr"
+          ignore: "E501,W503"
       - name: Check with Black
         uses: psf/black@stable
         with:
           options: "--check --verbose"
           src: "./mconf_aggr"
-          version: "~= 22.0"
+          version: "22.10.0"
       - name: Run Isort
         uses: isort/isort-action@v1.0.0
 
   test-and-check-coverage:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     name: Test and Check Coverage
     steps:
       - name: Check out Source Repository
         uses: actions/checkout@v3
+      - name: Get Modified Python Files
+        id: changed-python-files
+        uses: tj-actions/changed-files@v37
       - name: Set up Python Environment
+        if: contains(steps.changed-python-files.outputs.modified_files, '.py')
         uses: actions/setup-python@v4
         with:
           python-version: '3.10'
       - name: Setup PDM
+        if: contains(steps.changed-python-files.outputs.modified_files, '.py')
         uses: pdm-project/setup-pdm@v3
         with:
           python-version: '3.10'
           cache: true
           cache-dependency-path: ./pdm.lock
       - name: Install Dependencies
+        if: contains(steps.changed-python-files.outputs.modified_files, '.py')
         run: pdm install 
       - name: Load .env File
+        if: contains(steps.changed-python-files.outputs.modified_files, '.py')
         uses: c-py/action-dotenv-to-setenv@v2
         with:
-          env-file: .env
+          env-file: envs/webhook-env-file.env
       - name: Run Tests
-        run: pdm run coverage run --source=$SRC_PATH -m unittest discover -s $TESTS_PATH
+        if: contains(steps.changed-python-files.outputs.modified_files, '.py')
+        run: pdm run coverage run --source=${SRC_PATH} -m pytest -s ${TESTS_PATH} --ignore ${TESTS_PATH}/black-box --ignore-glob=${TESTS_PATH}/integration*
       - name: Generate XML from Coverage
+        if: contains(steps.changed-python-files.outputs.modified_files, '.py')
         run: pdm run coverage xml
       - name: Run Python Cov
+        if: ${{ contains(steps.changed-python-files.outputs.modified_files, '.py') && github.event_name == 'pull_request' }}
         uses: orgoro/coverage@v2.1
-        if: github.event_name == 'pull_request'
         with:
           coverageFile: coverage.xml
           token: ${{ secrets.GITHUB_TOKEN }}

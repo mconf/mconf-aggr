@@ -2,9 +2,6 @@
 
 It will receive, validate, parse and send the parsed data to be processed.
 """
-import json
-import logging
-
 import falcon
 import sqlalchemy
 
@@ -100,7 +97,7 @@ class ReadinessProbeListener(ProbeListener):
         try:
             _ping_database()
         except DatabaseNotReadyError as err:
-            self.logger.warn(str(err))
+            self.logger.warning(str(err))
 
             return False
 

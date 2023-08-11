@@ -20,9 +20,7 @@ class Config:
     def randomize_configuration(self):
         self.external_meeting_id = "random-" + get_random_numeric_string(7)
         self.internal_meeting_id = (
-            get_random_alpha_numeric_string(40)
-            + "-"
-            + get_random_alpha_numeric_string(13)
+            get_random_alpha_numeric_string(40) + "-" + get_random_alpha_numeric_string(13)
         )
         self.record_id = self.internal_meeting_id
         self.internal_user_id = (

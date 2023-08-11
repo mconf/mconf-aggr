@@ -123,9 +123,7 @@ class TestMeetingCreatedHandler(unittest.TestCase):
         self.assertEqual(meetings_events.recording, False)
         self.assertEqual(meetings_events.max_users, 0)
         self.assertEqual(meetings_events.is_breakout, False)
-        self.assertEqual(
-            meetings_events.meta_data, {"mock_data": "mock", "another_mock": "mocked"}
-        )
+        self.assertEqual(meetings_events.meta_data, {"mock_data": "mock", "another_mock": "mocked"})
 
 
 class TestMeetingEndedHandler(unittest.TestCase):
@@ -210,9 +208,7 @@ class TestMeetingEndedHandler(unittest.TestCase):
         )
 
         self.handler.session.query().filter().first.return_value = meetings_events
-        self.handler.session.query().get = mock.Mock(
-            side_effect=[meetings_events, meetings]
-        )
+        self.handler.session.query().get = mock.Mock(side_effect=[meetings_events, meetings])
 
         self.handler.handle(self.event)
 
@@ -283,9 +279,7 @@ class TestMeetingTransferHandler(unittest.TestCase):
         )
 
         self.handler.session.query().filter().first.return_value = meetings_events
-        self.handler.session.query().get = mock.Mock(
-            side_effect=[meetings_events, meetings]
-        )
+        self.handler.session.query().get = mock.Mock(side_effect=[meetings_events, meetings])
 
         self.handler.handle(self.enableEvent)
 
@@ -328,9 +322,7 @@ class TestMeetingTransferHandler(unittest.TestCase):
         )
 
         self.handler.session.query().filter().first.return_value = meetings_events
-        self.handler.session.query().get = mock.Mock(
-            side_effect=[meetings_events, meetings]
-        )
+        self.handler.session.query().get = mock.Mock(side_effect=[meetings_events, meetings])
 
         self.handler.handle(self.disableEvent)
 
@@ -388,12 +380,8 @@ class TestUserJoinedHandler(unittest.TestCase):
         self.assertEqual(users_events.name, self.event.event.name)
         self.assertEqual(users_events.role, self.event.event.role)
         self.assertEqual(users_events.join_time, self.event.event.join_time)
-        self.assertEqual(
-            users_events.internal_user_id, self.event.event.internal_user_id
-        )
-        self.assertEqual(
-            users_events.external_user_id, self.event.event.external_user_id
-        )
+        self.assertEqual(users_events.internal_user_id, self.event.event.internal_user_id)
+        self.assertEqual(users_events.external_user_id, self.event.event.external_user_id)
 
     def test_user_joined_no_meeting_event(self):
         self.handler.session.query().filter().first.return_value = None
@@ -549,16 +537,12 @@ class TestDataProcessor(unittest.TestCase):
         self.assertIsInstance(event_handler, UserVoiceEnabledHandler)
 
     def test_select_user_audio_listen_only_enabled(self):
-        event_handler = self.data_processor._select_handler(
-            "user-audio-listen-only-enabled"
-        )
+        event_handler = self.data_processor._select_handler("user-audio-listen-only-enabled")
 
         self.assertIsInstance(event_handler, UserListenOnlyEnabledHandler)
 
     def test_select_user_audio_listen_only_disabled(self):
-        event_handler = self.data_processor._select_handler(
-            "user-audio-listen-only-disabled"
-        )
+        event_handler = self.data_processor._select_handler("user-audio-listen-only-disabled")
 
         self.assertIsInstance(event_handler, UserListenOnlyDisabledHandler)
 
@@ -608,18 +592,14 @@ class TestDataProcessor(unittest.TestCase):
             self.data_processor._select_handler("invalid-event-type")
 
     def test_select_handler_called(self):
-        event = WebhookEvent(
-            event_type="valid-event-type", event=None, server_url="localhost"
-        )
+        event = WebhookEvent(event_type="valid-event-type", event=None, server_url="localhost")
         self.data_processor._select_handler = mock.MagicMock()
         self.data_processor.update(event)
 
         self.data_processor._select_handler.assert_called_once_with(event.event_type)
 
     def test_handle_called(self):
-        event = WebhookEvent(
-            event_type="valid-event-type", event=None, server_url="localhost"
-        )
+        event = WebhookEvent(event_type="valid-event-type", event=None, server_url="localhost")
         handler_mock = mock.Mock()
         handler_mock.handle = mock.MagicMock()
         self.data_processor._select_handler = mock.MagicMock(return_value=handler_mock)
@@ -638,9 +618,7 @@ class TestWebhookDataWriter(unittest.TestCase):
         self.webhook_data_writer = WebhookDataWriter(connector=self.connector_mock)
 
     def test_run_called_with_data(self):
-        with mock.patch(
-            "mconf_aggr.webhook.database_handler.DataProcessor"
-        ) as data_processor_mock:
+        with mock.patch("mconf_aggr.webhook.database_handler.DataProcessor") as data_processor_mock:
             data_processor_mock.update = mock.MagicMock()
             with self.assertRaises(CallbackError):
                 self.webhook_data_writer.run({})
