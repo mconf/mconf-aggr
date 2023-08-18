@@ -45,9 +45,7 @@ class RecordingsTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
 
             (
                 meetings,
@@ -128,17 +126,13 @@ class RecordingsTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
 
             meetings = self.engine.meetings_by_meeting_id(internal_meeting_id)
 
             self.assertIsNone(meetings)
 
-            meetings_events = self.engine.meetings_events_by_meeting_id(
-                internal_meeting_id
-            )
+            meetings_events = self.engine.meetings_events_by_meeting_id(internal_meeting_id)
 
             self.assertEqual(
                 meetings_events.internal_meeting_id,
@@ -169,9 +163,7 @@ class RecordingsTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
 
             recordings = self.engine.recordings_by_meeting_id(internal_meeting_id)
 
@@ -208,9 +200,7 @@ class RecordingsTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
 
             recordings = self.engine.recordings_by_meeting_id(internal_meeting_id)
 
@@ -245,9 +235,7 @@ class RecordingsTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
 
             recordings = self.engine.recordings_by_meeting_id(internal_meeting_id)
 
@@ -285,9 +273,7 @@ class RecordingsTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
 
             recordings = self.engine.recordings_by_meeting_id(internal_meeting_id)
 
@@ -323,9 +309,7 @@ class RecordingsTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
 
             recordings = self.engine.recordings_by_meeting_id(internal_meeting_id)
 
@@ -387,9 +371,7 @@ class RecordingsTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
 
             recordings = self.engine.recordings_by_meeting_id(internal_meeting_id)
 

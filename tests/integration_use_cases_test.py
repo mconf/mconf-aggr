@@ -45,9 +45,7 @@ class UseCaseTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
 
             (
                 meetings,
@@ -135,12 +133,8 @@ class UseCaseTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
-            internal_user_id = event[0]["data"]["attributes"]["user"][
-                "internal-user-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
+            internal_user_id = event[0]["data"]["attributes"]["user"]["internal-user-id"]
 
             (
                 users_events,
@@ -153,9 +147,7 @@ class UseCaseTest(unittest.TestCase):
 
             self.assertEqual(users_meetings_events, meetings_meetings_events)
 
-            self.assertEqual(
-                users_events.name, event[0]["data"]["attributes"]["user"]["name"]
-            )
+            self.assertEqual(users_events.name, event[0]["data"]["attributes"]["user"]["name"])
             self.assertEqual(
                 users_events.internal_user_id,
                 event[0]["data"]["attributes"]["user"]["internal-user-id"],
@@ -164,9 +156,7 @@ class UseCaseTest(unittest.TestCase):
                 users_events.external_user_id,
                 event[0]["data"]["attributes"]["user"]["external-user-id"],
             )
-            self.assertEqual(
-                users_events.role, event[0]["data"]["attributes"]["user"]["role"]
-            )
+            self.assertEqual(users_events.role, event[0]["data"]["attributes"]["user"]["role"])
             self.assertEqual(users_events.join_time, event[0]["data"]["event"]["ts"])
             self.assertEqual(users_events.leave_time, None)
             self.assertEqual(users_events.meta_data, None)
@@ -194,9 +184,7 @@ class UseCaseTest(unittest.TestCase):
                 attendees[0]["full_name"],
                 event[0]["data"]["attributes"]["user"]["name"],
             )
-            self.assertEqual(
-                attendees[0]["role"], event[0]["data"]["attributes"]["user"]["role"]
-            )
+            self.assertEqual(attendees[0]["role"], event[0]["data"]["attributes"]["user"]["role"])
             self.assertEqual(
                 attendees[0]["is_presenter"],
                 event[0]["data"]["attributes"]["user"]["presenter"],
@@ -206,9 +194,7 @@ class UseCaseTest(unittest.TestCase):
             self.assertEqual(attendees[0]["has_video"], False)
 
             self.assertEqual(users_meetings_events.unique_users, 1)
-            self.assertEqual(
-                users_meetings_events.start_time, event[0]["data"]["event"]["ts"]
-            )
+            self.assertEqual(users_meetings_events.start_time, event[0]["data"]["event"]["ts"])
 
     def test_03_second_user_joined(self):
         event = [
@@ -237,12 +223,8 @@ class UseCaseTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
-            internal_user_id = event[0]["data"]["attributes"]["user"][
-                "internal-user-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
+            internal_user_id = event[0]["data"]["attributes"]["user"]["internal-user-id"]
 
             (
                 users_events,
@@ -255,9 +237,7 @@ class UseCaseTest(unittest.TestCase):
 
             self.assertEqual(users_meetings_events, meetings_meetings_events)
 
-            self.assertEqual(
-                users_events.name, event[0]["data"]["attributes"]["user"]["name"]
-            )
+            self.assertEqual(users_events.name, event[0]["data"]["attributes"]["user"]["name"])
             self.assertEqual(
                 users_events.internal_user_id,
                 event[0]["data"]["attributes"]["user"]["internal-user-id"],
@@ -266,9 +246,7 @@ class UseCaseTest(unittest.TestCase):
                 users_events.external_user_id,
                 event[0]["data"]["attributes"]["user"]["external-user-id"],
             )
-            self.assertEqual(
-                users_events.role, event[0]["data"]["attributes"]["user"]["role"]
-            )
+            self.assertEqual(users_events.role, event[0]["data"]["attributes"]["user"]["role"])
             self.assertEqual(users_events.join_time, event[0]["data"]["event"]["ts"])
             self.assertEqual(users_events.leave_time, None)
             self.assertEqual(users_events.meta_data, None)
@@ -296,9 +274,7 @@ class UseCaseTest(unittest.TestCase):
                 attendees[1]["full_name"],
                 event[0]["data"]["attributes"]["user"]["name"],
             )
-            self.assertEqual(
-                attendees[1]["role"], event[0]["data"]["attributes"]["user"]["role"]
-            )
+            self.assertEqual(attendees[1]["role"], event[0]["data"]["attributes"]["user"]["role"])
             self.assertEqual(
                 attendees[1]["is_presenter"],
                 event[0]["data"]["attributes"]["user"]["presenter"],
@@ -335,12 +311,8 @@ class UseCaseTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
-            internal_user_id = event[0]["data"]["attributes"]["user"][
-                "internal-user-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
+            internal_user_id = event[0]["data"]["attributes"]["user"]["internal-user-id"]
 
             (
                 users_events,
@@ -403,12 +375,8 @@ class UseCaseTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
-            internal_user_id = event[0]["data"]["attributes"]["user"][
-                "internal-user-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
+            internal_user_id = event[0]["data"]["attributes"]["user"]["internal-user-id"]
 
             (
                 users_events,
@@ -469,12 +437,8 @@ class UseCaseTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
-            internal_user_id = event[0]["data"]["attributes"]["user"][
-                "internal-user-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
+            internal_user_id = event[0]["data"]["attributes"]["user"]["internal-user-id"]
 
             (
                 users_events,
@@ -524,12 +488,8 @@ class UseCaseTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
-            internal_user_id = event[0]["data"]["attributes"]["user"][
-                "internal-user-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
+            internal_user_id = event[0]["data"]["attributes"]["user"]["internal-user-id"]
 
             (
                 users_events,
@@ -579,12 +539,8 @@ class UseCaseTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
-            internal_user_id = event[0]["data"]["attributes"]["user"][
-                "internal-user-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
+            internal_user_id = event[0]["data"]["attributes"]["user"]["internal-user-id"]
 
             (
                 users_events,
@@ -644,12 +600,8 @@ class UseCaseTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
-            internal_user_id = event[0]["data"]["attributes"]["user"][
-                "internal-user-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
+            internal_user_id = event[0]["data"]["attributes"]["user"]["internal-user-id"]
 
             (
                 users_events,
@@ -701,12 +653,8 @@ class UseCaseTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
-            internal_user_id = event[0]["data"]["attributes"]["user"][
-                "internal-user-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
+            internal_user_id = event[0]["data"]["attributes"]["user"]["internal-user-id"]
 
             (
                 users_events,
@@ -762,17 +710,13 @@ class UseCaseTest(unittest.TestCase):
         self.engine.post_and_wait(event)
 
         with self.engine.database_session():
-            internal_meeting_id = event[0]["data"]["attributes"]["meeting"][
-                "internal-meeting-id"
-            ]
+            internal_meeting_id = event[0]["data"]["attributes"]["meeting"]["internal-meeting-id"]
 
             meetings = self.engine.meetings_by_meeting_id(internal_meeting_id)
 
             self.assertIsNone(meetings)
 
-            meetings_events = self.engine.meetings_events_by_meeting_id(
-                internal_meeting_id
-            )
+            meetings_events = self.engine.meetings_events_by_meeting_id(internal_meeting_id)
 
             self.assertEqual(
                 meetings_events.internal_meeting_id,

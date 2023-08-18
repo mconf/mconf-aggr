@@ -37,9 +37,7 @@ def remove_ext(file):
 
 
 def get_cmd_args_parser():
-    parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
-    )
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         "suite",
         type=str,

@@ -87,8 +87,7 @@ class AuthMiddleware:
                 )
                 raise falcon.HTTPUnauthorized(
                     title="Authentication required",
-                    description="Provide an authentication token as part of the "
-                    "request",
+                    description="Provide an authentication token as part of the " "request",
                     headers=www_authentication,
                 )
 
@@ -101,8 +100,7 @@ class AuthMiddleware:
                 )
                 raise falcon.HTTPUnauthorized(
                     title="Unable to validate authentication token",
-                    description="The provided authentication token could not be "
-                    "validate",
+                    description="The provided authentication token could not be " "validate",
                     headers=www_authentication,
                 )
 
@@ -164,9 +162,7 @@ class WebhookEventListener:
             event = req.get_param("event")
 
             self.logger.info(
-                "Webhook event received from '{}' (last hop: '{}').".format(
-                    server_url, req.host
-                )
+                "Webhook event received from '{}' (last hop: '{}').".format(server_url, req.host)
             )
 
             # Always responds with HTTP status code 200 in order to prevent
@@ -313,9 +309,7 @@ class WebhookEventHandler:
                             continue
 
                 else:
-                    self.logger.warning(
-                        "Not publishing event from '{}'".format(server_url)
-                    )
+                    self.logger.warning("Not publishing event from '{}'".format(server_url))
 
     def _decode(self, event):
         return json.loads(event)

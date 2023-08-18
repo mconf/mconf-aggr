@@ -1,9 +1,7 @@
 from utility.utils import post_event, timestamp_now
 
 
-def post_meeting_created(
-    internal_meeting_id, external_meeting_id, shared_secret, institution
-):
+def post_meeting_created(internal_meeting_id, external_meeting_id, shared_secret, institution):
     createJSON = {
         "data": {
             "type": "event",
@@ -649,9 +647,7 @@ def post_rap_sanity_started(internal_meeting_id, external_meeting_id, record_id)
     post_event(rap_sanity_started_json)
 
 
-def post_user_audio_voice_enabled(
-    internal_meeting_id, external_meeting_id, internal_user_id
-):
+def post_user_audio_voice_enabled(internal_meeting_id, external_meeting_id, internal_user_id):
     userAudioVoiceEnabledJSON = {
         "data": {
             "type": "event",
@@ -700,9 +696,7 @@ def post_user_joined(internal_meeting_id, external_meeting_id, internal_user_id)
     post_event(userJoinedJSON)
 
 
-def post_user_presenter_assigned(
-    internal_meeting_id, external_meeting_id, internal_user_id
-):
+def post_user_presenter_assigned(internal_meeting_id, external_meeting_id, internal_user_id):
     presenterAssignedJSON = {
         "data": {
             "type": "event",
@@ -724,9 +718,7 @@ def post_user_presenter_assigned(
     post_event(presenterAssignedJSON)
 
 
-def post_user_presenter_unassigned(
-    internal_meeting_id, external_meeting_id, internal_user_id
-):
+def post_user_presenter_unassigned(internal_meeting_id, external_meeting_id, internal_user_id):
     userPresenterUnassignedJSON = {
         "data": {
             "type": "event",

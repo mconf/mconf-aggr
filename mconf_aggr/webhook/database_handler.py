@@ -90,11 +90,12 @@ class MeetingCreatedHandler(DatabaseEventHandler):
         event : event_mapper.WebhookEvent
             Event to be handled and written to database.
         """
-        event_type = event.event_type
+
         event = event.event
 
         self.logger.info(
-            f"Processing meeting-created event for internal-meeting-id: '{event.internal_meeting_id}'."
+            f"Processing meeting-created event for internal-meeting-id: \
+                         '{event.internal_meeting_id}'."
         )
 
         # Create tables meetings_events and meetings.
@@ -104,7 +105,8 @@ class MeetingCreatedHandler(DatabaseEventHandler):
             .first()
         ):
             self.logger.warning(
-                f"Meeting with internal-meeting-id '{event.internal_meeting_id}' already exists."
+                f"Meeting with internal-meeting-id '{event.internal_meeting_id}' \
+                                already exists."
             )
             return
 
@@ -133,7 +135,8 @@ class MeetingCreatedHandler(DatabaseEventHandler):
 
         if not metadata.mconf_shared_secret_guid:
             self.logger.info(
-                f"Empty shared secret guid, meeting '{event.internal_meeting_id}' insertion falling back to institution name: '{metadata.mconflb_institution_name}'"
+                f"Empty shared secret guid, meeting '{event.internal_meeting_id}' \
+                             insertion falling back to institution name: '{metadata.mconflb_institution_name}'"
             )
             # fallback to name of institution
             try:
@@ -147,7 +150,8 @@ class MeetingCreatedHandler(DatabaseEventHandler):
                 )
                 new_meetings_events.shared_secret_guid = found_secret.guid
                 self.logger.info(
-                    f"Found secret: '{found_secret.name}' for meeting '{event.internal_meeting_id}'"
+                    f"Found secret: '{found_secret.name}' for meeting \
+                                 '{event.internal_meeting_id}'"
                 )
 
                 # We found the secret, try to find its institution to complete
@@ -162,22 +166,23 @@ class MeetingCreatedHandler(DatabaseEventHandler):
                     new_meetings_events.shared_secret_name = found_secret.name
                 except RuntimeError:
                     self.logger.warning(
-                        f"Could not find institution for secret '{found_secret.name}'"
+                        f"Could not find institution for secret \
+                                        '{found_secret.name}'"
                     )
 
                 self.logger.info(
-                    f"Found institution: '{found_institution.name}' for meeting '{event.internal_meeting_id}'"
+                    f"Found institution: '{found_institution.name}' \
+                                 for meeting '{event.internal_meeting_id}'"
                 )
             except AttributeError:
                 self.logger.warning(
-                    f"Could not match institution name '{metadata.mconflb_institution_name}' to an institution"
+                    f"Could not match institution name \
+                                    '{metadata.mconflb_institution_name}' to an institution"
                 )
 
         if not metadata.mconf_server_guid and not metadata.mconf_server_url:
             servers_table = (
-                self.session.query(Servers)
-                .filter(Servers.name == event.server_url)
-                .first()
+                self.session.query(Servers).filter(Servers.name == event.server_url).first()
             )
 
             new_meetings_events.server_url, new_meetings_events.server_guid = (
@@ -229,7 +234,6 @@ class MeetingEndedHandler(DatabaseEventHandler):
             Event to be handled and written to database.
         """
 
-        event_type = event.event_type
         event = event.event
 
         int_id = event.internal_meeting_id
@@ -250,7 +254,7 @@ class MeetingEndedHandler(DatabaseEventHandler):
                 self.session.query(UsersEvents)
                 .filter(
                     UsersEvents.meeting_event_id == meetings_event.id,
-                    UsersEvents.leave_time == None,
+                    UsersEvents.leave_time.is_(None),
                 )
                 .update({"leave_time": event.end_time}, synchronize_session="fetch")
             )
@@ -263,9 +267,7 @@ class MeetingEndedHandler(DatabaseEventHandler):
 
             # Table meetings to be updated.
             meetings_table = (
-                self.session.query(Meetings)
-                .filter(Meetings.int_meeting_id == int_id)
-                .first()
+                self.session.query(Meetings).filter(Meetings.int_meeting_id == int_id).first()
             )
 
             if meetings_table:
@@ -283,13 +285,14 @@ class UserJoinedHandler(DatabaseEventHandler):
         event : event_mapper.WebhookEvent
             Event to be handled and written to database.
         """
-        event_type = event.event_type
+
         event = event.event
 
         int_id = event.internal_meeting_id
 
         self.logger.info(
-            f"Processing user-joined event for internal-user-id '{event.internal_user_id}'.'"
+            f"Processing user-joined event for internal-user-id \
+                         '{event.internal_user_id}'.'"
         )
 
         users_events_table = self._get_users_events(event)
@@ -319,15 +322,11 @@ class UserJoinedHandler(DatabaseEventHandler):
 
             # Table meetings to be updated.
             meetings_table = (
-                self.session.query(Meetings)
-                .filter(Meetings.int_meeting_id == int_id)
-                .first()
+                self.session.query(Meetings).filter(Meetings.int_meeting_id == int_id).first()
             )
 
             if meetings_table:
-                meetings_table.attendees = self._attendee_json(
-                    meetings_table.attendees, attendee
-                )
+                meetings_table.attendees = self._attendee_json(meetings_table.attendees, attendee)
                 self._update_meeting(meetings_table)
 
                 # SQLAlchemy was not considering the attendees array as modified, so it
@@ -407,13 +406,14 @@ class UserLeftHandler(DatabaseEventHandler):
         event : event_mapper.WebhookEvent
             Event to be handled and written to database.
         """
-        event_type = event.event_type
+
         event = event.event
 
         user_id = event.internal_user_id
         int_id = event.internal_meeting_id
         self.logger.info(
-            f"Processing user-left message for internal-user-id '{user_id}' in meeting '{int_id}'."
+            f"Processing user-left message for internal-user-id \
+                         '{user_id}' in meeting '{int_id}'."
         )
 
         # Table meetings to be updated.
@@ -439,9 +439,7 @@ class UserLeftHandler(DatabaseEventHandler):
 
         # Table users_events to be updated.
         users_table = (
-            self.session.query(UsersEvents)
-            .filter(UsersEvents.internal_user_id == user_id)
-            .first()
+            self.session.query(UsersEvents).filter(UsersEvents.internal_user_id == user_id).first()
         )
 
         if users_table:
@@ -478,7 +476,8 @@ class UserEventHandler(DatabaseEventHandler):
         user_id = event.internal_user_id
         int_id = event.internal_meeting_id
         self.logger.info(
-            f"Processing {event.event_name} event for internal-user-id '{user_id}' on meeting '{int_id}'."
+            f"Processing {event.event_name} event for internal-user-id \
+                         '{user_id}' on meeting '{int_id}'."
         )
 
         # Table meetings to be updated.
@@ -584,7 +583,6 @@ class RapArchiveHandler(DatabaseEventHandler):
             Event to be handled and written to database.
         """
         event_type = event.event_type
-        server_url = event.server_url
         event = event.event
 
         int_id = event.internal_meeting_id
@@ -847,7 +845,6 @@ class RapPublishHandler(DatabaseEventHandler):
         """
 
         event_type = event.event_type
-        server_url = event.server_url
         event = event.event
 
         int_id = event.internal_meeting_id
@@ -946,9 +943,7 @@ class MeetingTransferHandler(DatabaseEventHandler):
         )
 
         transfer_table = (
-            self.session.query(Meetings)
-            .filter(Meetings.int_meeting_id == int_id)
-            .first()
+            self.session.query(Meetings).filter(Meetings.int_meeting_id == int_id).first()
         )
 
         if transfer_table:
@@ -964,9 +959,7 @@ def _update_meeting(meetings_table):
     meetings_table.transfer_count = sum(
         1 for attendee in meetings_table.attendees if attendee["role"] == "TRANSFER"
     )
-    meetings_table.participant_count = (
-        len(meetings_table.attendees) - meetings_table.transfer_count
-    )
+    meetings_table.participant_count = len(meetings_table.attendees) - meetings_table.transfer_count
     meetings_table.has_user_joined = meetings_table.participant_count != 0
     meetings_table.moderator_count = sum(
         1 for attendee in meetings_table.attendees if attendee["role"] == "MODERATOR"
@@ -980,9 +973,7 @@ def _update_meeting(meetings_table):
     meetings_table.voice_participant_count = sum(
         1 for attendee in meetings_table.attendees if attendee["has_joined_voice"]
     )
-    meetings_table.video_count = sum(
-        1 for a in meetings_table.attendees if a["has_video"]
-    )
+    meetings_table.video_count = sum(1 for a in meetings_table.attendees if a["has_video"])
 
 
 def _upsert_playback(records_table, event_playback):
@@ -1242,7 +1233,8 @@ class WebhookDataWriter(AggregatorCallback):
             raise CallbackError() from err
         except WebhookDatabaseError as err:
             self.logger.error(
-                f"An error occurred while persisting data. Not persisting data: {err}"
+                f"An error occurred while persisting data. \
+                              Not persisting data: {err}"
             )
 
             raise CallbackError() from err
@@ -1283,9 +1275,7 @@ class AuthenticationHandler:
         found_secret = None
         with session_scope() as session:
             try:
-                server = (
-                    session.query(Servers.secret).filter(Servers.name == server).first()
-                )
+                server = session.query(Servers.secret).filter(Servers.name == server).first()
             except sqlalchemy.exc.OperationalError as err:
                 self.logger.error(
                     f"Operational error on database while validating token: {err}"

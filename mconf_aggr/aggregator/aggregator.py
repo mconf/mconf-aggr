@@ -215,7 +215,7 @@ class Channel:
         """
         self.logger.debug(f"Closing channel {self.name}.")
         if not self.empty():
-            self.logger.warning(f"There are data not consumed in channel {self.name}.")
+            self.logger.warning(f"There is data not consumed in channel {self.name}.")
         self.queue.put(None)
 
     def publish(self, data):
@@ -252,7 +252,8 @@ class Channel:
 
         if data is None:
             self.logger.debug(
-                f"Signaling closing channel {self.name} for clients. Waiting for data."
+                f"Signaling closing channel {self.name} for clients. \
+                              Waiting for data."
             )
             raise ChannelClosed()
 
@@ -364,9 +365,7 @@ class Publisher:
     def __repr__(self):
         channels = list(self.channels.keys())
 
-        return "{!s}(channels={!r})".format(
-            self.__class__.__name__, reprlib.repr(channels)
-        )
+        return "{!s}(channels={!r})".format(self.__class__.__name__, reprlib.repr(channels))
 
 
 def error_handler(aggregator, errorevent):
@@ -437,7 +436,8 @@ class Aggregator:
                 continue
             except Exception:
                 self.logger.exception(
-                    f"Something went wrong while setting up callback {subscriber.callback}."
+                    f"Something went wrong while setting up callback \
+                                      {subscriber.callback}."
                 )
                 self.remove_callback(subscriber.callback)
                 continue
@@ -447,9 +447,7 @@ class Aggregator:
         self.threads = []
 
         for subscriber in self.subscribers:
-            self.threads.append(
-                SubscriberThread(subscriber=subscriber, errorevent=errorevent)
-            )
+            self.threads.append(SubscriberThread(subscriber=subscriber, errorevent=errorevent))
 
         # Create error-waiting thread.
         self._error_thread = threading.Thread(
@@ -519,12 +517,14 @@ class Aggregator:
                 subscriber.callback.teardown()
             except NotImplementedError:
                 self.logger.warning(
-                    f"teardown() not implemented for callback {subscriber.callback}."
+                    f"teardown() not implemented for callback \
+                                    {subscriber.callback}."
                 )
                 continue
             except Exception:
                 self.logger.exception(
-                    f"Something went wrong while tearing down callback {subscriber.callback}."
+                    f"Something went wrong while tearing down callback \
+                                      {subscriber.callback}."
                 )
                 continue
 
@@ -586,9 +586,7 @@ class Aggregator:
             self.channels[channel] = filtered_subscribers
 
         self.channels = {
-            channel: subscribers
-            for channel, subscribers in self.channels.items()
-            if subscribers
+            channel: subscribers for channel, subscribers in self.channels.items() if subscribers
         }
 
     @property
