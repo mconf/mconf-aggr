@@ -6,7 +6,6 @@ import json
 import logging
 
 from mconf_aggr.logger import get_logger
-
 from mconf_aggr.webhook.exceptions import (
     InvalidWebhookEventError,
     InvalidWebhookMessageError,
@@ -138,6 +137,7 @@ RapPublishEndedEvent = collections.namedtuple(
         "download",
         "external_meeting_id",
         "internal_meeting_id",
+        "record_id",
         "workflow",
         "current_step",
     ],
@@ -148,6 +148,7 @@ RapPublishUnpublishHandler = collections.namedtuple(
     [
         "internal_meeting_id",
         "external_meeting_id",
+        "record_id",
     ],
 )
 
@@ -156,6 +157,7 @@ RapDeletedEvent = collections.namedtuple(
     [
         "internal_meeting_id",
         "external_meeting_id",
+        "record_id",
     ],
 )
 
@@ -206,7 +208,7 @@ def map_webhook_event(event):
         event_type = event["data"]["id"]
         server_url = event["server_url"]
     except (KeyError, TypeError) as err:
-        logger.warn("Webhook message dos not contain a valid id: {}".format(err))
+        logger.warning("Webhook message dos not contain a valid id: {}".format(err))
         raise InvalidWebhookMessageError("Webhook message dos not contain a valid id")
 
     logger.debug("Mapping event")
@@ -280,7 +282,7 @@ def map_webhook_event(event):
         mapped_event = _map_transfer_event(event, event_type, server_url)
 
     else:
-        logger.warn("Webhook event id is not valid: '{}'".format(event_type))
+        logger.warning("Webhook event id is not valid: '{}'".format(event_type))
         raise InvalidWebhookEventError(
             "Webhook event '{}' is not valid".format(event_type)
         )
@@ -346,6 +348,7 @@ def _map_rap_deleted_event(event, event_type, server_url):
         internal_meeting_id=_get_nested(
             event, ["data", "attributes", "meeting", "internal-meeting-id"], ""
         ),
+        record_id=_get_nested(event, ["data", "attributes", "record_id"], ""),
     )
 
     webhook_event = WebhookEvent(event_type, end_event, server_url)
@@ -362,6 +365,7 @@ def _map_rap_published_unpublished_event(event, event_type, server_url):
         internal_meeting_id=_get_nested(
             event, ["data", "attributes", "meeting", "internal-meeting-id"], ""
         ),
+        record_id=_get_nested(event, ["data", "attributes", "record_id"], ""),
     )
 
     webhook_event = WebhookEvent(event_type, end_event, server_url)
@@ -500,9 +504,7 @@ def _map_rap_process_event(event, event_type, server_url):
         internal_meeting_id=_get_nested(
             event, ["data", "attributes", "meeting", "internal-meeting-id"], ""
         ),
-        record_id=_get_nested(
-            event, ["data", "attributes", "meeting", "internal-meeting-id"], ""
-        ),
+        record_id=_get_nested(event, ["data", "attributes", "record-id"], ""),
         workflow=_get_nested(event, ["data", "attributes", "workflow"], {}),
         current_step=event_type,
     )
@@ -522,9 +524,7 @@ def _map_rap_publish_event(event, event_type, server_url):
         internal_meeting_id=_get_nested(
             event, ["data", "attributes", "meeting", "internal-meeting-id"], ""
         ),
-        record_id=_get_nested(
-            event, ["data", "attributes", "meeting", "internal-meeting-id"], ""
-        ),
+        record_id=_get_nested(event, ["data", "attributes", "record-id"], ""),
         workflow=_get_nested(event, ["data", "attributes", "workflow"], {}),
         current_step=event_type,
     )
@@ -562,6 +562,7 @@ def _map_rap_publish_ended_event(event, event_type, server_url):
         internal_meeting_id=_get_nested(
             event, ["data", "attributes", "meeting", "internal-meeting-id"], ""
         ),
+        record_id=_get_nested(event, ["data", "attributes", "record-id"], ""),
         workflow=_get_nested(event, ["data", "attributes", "workflow"], {}),
         current_step=event_type,
     )
@@ -580,9 +581,7 @@ def _map_rap_archive_event(event, event_type, server_url):
         internal_meeting_id=_get_nested(
             event, ["data", "attributes", "meeting", "internal-meeting-id"], ""
         ),
-        record_id=_get_nested(
-            event, ["data", "attributes", "meeting", "internal-meeting-id"], ""
-        ),
+        record_id=_get_nested(event, ["data", "attributes", "record-id"], ""),
         recorded=_get_nested(event, ["data", "attributes", "recorded"], True),
         current_step=event_type,
     )
@@ -618,9 +617,7 @@ def _map_rap_event(event, event_type, server_url):
         internal_meeting_id=_get_nested(
             event, ["data", "attributes", "meeting", "internal-meeting-id"], ""
         ),
-        record_id=_get_nested(
-            event, ["data", "attributes", "meeting", "internal-meeting-id"], ""
-        ),
+        record_id=_get_nested(event, ["data", "attributes", "record-id"], ""),
         current_step=event_type,
     )
 

@@ -93,7 +93,7 @@ class WebhookRegister:
                     self._callback_url, self._get_raw, self._hook_id
                 )
             except WebhookCreateError as err:
-                self.logger.warn(
+                self.logger.warning(
                     f"Webhook registration for server '{server}' failed "
                     f"({err.reason})."
                 )
@@ -104,7 +104,7 @@ class WebhookRegister:
                     "(webhook already exists)."
                 )
             except RuntimeError:
-                self.logger.warn(
+                self.logger.warning(
                     f"Webhook registration for server '{server}' failed "
                     "(unexpected reason)."
                 )
