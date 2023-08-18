@@ -3,7 +3,6 @@
 It will receive, validate, parse and send the parsed data to be processed.
 """
 import json
-import logging
 
 import falcon
 

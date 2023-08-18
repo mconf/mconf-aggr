@@ -1,7 +1,6 @@
 import json
 import urllib.parse
 from datetime import datetime
-from pprint import pprint
 
 import requests
 from config import Config

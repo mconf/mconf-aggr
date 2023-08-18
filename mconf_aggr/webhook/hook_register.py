@@ -1,6 +1,4 @@
 import hashlib
-import json
-import logging
 import urllib.parse
 from urllib.parse import urljoin
 from xml.etree import ElementTree

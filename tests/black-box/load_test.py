@@ -5,7 +5,7 @@ import time
 from random import choice
 
 import events
-from utility.config import Config, get_random_alpha_numeric_string
+from utility.config import Config
 
 
 def main(argv):

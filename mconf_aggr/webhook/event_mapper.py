@@ -2,8 +2,6 @@
 internally.
 """
 import collections
-import json
-import logging
 
 from mconf_aggr.logger import get_logger
 from mconf_aggr.webhook.exceptions import (

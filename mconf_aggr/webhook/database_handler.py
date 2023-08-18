@@ -674,7 +674,9 @@ class RapHandler(DatabaseEventHandler):
                 self.logger.info(f"Recording host was updated to '{server_url}'.")
             recording.server_id = server_id_result.id
         else:
-            self.logger.warning(f"No server found for recording '{record_id}'.")
+            self.logger.warning(
+                f"No server found for recording '{recording.record_id}'."
+            )
 
         return recording
 
@@ -775,7 +777,7 @@ class RapPublishUnpublishHandler(DatabaseEventHandler):
             + f"'{record_id}'."
         )
 
-        records = _fetch_recording(self.session, record_id)
+        recording = _fetch_recording(self.session, record_id)
 
         if recording:
             if event_type == "rap-unpublished":
@@ -940,9 +942,7 @@ class MeetingTransferHandler(DatabaseEventHandler):
 
         int_id = event.internal_meeting_id
         self.logger.info(
-            f"Processing {event_type} event for "
-            + f"internal-meeting-id '{int_id}' and record_id "
-            + f"'{record_id}'."
+            f"Processing {event_type} event for internal-meeting-id '{int_id}'."
         )
 
         transfer_table = (

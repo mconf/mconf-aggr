@@ -16,7 +16,6 @@ from mconf_aggr.webhook.database_handler import (
     MeetingEndedHandler,
     MeetingTransferHandler,
     RapHandler,
-    RapProcessHandler,
     Status,
     UserCamBroadcastEndHandler,
     UserCamBroadcastStartHandler,
@@ -37,7 +36,6 @@ from mconf_aggr.webhook.event_mapper import (
     MeetingEndedEvent,
     MeetingTransferEvent,
     RapEvent,
-    RapProcessEvent,
     UserJoinedEvent,
     WebhookEvent,
 )
