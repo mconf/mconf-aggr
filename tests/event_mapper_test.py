@@ -346,6 +346,7 @@ class TestMapping(unittest.TestCase):
                         "internal-meeting-id": "madeup-internal-meeting-id",
                         "external-meeting-id": "madeup-external-meeting-id",
                     },
+                    "record-id": "madeup-internal-meeting-id",
                     "success": True,
                     "step-time": 480,
                     "recording": {
@@ -406,6 +407,7 @@ class TestMapping(unittest.TestCase):
                 workflow={},
                 external_meeting_id="madeup-external-meeting-id",
                 internal_meeting_id="madeup-internal-meeting-id",
+                record_id="madeup-internal-meeting-id",
                 current_step="rap-publish-ended",
             ),
         )
@@ -432,7 +434,8 @@ class TestMapping(unittest.TestCase):
                     "meeting": {
                         "internal-meeting-id": "madeup-internal-meeting-id",
                         "external-meeting-id": "madeup-external-meeting-id",
-                    }
+                    },
+                    "record-id": "madeup-record-id",
                 },
                 "event": {"ts": 1502810164922},
             },
@@ -444,7 +447,7 @@ class TestMapping(unittest.TestCase):
             event=RapPublishEvent(
                 external_meeting_id="madeup-external-meeting-id",
                 internal_meeting_id="madeup-internal-meeting-id",
-                record_id="madeup-internal-meeting-id",
+                record_id="madeup-record-id",
                 current_step="rap-publish-started",
                 workflow={},
             ),
