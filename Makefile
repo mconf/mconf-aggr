@@ -1,4 +1,5 @@
 include .env
+include ./envs/webhook-env-file.env
 
 AGGR_PATH=$(shell pwd)
 DOCKER_USERNAME?=mconf
@@ -12,22 +13,22 @@ run:
 	gunicorn main:app --bind=0.0.0.0:8000 --worker-class gevent
 
 up:
-	docker-compose up -d prod
+	docker compose up prod --build
 
 up-dev:
-	docker-compose up -d dev
+	docker compose up dev --build
 
 up-debug:
-	docker-compose up -d debug
+	docker compose up debug --build
 
 docker-build:
-	docker-compose build prod
+	docker compose build prod
 
 docker-build-dev:
-	docker-compose build dev
+	docker compose build dev
 
 docker-build-debug:
-	docker-compose build debug
+	docker compose build debug
 
 docker-tag:
 	docker tag $(IMAGE_NAME):webhook-$(IMAGE_VERSION) $(IMAGE_NAME):webhook-$(NUMBER_VERSION)
@@ -55,7 +56,7 @@ docker-push-latest: docker-tag-latest
 	docker push $(IMAGE_NAME):webhook-latest
 
 test:
-	pdm run python tests.py ${ARGS}
+	pdm run tests
 
 html:
 	@make -C docs/ html
