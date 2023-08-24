@@ -2,6 +2,7 @@ import collections
 import json
 import random
 import string
+import time
 
 Institution = collections.namedtuple("Institution", ["name", "guid"])
 SharedSecret = collections.namedtuple("SharedSecret", ["name", "guid"])
@@ -20,7 +21,7 @@ class Config:
     def randomize_configuration(self):
         self.external_meeting_id = "random-" + get_random_numeric_string(7)
         self.internal_meeting_id = (
-            get_random_alpha_numeric_string(40) + "-" + get_random_alpha_numeric_string(13)
+            get_random_alpha_numeric_string(40) + "-" + str(round(time.time() * 1000))
         )
         self.record_id = self.internal_meeting_id
         self.internal_user_id = (

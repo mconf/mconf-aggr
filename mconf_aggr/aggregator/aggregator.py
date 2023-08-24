@@ -152,7 +152,9 @@ class SubscriberThread(threading.Thread):
         sent to the `subscriber`'s callback `run` method. When signaled to
         exit, it simply returns and the thread is done.
         """
-        self.logger.debug(f"Running thread with callback {format(self.subscriber.callback)}")
+        self.logger.debug(
+            f"Running thread with callback {format(self.subscriber.callback)}"
+        )
 
         while not self._stopevent.is_set():
             try:
@@ -176,7 +178,9 @@ class SubscriberThread(threading.Thread):
         self.subscriber.channel.close()
 
         threading.Thread.join(self)
-        self.logger.debug(f"Thread with callback {self.subscriber.callback} exited with success.")
+        self.logger.debug(
+            f"Thread with callback {self.subscriber.callback} exited with success."
+        )
 
 
 class Channel:
@@ -426,7 +430,9 @@ class Aggregator:
                 self.logger.debug(f"Setting up callback {subscriber.callback}.")
                 subscriber.callback.setup()
             except NotImplementedError:
-                self.logger.warning(f"setup() not implemented for callback {subscriber.callback}.")
+                self.logger.warning(
+                    f"setup() not implemented for callback {subscriber.callback}."
+                )
                 continue
             except Exception:
                 self.logger.exception(
@@ -554,7 +560,9 @@ class Aggregator:
         try:
             subscribers = self.channels[channel]
         except KeyError:
-            self.logger.debug(f"Creating new list of subscribers for channel {channel}.")
+            self.logger.debug(
+                f"Creating new list of subscribers for channel {channel}."
+            )
             subscribers = []
 
         channel_obj = Channel(channel)

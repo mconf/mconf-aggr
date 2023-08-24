@@ -13,7 +13,7 @@ def main(argv):
     simultaneously = 1
     randomize = True
     forever = False
-    interval = 0
+    interval = 50.0 / 1000
     try:
         opts, args = getopt.getopt(
             argv,
@@ -160,63 +160,87 @@ def run_recording(cfg, interval):
     time.sleep(interval)
     events.post_rap_archive_ended(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
     time.sleep(interval)
-    events.post_rap_sanity_started(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
-    time.sleep(interval)
-    events.post_rap_sanity_ended(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
-    time.sleep(interval)
-    events.post_rap_process_started(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
-    time.sleep(interval)
-    events.post_rap_process_ended(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
-    time.sleep(interval)
-    events.post_rap_process_started_pv(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
-    time.sleep(interval)
-    events.post_rap_process_ended_pv(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
-    time.sleep(interval)
-    events.post_rap_publish_started(cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id)
-    time.sleep(interval)
-    events.post_rap_publish_ended(
-        cfg.internal_meeting_id,
-        cfg.external_meeting_id,
-        cfg.record_id,
-        cfg.shared_secret,
-        cfg.institution,
-    )
-    time.sleep(interval)
-    events.post_rap_post_publish_started(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
-    time.sleep(interval)
-    events.post_rap_post_publish_ended(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
-    time.sleep(interval)
-    events.post_rap_publish_started_pv(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
-    time.sleep(interval)
-    events.post_rap_publish_ended_pv(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
-    time.sleep(interval)
-    events.post_rap_post_publish_started(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
-    time.sleep(interval)
-    events.post_rap_post_publish_ended(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
-    time.sleep(interval)
-    events.post_rap_publish_ended_rec(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
-    time.sleep(interval)
-    events.post_rap_publish_ended_rec_pv(
-        cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
-    )
+
+    for i in range(3):
+        events.post_rap_sanity_started(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
+        )
+        time.sleep(interval)
+        events.post_rap_sanity_ended(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
+        )
+        time.sleep(interval)
+
+        events.post_rap_process_started(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
+        )
+        time.sleep(interval)
+        events.post_rap_process_ended(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
+        )
+        time.sleep(interval)
+
+        events.post_rap_process_started_pv(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
+        )
+        time.sleep(interval)
+        events.post_rap_process_ended_pv(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
+        )
+        time.sleep(interval)
+
+        events.post_rap_publish_started(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
+        )
+        time.sleep(interval)
+        events.post_rap_publish_ended(
+            cfg.internal_meeting_id,
+            cfg.external_meeting_id,
+            cfg.record_id,
+            cfg.shared_secret,
+            cfg.institution,
+            i,
+        )
+        time.sleep(interval)
+
+        events.post_rap_post_publish_started(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
+        )
+        time.sleep(interval)
+        events.post_rap_post_publish_ended(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
+        )
+        time.sleep(interval)
+
+        events.post_rap_publish_started_pv(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
+        )
+        time.sleep(interval)
+        events.post_rap_publish_ended_pv(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id, i
+        )
+        time.sleep(interval)
+
+        events.post_rap_post_publish_started(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
+        )
+        time.sleep(interval)
+        events.post_rap_post_publish_ended(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id
+        )
+        time.sleep(interval)
+
+        events.post_rap_publish_ended_rec(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id, i
+        )
+        time.sleep(interval)
+        events.post_rap_publish_ended_rec_pv(
+            cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id, i
+        )
+
+        cfg.record_id = (
+            cfg.record_id.split("-")[0] + "-" + str(round(time.time() * 1000))
+        )
 
 
 main(sys.argv[1:])

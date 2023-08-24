@@ -49,3 +49,6 @@ services:
 
 networks:
   mconf-net-dev:
+    name: dev-tools_mconf-net-dev
+    external: true
+
