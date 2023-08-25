@@ -899,7 +899,7 @@ class RapPublishHandler(DatabaseEventHandler):
         # overwriting currently saved meta_data.
         if recording.meta_data:
             event.meta_data.update(recording.meta_data)
-        if event.workflow == "presentation":
+        if (event.workflow == "presentation") or (event.workflow == "video"):
             event.meta_data.update({"mconf-decrypter-pending": "false"})
         recording.meta_data = event.meta_data
         recording.download = event.download
