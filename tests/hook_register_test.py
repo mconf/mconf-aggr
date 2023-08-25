@@ -35,16 +35,12 @@ class WebhookRegisterTest(unittest.TestCase):
         self.assertEqual({}, register.servers)
 
     def test_create_register_single_server(self):
-        register = WebhookRegister(
-            callback_url=self.this_server, servers=self.single_server
-        )
+        register = WebhookRegister(callback_url=self.this_server, servers=self.single_server)
 
         self.assertEqual(self.single_server, register.servers)
 
     def test_create_single_hook(self):
-        register = WebhookRegister(
-            callback_url=self.this_server, servers=self.single_server
-        )
+        register = WebhookRegister(callback_url=self.this_server, servers=self.single_server)
 
         with mock.patch(
             "mconf_aggr.webhook.hook_register.WebhookServer.create_hook"
@@ -58,9 +54,7 @@ class WebhookRegisterTest(unittest.TestCase):
         self.assertEqual([], failed_servers)
 
     def test_create_two_hooks(self):
-        register = WebhookRegister(
-            callback_url=self.this_server, servers=self.two_servers
-        )
+        register = WebhookRegister(callback_url=self.this_server, servers=self.two_servers)
 
         with mock.patch(
             "mconf_aggr.webhook.hook_register.WebhookServer.create_hook"
@@ -74,9 +68,7 @@ class WebhookRegisterTest(unittest.TestCase):
         self.assertEqual([], failed_servers)
 
     def test_create_two_hooks_failed(self):
-        register = WebhookRegister(
-            callback_url=self.this_server, servers=self.two_servers
-        )
+        register = WebhookRegister(callback_url=self.this_server, servers=self.two_servers)
 
         ServerMock = mock.MagicMock()
         ServerMock.create_hook = mock.MagicMock(side_effect=WebhookCreateError)
@@ -97,9 +89,7 @@ class WebhookRegisterTest(unittest.TestCase):
 
         create_hook_url = server._build_create_hook_url()
 
-        self.assertEqual(
-            server_addr + "/bigbluebutton/api/hooks/create", create_hook_url
-        )
+        self.assertEqual(server_addr + "/bigbluebutton/api/hooks/create", create_hook_url)
 
     def test_create_get_request_succeeded(self):
         import requests

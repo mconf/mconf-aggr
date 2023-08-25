@@ -1,5 +1,8 @@
+import random
+import time
 import unittest
 import unittest.mock as mock
+import uuid
 from unittest.mock import MagicMock
 
 import sqlalchemy
@@ -13,6 +16,7 @@ from mconf_aggr.webhook.database_handler import (
     MeetingEndedHandler,
     MeetingTransferHandler,
     RapHandler,
+    Status,
     UserCamBroadcastEndHandler,
     UserCamBroadcastStartHandler,
     UserJoinedHandler,
@@ -26,11 +30,12 @@ from mconf_aggr.webhook.database_handler import (
     UserVoiceEnabledHandler,
     WebhookDataWriter,
 )
-from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents
+from mconf_aggr.webhook.database_model import Meetings, MeetingsEvents, Recordings
 from mconf_aggr.webhook.event_mapper import (
     MeetingCreatedEvent,
     MeetingEndedEvent,
     MeetingTransferEvent,
+    RapEvent,
     UserJoinedEvent,
     WebhookEvent,
 )
@@ -123,9 +128,7 @@ class TestMeetingCreatedHandler(unittest.TestCase):
         self.assertEqual(meetings_events.recording, False)
         self.assertEqual(meetings_events.max_users, 0)
         self.assertEqual(meetings_events.is_breakout, False)
-        self.assertEqual(
-            meetings_events.meta_data, {"mock_data": "mock", "another_mock": "mocked"}
-        )
+        self.assertEqual(meetings_events.meta_data, {"mock_data": "mock", "another_mock": "mocked"})
 
 
 class TestMeetingEndedHandler(unittest.TestCase):
@@ -210,9 +213,7 @@ class TestMeetingEndedHandler(unittest.TestCase):
         )
 
         self.handler.session.query().filter().first.return_value = meetings_events
-        self.handler.session.query().get = mock.Mock(
-            side_effect=[meetings_events, meetings]
-        )
+        self.handler.session.query().get = mock.Mock(side_effect=[meetings_events, meetings])
 
         self.handler.handle(self.event)
 
@@ -283,9 +284,7 @@ class TestMeetingTransferHandler(unittest.TestCase):
         )
 
         self.handler.session.query().filter().first.return_value = meetings_events
-        self.handler.session.query().get = mock.Mock(
-            side_effect=[meetings_events, meetings]
-        )
+        self.handler.session.query().get = mock.Mock(side_effect=[meetings_events, meetings])
 
         self.handler.handle(self.enableEvent)
 
@@ -328,9 +327,7 @@ class TestMeetingTransferHandler(unittest.TestCase):
         )
 
         self.handler.session.query().filter().first.return_value = meetings_events
-        self.handler.session.query().get = mock.Mock(
-            side_effect=[meetings_events, meetings]
-        )
+        self.handler.session.query().get = mock.Mock(side_effect=[meetings_events, meetings])
 
         self.handler.handle(self.disableEvent)
 
@@ -388,12 +385,8 @@ class TestUserJoinedHandler(unittest.TestCase):
         self.assertEqual(users_events.name, self.event.event.name)
         self.assertEqual(users_events.role, self.event.event.role)
         self.assertEqual(users_events.join_time, self.event.event.join_time)
-        self.assertEqual(
-            users_events.internal_user_id, self.event.event.internal_user_id
-        )
-        self.assertEqual(
-            users_events.external_user_id, self.event.event.external_user_id
-        )
+        self.assertEqual(users_events.internal_user_id, self.event.event.internal_user_id)
+        self.assertEqual(users_events.external_user_id, self.event.event.external_user_id)
 
     def test_user_joined_no_meeting_event(self):
         self.handler.session.query().filter().first.return_value = None
@@ -518,6 +511,124 @@ class TestUserJoinedHandler(unittest.TestCase):
         self.handler.session.flush.assert_called_once()
 
 
+class TestRapHandler(unittest.TestCase):
+    def setUp(self):
+        session_mock = SessionMock()
+
+        self.handler = RapHandler(session_mock)
+
+        self.events_types = [
+            "rap-archive-started",
+            "rap-sanity-started",
+            "rap-sanity-ended",
+            "rap-post-archive-started",
+            "rap-post-archive-ended",
+            "rap-post-process-started",
+            "rap-post-process-ended",
+            "rap-post-publish-started",
+            "rap-post-publish-ended",
+        ]
+
+        self.call_count = 0
+
+        self.server = MagicMock()
+        self.server.id = random.randint(1000, 10000)
+
+        self.recording = [None, None, None]
+
+        self.meetings_event = MagicMock()
+        self.meetings_event.end_time = round(time.time() * 1000)
+        self.meetings_event.start_time = self.meetings_event.end_time - 10_000_000
+        self.meetings_event.external_meeting_id = "mock_e"
+        self.meetings_event.internal_meeting_id = "mock_i"
+        self.meetings_event.is_breakout = False
+        self.meetings_event.id = random.randint(1000, 10000)
+        self.meetings_event.parent_meeting_id = random.randint(1000, 10000) + 1
+        self.meetings_event.institution_guid = str(uuid.uuid4())
+        self.meetings_event.shared_secret_guid = str(uuid.uuid4())
+
+    def test_rap_handler_events(self):
+        for i, event_type in enumerate(self.events_types):
+            # for each split recording j
+            for j in range(3):
+                # 'rap-archive-started' only receives the first recording
+                if event_type == "rap-archive-started" and j > 0:
+                    break
+                event = WebhookEvent(
+                    event_type=event_type,
+                    server_url="localhost",
+                    event=RapEvent(
+                        external_meeting_id="mock_e",
+                        internal_meeting_id="mock_i",
+                        # each split has a different record_id, the first one is equal
+                        # to the internal_meeting_id
+                        record_id="mock_i" + "_" + str(j) if j > 0 else "",
+                        current_step=event_type,
+                    ),
+                )
+
+                if event_type == "rap-archive-started":
+                    self.handler.session.query().filter().first.side_effect = [
+                        False,  # no recording found
+                        self.meetings_event,
+                    ]
+                elif event_type == "rap-sanity-started":
+                    self.handler.session.query().filter().first.side_effect = [
+                        # return the previous created record from rap-archive-started
+                        # when j = 0. Return false (meeting not found for others)
+                        self.recording[0] if j == 0 else False,
+                        self.server,
+                        self.meetings_event,
+                    ]
+                else:
+                    self.handler.session.query().filter().first.side_effect = [
+                        # return the previous created record from rap-archive-started
+                        # and rap-sanity-started
+                        self.recording[j],
+                        self.meetings_event,
+                    ]
+
+                self.handler.session.query().join().filter().count.side_effect = [
+                    7 + j,  # participant_cound
+                ]
+                self.handler.handle(event)
+
+                self.recording[j] = self.handler.session.get_first_add_arg
+
+                self.call_count += 1
+                self.assertEqual(self.handler.session.add.call_count, self.call_count)
+
+                self.assertIsInstance(self.recording[j], Recordings)
+                self.assertEqual(self.recording[j].current_step, event_type)
+                if event_type == "rap-archive-started":
+                    self.assertEqual(self.recording[j].status, Status.DELETED)
+                else:
+                    # status is set to processing during 'rap-sanity-started'
+                    # and not updated anymore (in this event handler)
+                    self.assertNotEqual(self.recording[j].status, Status.DELETED)
+
+                self.assertEqual(self.recording[j].playback, [])
+                self.assertEqual(self.recording[j].workflow, {})
+                self.assertEqual(self.recording[j].participants, 7 + j)
+                if event_type == "rap-sanity-started":
+                    self.assertEqual(self.recording[j].server_id, self.server.id)
+
+                _compare_recording_meetings_event(
+                    self, self.recording[j], self.meetings_event
+                )
+
+
+def _compare_recording_meetings_event(test, recording, meetings_event):
+    test.assertEqual(recording.start_time, meetings_event.start_time)
+    test.assertEqual(recording.end_time, meetings_event.end_time)
+    test.assertEqual(recording.external_meeting_id, meetings_event.external_meeting_id)
+    test.assertEqual(recording.internal_meeting_id, meetings_event.internal_meeting_id)
+    test.assertEqual(recording.is_breakout, meetings_event.is_breakout)
+    test.assertEqual(recording.meeting_event_id, meetings_event.id)
+    test.assertEqual(recording.r_institution_guid, meetings_event.institution_guid)
+    test.assertEqual(recording.r_shared_secret_guid, meetings_event.shared_secret_guid)
+
+
 class TestDataProcessor(unittest.TestCase):
     def setUp(self):
         self.session_mock = mock.Mock()
@@ -549,16 +660,12 @@ class TestDataProcessor(unittest.TestCase):
         self.assertIsInstance(event_handler, UserVoiceEnabledHandler)
 
     def test_select_user_audio_listen_only_enabled(self):
-        event_handler = self.data_processor._select_handler(
-            "user-audio-listen-only-enabled"
-        )
+        event_handler = self.data_processor._select_handler("user-audio-listen-only-enabled")
 
         self.assertIsInstance(event_handler, UserListenOnlyEnabledHandler)
 
     def test_select_user_audio_listen_only_disabled(self):
-        event_handler = self.data_processor._select_handler(
-            "user-audio-listen-only-disabled"
-        )
+        event_handler = self.data_processor._select_handler("user-audio-listen-only-disabled")
 
         self.assertIsInstance(event_handler, UserListenOnlyDisabledHandler)
 
@@ -608,18 +715,14 @@ class TestDataProcessor(unittest.TestCase):
             self.data_processor._select_handler("invalid-event-type")
 
     def test_select_handler_called(self):
-        event = WebhookEvent(
-            event_type="valid-event-type", event=None, server_url="localhost"
-        )
+        event = WebhookEvent(event_type="valid-event-type", event=None, server_url="localhost")
         self.data_processor._select_handler = mock.MagicMock()
         self.data_processor.update(event)
 
         self.data_processor._select_handler.assert_called_once_with(event.event_type)
 
     def test_handle_called(self):
-        event = WebhookEvent(
-            event_type="valid-event-type", event=None, server_url="localhost"
-        )
+        event = WebhookEvent(event_type="valid-event-type", event=None, server_url="localhost")
         handler_mock = mock.Mock()
         handler_mock.handle = mock.MagicMock()
         self.data_processor._select_handler = mock.MagicMock(return_value=handler_mock)
@@ -638,9 +741,7 @@ class TestWebhookDataWriter(unittest.TestCase):
         self.webhook_data_writer = WebhookDataWriter(connector=self.connector_mock)
 
     def test_run_called_with_data(self):
-        with mock.patch(
-            "mconf_aggr.webhook.database_handler.DataProcessor"
-        ) as data_processor_mock:
+        with mock.patch("mconf_aggr.webhook.database_handler.DataProcessor") as data_processor_mock:
             data_processor_mock.update = mock.MagicMock()
             with self.assertRaises(CallbackError):
                 self.webhook_data_writer.run({})

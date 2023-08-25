@@ -23,18 +23,12 @@ class EnvConfig:
 
     def _load_env(self):
         # Default values.
-        self._config["MCONF_WEBHOOK_CALLBACK_URL"] = os.getenv(
-            "MCONF_WEBHOOK_CALLBACK_URL"
-        )
+        self._config["MCONF_WEBHOOK_CALLBACK_URL"] = os.getenv("MCONF_WEBHOOK_CALLBACK_URL")
         self._config["MCONF_WEBHOOK_SHOULD_REGISTER"] = to_bool(
             os.getenv("MCONF_WEBHOOK_SHOULD_REGISTER", "True")
         )
-        self._config["MCONF_WEBHOOK_DATABASE_HOST"] = os.getenv(
-            "MCONF_WEBHOOK_DATABASE_HOST"
-        )
-        self._config["MCONF_WEBHOOK_DATABASE_USER"] = os.getenv(
-            "MCONF_WEBHOOK_DATABASE_USER"
-        )
+        self._config["MCONF_WEBHOOK_DATABASE_HOST"] = os.getenv("MCONF_WEBHOOK_DATABASE_HOST")
+        self._config["MCONF_WEBHOOK_DATABASE_USER"] = os.getenv("MCONF_WEBHOOK_DATABASE_USER")
         self._config["MCONF_WEBHOOK_DATABASE_PASSWORD"] = os.getenv(
             "MCONF_WEBHOOK_DATABASE_PASSWORD"
         )

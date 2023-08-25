@@ -1,6 +1,4 @@
 import hashlib
-import json
-import logging
 import urllib.parse
 from urllib.parse import urljoin
 from xml.etree import ElementTree
@@ -32,9 +30,7 @@ class WebhookRegister:
     This is class is responsible for registering webhook callbacks.
     """
 
-    def __init__(
-        self, callback_url, servers=None, get_raw=False, hook_id=None, logger=None
-    ):
+    def __init__(self, callback_url, servers=None, get_raw=False, hook_id=None, logger=None):
         """Constructor of the WebhookRegister.
 
         Parameters
@@ -89,22 +85,19 @@ class WebhookRegister:
             # If it fails, appends the failed server to the failed_servers list.
             # Otherwise, the server is good to go on the success_servers list.
             try:
-                _ = inner_server.create_hook(
-                    self._callback_url, self._get_raw, self._hook_id
-                )
+                _ = inner_server.create_hook(self._callback_url, self._get_raw, self._hook_id)
             except WebhookCreateError as err:
-                self.logger.warn(
+                self.logger.warning(
                     f"Webhook registration for server '{server}' failed "
                     f"({err.reason})."
                 )
                 self.failed_servers.append(server)
             except WebhookAlreadyExistsError:
                 self.logger.info(
-                    f"Webhook registration for server '{server}' ok "
-                    "(webhook already exists)."
+                    f"Webhook registration for server '{server}' ok " "(webhook already exists)."
                 )
             except RuntimeError:
-                self.logger.warn(
+                self.logger.warning(
                     f"Webhook registration for server '{server}' failed "
                     "(unexpected reason)."
                 )
@@ -178,9 +171,7 @@ class WebhookServer:
         if hook_id:
             params["hookID"] = hook_id
 
-        params["checksum"] = checksum(
-            "hooks/create", urllib.parse.urlencode(params), self._secret
-        )
+        params["checksum"] = checksum("hooks/create", urllib.parse.urlencode(params), self._secret)
 
         r = None
         try:
@@ -235,9 +226,7 @@ def checksum(method, params, secret):
     """
     # We need to make sure the strings are encoded as UTF-8 before calculating the
     # SHA-1.
-    encoded_payload = (
-        method.encode("utf-8") + params.encode("utf-8") + secret.encode("utf-8")
-    )
+    encoded_payload = method.encode("utf-8") + params.encode("utf-8") + secret.encode("utf-8")
     sha1_payload = hashlib.sha1(encoded_payload)
 
     # Converts and returns SHA-1 as str.
@@ -275,12 +264,8 @@ def parse_response(response):
             # If it can not find it, assign None to these variables.
             return_code_node = response_xml.find("returncode")
             message_key_node = response_xml.find("messageKey")
-            return_code = (
-                return_code_node.text if return_code_node is not None else None
-            )
-            message_key = (
-                message_key_node.text if message_key_node is not None else None
-            )
+            return_code = return_code_node.text if return_code_node is not None else None
+            message_key = message_key_node.text if message_key_node is not None else None
 
             # Below is a list of the possible errors that can occur when registering
             # a webhook callback.

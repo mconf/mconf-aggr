@@ -290,9 +290,7 @@ dependencies = [
 ]
 
 [metadata]
-lock_version = "4.2"
-cross_platform = true
-groups = ["default", "debug", "dev", "test"]
+lock_version = "4.1"
 content_hash = "sha256:0abc33349d81d87068948df26e55351a70f9e19cac9f4303a53889a19131c919"
 
 [metadata.files]

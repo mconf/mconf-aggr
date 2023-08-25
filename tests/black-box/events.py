@@ -1,9 +1,7 @@
 from utility.utils import post_event, timestamp_now
 
 
-def post_meeting_created(
-    internal_meeting_id, external_meeting_id, shared_secret, institution
-):
+def post_meeting_created(internal_meeting_id, external_meeting_id, shared_secret, institution):
     createJSON = {
         "data": {
             "type": "event",
@@ -279,7 +277,9 @@ def post_rap_process_started(internal_meeting_id, external_meeting_id, record_id
     post_event(rap_process_started_json)
 
 
-def post_rap_publish_ended_pv(internal_meeting_id, external_meeting_id, record_id):
+def post_rap_publish_ended_pv(
+    internal_meeting_id, external_meeting_id, record_id, index
+):
     rap_publish_ended_pv_json = {
         "data": {
             "type": "event",
@@ -301,6 +301,7 @@ def post_rap_publish_ended_pv(internal_meeting_id, external_meeting_id, record_i
                     "size": 18683,
                     "raw-size": 4225033,
                     "metadata": {
+                        "splitRecordingIndex": index,
                         "isBreakout": "false",
                         "meetingId": external_meeting_id,
                         "meetingName": external_meeting_id,
@@ -352,7 +353,9 @@ def post_rap_publish_ended_pv(internal_meeting_id, external_meeting_id, record_i
     post_event(rap_publish_ended_pv_json)
 
 
-def post_rap_publish_ended_rec_pv(internal_meeting_id, external_meeting_id, record_id):
+def post_rap_publish_ended_rec_pv(
+    internal_meeting_id, external_meeting_id, record_id, index
+):
     rap_publish_ended_rec_pv_json = {
         "data": {
             "type": "event",
@@ -374,6 +377,7 @@ def post_rap_publish_ended_rec_pv(internal_meeting_id, external_meeting_id, reco
                     "size": 18683,
                     "raw-size": 4225033,
                     "metadata": {
+                        "splitRecordingIndex": index,
                         "isBreakout": "false",
                         "meetingId": external_meeting_id,
                         "meetingName": external_meeting_id,
@@ -415,7 +419,9 @@ def post_rap_publish_ended_rec_pv(internal_meeting_id, external_meeting_id, reco
     post_event(rap_publish_ended_rec_pv_json)
 
 
-def post_rap_publish_ended_rec(internal_meeting_id, external_meeting_id, record_id):
+def post_rap_publish_ended_rec(
+    internal_meeting_id, external_meeting_id, record_id, index
+):
     rap_publish_ended_rec_json = {
         "data": {
             "type": "event",
@@ -437,6 +443,7 @@ def post_rap_publish_ended_rec(internal_meeting_id, external_meeting_id, record_
                     "size": 1204266,
                     "raw-size": 4225033,
                     "metadata": {
+                        "splitRecordingIndex": index,
                         "isBreakout": "false",
                         "meetingId": external_meeting_id,
                         "meetingName": external_meeting_id,
@@ -477,7 +484,12 @@ def post_rap_publish_ended_rec(internal_meeting_id, external_meeting_id, record_
 
 
 def post_rap_publish_ended(
-    internal_meeting_id, external_meeting_id, record_id, shared_secret, institution
+    internal_meeting_id,
+    external_meeting_id,
+    record_id,
+    shared_secret,
+    institution,
+    index,
 ):
     rap_publish_ended_json = {
         "data": {
@@ -500,6 +512,7 @@ def post_rap_publish_ended(
                     "size": 1204266,
                     "raw-size": 4225033,
                     "metadata": {
+                        "splitRecordingIndex": index,
                         "isBreakout": "false",
                         "meetingId": external_meeting_id,
                         "meetingName": external_meeting_id,
@@ -634,9 +647,7 @@ def post_rap_sanity_started(internal_meeting_id, external_meeting_id, record_id)
     post_event(rap_sanity_started_json)
 
 
-def post_user_audio_voice_enabled(
-    internal_meeting_id, external_meeting_id, internal_user_id
-):
+def post_user_audio_voice_enabled(internal_meeting_id, external_meeting_id, internal_user_id):
     userAudioVoiceEnabledJSON = {
         "data": {
             "type": "event",
@@ -685,9 +696,7 @@ def post_user_joined(internal_meeting_id, external_meeting_id, internal_user_id)
     post_event(userJoinedJSON)
 
 
-def post_user_presenter_assigned(
-    internal_meeting_id, external_meeting_id, internal_user_id
-):
+def post_user_presenter_assigned(internal_meeting_id, external_meeting_id, internal_user_id):
     presenterAssignedJSON = {
         "data": {
             "type": "event",
@@ -709,9 +718,7 @@ def post_user_presenter_assigned(
     post_event(presenterAssignedJSON)
 
 
-def post_user_presenter_unassigned(
-    internal_meeting_id, external_meeting_id, internal_user_id
-):
+def post_user_presenter_unassigned(internal_meeting_id, external_meeting_id, internal_user_id):
     userPresenterUnassignedJSON = {
         "data": {
             "type": "event",

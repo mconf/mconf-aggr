@@ -3,14 +3,13 @@
 It will receive, validate, parse and send the parsed data to be processed.
 """
 import json
-import logging
 
 import falcon
 
 import mconf_aggr.aggregator.cfg as cfg
-from mconf_aggr.logger import get_logger
 from mconf_aggr.aggregator.aggregator import PublishError
 from mconf_aggr.aggregator.utils import RequestTimeLogger, time_logger
+from mconf_aggr.logger import get_logger
 from mconf_aggr.webhook.database_handler import AuthenticationHandler
 from mconf_aggr.webhook.event_mapper import map_webhook_event
 from mconf_aggr.webhook.exceptions import RequestProcessingError, WebhookError
@@ -70,7 +69,9 @@ class AuthMiddleware:
             server_url = req.get_param("domain")
 
             if not server_url:
-                self.logger.warning("Domain missing from (last hop) '{}'.".format(req.host))
+                self.logger.warning(
+                    "Domain missing from (last hop) '{}'.".format(req.host)
+                )
                 raise falcon.HTTPUnauthorized(
                     title="Domain required for authentication",
                     description="Provide a valid domain as part of the request",
@@ -81,11 +82,12 @@ class AuthMiddleware:
             www_authentication = {"Bearer realm": '"mconf-aggregator"'}
 
             if token is None:
-                self.logger.warning("Authentication token missing from '{}'.".format(server_url))
+                self.logger.warning(
+                    "Authentication token missing from '{}'.".format(server_url)
+                )
                 raise falcon.HTTPUnauthorized(
                     title="Authentication required",
-                    description="Provide an authentication token as part of the "
-                    "request",
+                    description="Provide an authentication token as part of the " "request",
                     headers=www_authentication,
                 )
 
@@ -98,8 +100,7 @@ class AuthMiddleware:
                 )
                 raise falcon.HTTPUnauthorized(
                     title="Unable to validate authentication token",
-                    description="The provided authentication token could not be "
-                    "validate",
+                    description="The provided authentication token could not be " "validate",
                     headers=www_authentication,
                 )
 
@@ -161,9 +162,7 @@ class WebhookEventListener:
             event = req.get_param("event")
 
             self.logger.info(
-                "Webhook event received from '{}' (last hop: '{}').".format(
-                    server_url, req.host
-                )
+                "Webhook event received from '{}' (last hop: '{}').".format(server_url, req.host)
             )
 
             # Always responds with HTTP status code 200 in order to prevent
@@ -172,13 +171,14 @@ class WebhookEventListener:
                 self.logger.debug("Processing event")
                 self.event_handler.process_event(server_url, event)
             except WebhookError as err:
-                self.logger.error(
-                    f"An error occurred while processing event: {err}")
+                self.logger.error(f"An error occurred while processing event: {err}")
                 response = WebhookResponse(str(err))
                 resp.text = json.dumps(response.error)
                 resp.status = falcon.HTTP_200
             except Exception as err:
-                self.logger.error(f"An unexpected error occurred while processing event: {err}")
+                self.logger.error(
+                    f"An unexpected error occurred while processing event: {err}"
+                )
                 response = WebhookResponse(str(err))
                 resp.text = json.dumps(response.error)
                 resp.status = falcon.HTTP_200
@@ -309,7 +309,7 @@ class WebhookEventHandler:
                             continue
 
                 else:
-                    self.logger.warn("Not publishing event from '{}'".format(server_url))
+                    self.logger.warning("Not publishing event from '{}'".format(server_url))
 
     def _decode(self, event):
         return json.loads(event)

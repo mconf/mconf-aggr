@@ -19,6 +19,10 @@ requires-python = ">=3.9"
 requires = ["pdm-pep517>=1.0.0"]
 build-backend = "pdm.pep517.api"
 
+[tool.pdm.scripts]
+tests.cmd = "python tests.py"
+tests.env_file = "./envs/webhook-env-file.env"
+
 [tool.pdm]
 [[tool.pdm.source]]
 url = "https://pypi.org/simple"
@@ -44,7 +48,7 @@ debug = [
 addopts = "-ra -v -x -s --import-mode=importlib"
 testpaths = ["tests"]
 [tool.black]
-line-length = 88
+line-length = 100
 target-version = ['py310']
 include = '\.pyi?$'
 [tool.isort]
