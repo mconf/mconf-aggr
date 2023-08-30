@@ -613,9 +613,7 @@ class TestRapHandler(unittest.TestCase):
                 if event_type == "rap-sanity-started":
                     self.assertEqual(self.recording[j].server_id, self.server.id)
 
-                _compare_recording_meetings_event(
-                    self, self.recording[j], self.meetings_event
-                )
+                _compare_recording_meetings_event(self, self.recording[j], self.meetings_event)
 
 
 def _compare_recording_meetings_event(test, recording, meetings_event):

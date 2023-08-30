@@ -277,9 +277,7 @@ def post_rap_process_started(internal_meeting_id, external_meeting_id, record_id
     post_event(rap_process_started_json)
 
 
-def post_rap_publish_ended_pv(
-    internal_meeting_id, external_meeting_id, record_id, index
-):
+def post_rap_publish_ended_pv(internal_meeting_id, external_meeting_id, record_id, index):
     rap_publish_ended_pv_json = {
         "data": {
             "type": "event",
@@ -353,9 +351,7 @@ def post_rap_publish_ended_pv(
     post_event(rap_publish_ended_pv_json)
 
 
-def post_rap_publish_ended_rec_pv(
-    internal_meeting_id, external_meeting_id, record_id, index
-):
+def post_rap_publish_ended_rec_pv(internal_meeting_id, external_meeting_id, record_id, index):
     rap_publish_ended_rec_pv_json = {
         "data": {
             "type": "event",
@@ -419,9 +415,7 @@ def post_rap_publish_ended_rec_pv(
     post_event(rap_publish_ended_rec_pv_json)
 
 
-def post_rap_publish_ended_rec(
-    internal_meeting_id, external_meeting_id, record_id, index
-):
+def post_rap_publish_ended_rec(internal_meeting_id, external_meeting_id, record_id, index):
     rap_publish_ended_rec_json = {
         "data": {
             "type": "event",

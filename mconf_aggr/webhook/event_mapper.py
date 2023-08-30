@@ -277,9 +277,7 @@ def map_webhook_event(event):
 
     else:
         logger.warning("Webhook event id is not valid: '{}'".format(event_type))
-        raise InvalidWebhookEventError(
-            "Webhook event '{}' is not valid".format(event_type)
-        )
+        raise InvalidWebhookEventError("Webhook event '{}' is not valid".format(event_type))
 
     return mapped_event
 

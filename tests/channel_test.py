@@ -75,4 +75,7 @@ class TestChannel(unittest.TestCase):
 
         with capture_logs(level="WARNING") as cm:
             self.channel.close()
-            self.assertIn("WARNING:mconf_aggr.aggregator.aggregator:There is data not consumed in channel test_channel.\n", cm)
+            self.assertIn(
+                "WARNING:mconf_aggr.aggregator.aggregator:There is data not consumed in channel test_channel.\n",
+                cm,
+            )

@@ -69,9 +69,7 @@ class AuthMiddleware:
             server_url = req.get_param("domain")
 
             if not server_url:
-                self.logger.warning(
-                    "Domain missing from (last hop) '{}'.".format(req.host)
-                )
+                self.logger.warning("Domain missing from (last hop) '{}'.".format(req.host))
                 raise falcon.HTTPUnauthorized(
                     title="Domain required for authentication",
                     description="Provide a valid domain as part of the request",
@@ -82,9 +80,7 @@ class AuthMiddleware:
             www_authentication = {"Bearer realm": '"mconf-aggregator"'}
 
             if token is None:
-                self.logger.warning(
-                    "Authentication token missing from '{}'.".format(server_url)
-                )
+                self.logger.warning("Authentication token missing from '{}'.".format(server_url))
                 raise falcon.HTTPUnauthorized(
                     title="Authentication required",
                     description="Provide an authentication token as part of the " "request",
@@ -176,9 +172,7 @@ class WebhookEventListener:
                 resp.text = json.dumps(response.error)
                 resp.status = falcon.HTTP_200
             except Exception as err:
-                self.logger.error(
-                    f"An unexpected error occurred while processing event: {err}"
-                )
+                self.logger.error(f"An unexpected error occurred while processing event: {err}")
                 response = WebhookResponse(str(err))
                 resp.text = json.dumps(response.error)
                 resp.status = falcon.HTTP_200

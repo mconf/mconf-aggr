@@ -196,9 +196,7 @@ class MeetingCreatedHandler(DatabaseEventHandler):
             .filter(Meetings.ext_meeting_id == event.external_meeting_id)
             .first()
         ):
-            self.logger.warning(
-                f"Meeting with external-meeting-id '{event.external_meeting_id}'"
-            )
+            self.logger.warning(f"Meeting with external-meeting-id '{event.external_meeting_id}'")
             return
 
         new_meeting = Meetings(
@@ -237,9 +235,7 @@ class MeetingEndedHandler(DatabaseEventHandler):
         event = event.event
 
         int_id = event.internal_meeting_id
-        self.logger.info(
-            f"Processing meeting-ended event for internal-meeting-id: '{int_id}'."
-        )
+        self.logger.info(f"Processing meeting-ended event for internal-meeting-id: '{int_id}'.")
 
         # Table meetings_events to be updated.
         meetings_event = (
@@ -337,12 +333,8 @@ class UserJoinedHandler(DatabaseEventHandler):
                 self.session.add(meetings_table)
                 self.session.flush()
             else:
-                self.logger.warning(
-                    f"No meeting found for user '{event.internal_user_id}'."
-                )
-                raise WebhookDatabaseError(
-                    f"no meeting found for user '{event.internal_user_id}'"
-                )
+                self.logger.warning(f"No meeting found for user '{event.internal_user_id}'.")
+                raise WebhookDatabaseError(f"no meeting found for user '{event.internal_user_id}'")
 
             # Update unique_users in table meetings_events.
             users_joined = (
@@ -433,9 +425,7 @@ class UserLeftHandler(DatabaseEventHandler):
 
             self.session.add(meetings_table)
         else:
-            self.logger.warning(
-                f"No meeting found with internal-meeting-id '{int_id}'."
-            )
+            self.logger.warning(f"No meeting found with internal-meeting-id '{int_id}'.")
 
         # Table users_events to be updated.
         users_table = (
@@ -496,9 +486,7 @@ class UserEventHandler(DatabaseEventHandler):
 
             self.session.add(meetings_table)
         else:
-            self.logger.warning(
-                f"No meeting found with internal-meeting-id '{int_id}'."
-            )
+            self.logger.warning(f"No meeting found with internal-meeting-id '{int_id}'.")
 
     def _update_meeting(self, meetings_table):
         _update_meeting(meetings_table)
@@ -597,18 +585,14 @@ class RapArchiveHandler(DatabaseEventHandler):
 
         # Meeting was set to be recorded.
         if recorded:
-            recording = _fetch_or_create_recording(
-                self.session, event, Status.PROCESSING
-            )
+            recording = _fetch_or_create_recording(self.session, event, Status.PROCESSING)
 
             meetings_event = _fetch_meetings_event(self.session, int_id)
 
             if meetings_event:
                 _update_recording_with_meetings_event_data(recording, meetings_event)
             else:
-                self.logger.warning(
-                    f"No meeting found for recording '{event.record_id}'."
-                )
+                self.logger.warning(f"No meeting found for recording '{event.record_id}'.")
 
             recording.current_step = event.current_step
 
@@ -664,17 +648,13 @@ class RapHandler(DatabaseEventHandler):
         self.logger.info(f"Records_row: {recording}")
 
     def _handle_rap_sanity_started(self, server_url, recording):
-        server_id_result = (
-            self.session.query(Servers.id).filter(Servers.name == server_url).first()
-        )
+        server_id_result = self.session.query(Servers.id).filter(Servers.name == server_url).first()
         if server_id_result:
             if server_id_result.id != recording.server_id:
                 self.logger.info(f"Recording host was updated to '{server_url}'.")
             recording.server_id = server_id_result.id
         else:
-            self.logger.warning(
-                f"No server found for recording '{recording.record_id}'."
-            )
+            self.logger.warning(f"No server found for recording '{recording.record_id}'.")
 
         return recording
 
@@ -723,13 +703,9 @@ class RapProcessHandler(DatabaseEventHandler):
         else:
             self.logger.warning(f"No recording found with id '{event.record_id}'.")
 
-    def handle_rap_process_started(
-        self, recording, event, workflow_status, current_status
-    ):
+    def handle_rap_process_started(self, recording, event, workflow_status, current_status):
         if not workflow_status:
-            recording.workflow = _update_workflow(
-                recording, event.workflow, Status.PROCESSING
-            )
+            recording.workflow = _update_workflow(recording, event.workflow, Status.PROCESSING)
         if current_status == Status.PROCESSING:
             recording.current_step = event.current_step
 
@@ -737,13 +713,9 @@ class RapProcessHandler(DatabaseEventHandler):
 
         return recording
 
-    def handle_rap_process_ended(
-        self, recording, event, workflow_status, current_status
-    ):
+    def handle_rap_process_ended(self, recording, event, workflow_status, current_status):
         if workflow_status == Status.PROCESSING:
-            recording.workflow = _update_workflow(
-                recording, event.workflow, Status.PROCESSED
-            )
+            recording.workflow = _update_workflow(recording, event.workflow, Status.PROCESSED)
         if current_status == Status.PROCESSING:
             recording.status = Status.PROCESSED
             recording.current_step = event.current_step
@@ -909,9 +881,7 @@ class RapPublishHandler(DatabaseEventHandler):
 
         flag_modified(recording, "playback")
 
-        recording.workflow = _update_workflow(
-            recording, event.workflow, Status.PUBLISHED
-        )
+        recording.workflow = _update_workflow(recording, event.workflow, Status.PUBLISHED)
         recording.current_step = event.current_step
 
         self.session.add(recording)
@@ -938,9 +908,7 @@ class MeetingTransferHandler(DatabaseEventHandler):
             transfer_status = True
 
         int_id = event.internal_meeting_id
-        self.logger.info(
-            f"Processing {event_type} event for internal-meeting-id '{int_id}'."
-        )
+        self.logger.info(f"Processing {event_type} event for internal-meeting-id '{int_id}'.")
 
         transfer_table = (
             self.session.query(Meetings).filter(Meetings.int_meeting_id == int_id).first()
@@ -1013,9 +981,7 @@ def _has_same_playback_format(playback1, playback2):
 
 
 def _fetch_recording(session, record_id):
-    recording = (
-        session.query(Recordings).filter(Recordings.record_id == record_id).first()
-    )
+    recording = session.query(Recordings).filter(Recordings.record_id == record_id).first()
 
     return recording
 
@@ -1023,9 +989,7 @@ def _fetch_recording(session, record_id):
 def _fetch_or_create_recording(session, event, first_status):
     int_id = event.internal_meeting_id
     record_id = event.record_id
-    recording = (
-        session.query(Recordings).filter(Recordings.record_id == record_id).first()
-    )
+    recording = session.query(Recordings).filter(Recordings.record_id == record_id).first()
 
     # Recording does not exist yet. Create it.
     if not recording:
@@ -1226,9 +1190,7 @@ class WebhookDataWriter(AggregatorCallback):
                 with session_scope() as session:
                     DataProcessor(session).update(data)
         except sqlalchemy.exc.OperationalError as err:
-            self.logger.error(
-                f"Operational error on database. Not persisting data: {err}"
-            )
+            self.logger.error(f"Operational error on database. Not persisting data: {err}")
 
             raise CallbackError() from err
         except WebhookDatabaseError as err:
@@ -1239,9 +1201,7 @@ class WebhookDataWriter(AggregatorCallback):
 
             raise CallbackError() from err
         except Exception as err:
-            self.logger.error(
-                f"Unknown error on database handler. Not persisting data: {err}"
-            )
+            self.logger.error(f"Unknown error on database handler. Not persisting data: {err}")
 
             raise CallbackError() from err
 
@@ -1277,9 +1237,7 @@ class AuthenticationHandler:
             try:
                 server = session.query(Servers.secret).filter(Servers.name == server).first()
             except sqlalchemy.exc.OperationalError as err:
-                self.logger.error(
-                    f"Operational error on database while validating token: {err}"
-                )
+                self.logger.error(f"Operational error on database while validating token: {err}")
                 server = None
             except Exception as err:
                 self.logger.warning(f"Unknown error while validating token: {err}")
@@ -1318,9 +1276,7 @@ class WebhookServerHandler:
             try:
                 servers = session.query(Servers).all()
             except sqlalchemy.exc.OperationalError as err:
-                self.logger.error(
-                    f"Operational error on database while gathering servers: {err}"
-                )
+                self.logger.error(f"Operational error on database while gathering servers: {err}")
 
                 raise DatabaseNotReadyError()
             except Exception as err:

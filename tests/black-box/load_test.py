@@ -238,9 +238,7 @@ def run_recording(cfg, interval):
             cfg.internal_meeting_id, cfg.external_meeting_id, cfg.record_id, i
         )
 
-        cfg.record_id = (
-            cfg.record_id.split("-")[0] + "-" + str(round(time.time() * 1000))
-        )
+        cfg.record_id = cfg.record_id.split("-")[0] + "-" + str(round(time.time() * 1000))
 
 
 main(sys.argv[1:])
