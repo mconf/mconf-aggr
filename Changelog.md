@@ -1,7 +1,8 @@
 # Changelog
 
 ## 1.14.0
-* Add support to multiple recordings by meeting
+* Add support to multiple recordings by meeting.
+* Add support to 'video' format.
 
 ## 1.13.1
 * Fix error on hooks/build.
