@@ -1,8 +1,9 @@
 import json
 import os
-import requests
 import time
+
 import psycopg2
+import requests
 
 # Get Institution GUID from environment variable
 r_institution_guid = os.getenv("R_INSTITUTION_GUID")
