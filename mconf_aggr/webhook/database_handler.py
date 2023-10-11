@@ -799,6 +799,7 @@ class RapDeleteHandler(DatabaseEventHandler):
 
         if recording:
             recording.status = Status.DELETED
+            recording.published = False
             self.session.add(recording)
         else:
             self.logger.warning(f"No recording found with meeting id '{int_id}'.")
