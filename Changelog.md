@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.15.0
+* Set published = false in rap-deleted events
+
 ## 1.14.0
 * Add support to multiple recordings by meeting.
 * Add support to 'video' format.
