@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.16.0
+* Update vulnerable dependency to a newer fixed version
+
 ## 1.15.0
 * Set published = false in rap-deleted events
 
