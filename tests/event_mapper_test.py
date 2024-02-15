@@ -170,6 +170,7 @@ class TestMapping(unittest.TestCase):
             event=UserJoinedEvent(
                 name="madeup-user",
                 role="MODERATOR",
+                guest=False,
                 internal_user_id="madeup-internal-user-id",
                 external_user_id="madeup-external-user-id",
                 internal_meeting_id="madeup-internal-meeting-id",
