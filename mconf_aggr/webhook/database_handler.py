@@ -304,7 +304,7 @@ class UserJoinedHandler(DatabaseEventHandler):
             "has_joined_voice": False,
             "has_video": False,
             "user_data": event.userdata,
-            "guest": event.guest
+            "guest": event.guest,
         }
 
         # Query for meetings_events to link with users_events table.
