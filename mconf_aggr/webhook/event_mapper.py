@@ -56,6 +56,7 @@ UserJoinedEvent = collections.namedtuple(
         "external_meeting_id",
         "join_time",
         "is_presenter",
+        "guest",
         "userdata",
     ],
 )
@@ -379,6 +380,7 @@ def _map_user_joined_event(event, event_type, server_url):
         ),
         join_time=_get_nested(event, ["data", "event", "ts"], ""),
         is_presenter=_get_nested(event, ["data", "attributes", "user", "presenter"], True),
+        guest=_get_nested(event, ["data", "attributes", "user", "guest"], False),
         userdata=_get_nested(event, ["data", "attributes", "user", "userdata"], {}),
     )
 

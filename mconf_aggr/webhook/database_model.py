@@ -514,6 +514,8 @@ class UsersEvents(Base):
         Name of the user.
     role : Column of type String
         Role of the user.
+    guest: Column of type Boolean
+        Indicates if the user is a guest.
     join_time : Column of type BigInteger
         Timestamp of when the user joined.
     leave_time : Column of type BigInteger
@@ -537,6 +539,7 @@ class UsersEvents(Base):
 
     name = Column(String(255))
     role = Column(String(50))
+    guest = Column(Boolean)
     join_time = Column(BigInteger)
     leave_time = Column(BigInteger)
     internal_user_id = Column(String(255), unique=True)
@@ -566,6 +569,8 @@ class UsersEvents(Base):
             + str(self.name)
             + ", role="
             + str(self.role)
+            + ", guest="
+            + str(self.guest)
             + ", join_time="
             + str(self.join_time)
             + ", leave_time="
