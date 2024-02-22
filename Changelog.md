@@ -1,5 +1,8 @@
 # Changelog
 
+## 1.17.0
+* Store the value of the `guest` field in `user-joined` events
+
 ## 1.16.0
 * Update vulnerable dependency to a newer fixed version
 
